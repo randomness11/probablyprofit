@@ -1,0 +1,39 @@
+# News-Driven Bot Configuration
+
+# Agent Settings
+agent:
+  name: "NewsBot"
+  loop_interval: 180  # seconds (3 minutes)
+  model: "claude-sonnet-4-5-20250929"
+  temperature: 1.0
+
+# Risk Management
+risk:
+  max_position_size: 150.0  # USD (larger for high-conviction news plays)
+  max_total_exposure: 1000.0  # USD
+  max_positions: 4
+  max_loss_per_trade: 75.0  # USD
+  max_daily_loss: 250.0  # USD
+  position_size_pct: 0.07  # 7% of capital per trade
+
+# Strategy Parameters
+strategy:
+  news_age_hours: 2  # Only consider news from last 2 hours
+  min_liquidity: 800.0  # USD
+  take_profit_pct: 0.30  # 30%
+  stop_loss_pct: 0.20  # 20%
+  require_multiple_sources: true
+
+# News Sources
+news:
+  rss_feeds:
+    - "http://feeds.bbci.co.uk/news/rss.xml"
+    - "http://rss.cnn.com/rss/cnn_topstories.rss"
+    - "https://feeds.reuters.com/reuters/topNews"
+  update_interval: 180  # seconds
+
+# Market Filters
+filters:
+  active_only: true
+  min_time_to_resolution: 12  # hours
+  max_markets_to_analyze: 50

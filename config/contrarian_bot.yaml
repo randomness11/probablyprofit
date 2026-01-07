@@ -1,0 +1,31 @@
+# Contrarian Bot Configuration
+
+# Agent Settings
+agent:
+  name: "ContrarianBot"
+  loop_interval: 600  # seconds (10 minutes)
+  model: "claude-sonnet-4-5-20250929"
+  temperature: 0.7
+
+# Risk Management
+risk:
+  max_position_size: 50.0  # USD (smaller for contrarian)
+  max_total_exposure: 500.0  # USD
+  max_positions: 2
+  max_loss_per_trade: 30.0  # USD
+  max_daily_loss: 100.0  # USD
+  position_size_pct: 0.03  # 3% of capital per trade
+
+# Strategy Parameters
+strategy:
+  extreme_high_threshold: 0.90  # 90%
+  extreme_low_threshold: 0.10  # 10%
+  min_liquidity: 500.0  # USD
+  take_profit_pct: 0.40  # 40%
+  stop_loss_pct: 0.20  # 20%
+
+# Market Filters
+filters:
+  active_only: true
+  min_time_to_resolution: 48  # hours (need time for reversion)
+  max_markets_to_analyze: 30

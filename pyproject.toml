@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "poly16z"
+version = "0.1.0"
+description = "AI-powered trading bot framework for Polymarket - inspired by a16z"
+authors = [{name = "poly16z Contributors", email = "hello@poly16z.dev"}]
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["polymarket", "trading", "ai", "bot", "crypto", "prediction-markets", "a16z"]
+
+dependencies = [
+    "httpx>=0.27.0",
+    "websockets>=12.0",
+    "anthropic>=0.39.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "eth-account>=0.11.0",
+    "web3>=6.0.0",
+    "py-clob-client>=0.20.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+    "aiohttp>=3.9.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "tweepy>=4.14.0",
+    "feedparser>=6.0.0",
+    "beautifulsoup4>=4.12.0",
+    "tenacity>=8.2.0",
+    "loguru>=0.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ankit/poly16z"
+Documentation = "https://github.com/ankit/poly16z#readme"
+Repository = "https://github.com/ankit/poly16z"
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

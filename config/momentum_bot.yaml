@@ -1,0 +1,31 @@
+# Momentum Bot Configuration
+
+# Agent Settings
+agent:
+  name: "MomentumBot"
+  loop_interval: 300  # seconds (5 minutes)
+  model: "claude-sonnet-4-5-20250929"
+  temperature: 1.0
+
+# Risk Management
+risk:
+  max_position_size: 100.0  # USD
+  max_total_exposure: 1000.0  # USD
+  max_positions: 3
+  max_loss_per_trade: 50.0  # USD
+  max_daily_loss: 200.0  # USD
+  position_size_pct: 0.05  # 5% of capital per trade
+
+# Strategy Parameters
+strategy:
+  momentum_threshold: 0.10  # 10% price change
+  min_liquidity: 1000.0  # USD
+  min_volume: 500.0  # USD
+  take_profit_pct: 0.25  # 25%
+  stop_loss_pct: 0.15  # 15%
+
+# Market Filters
+filters:
+  active_only: true
+  min_time_to_resolution: 24  # hours
+  max_markets_to_analyze: 50
