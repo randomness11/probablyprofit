@@ -10,8 +10,11 @@ from anthropic import Anthropic
 from loguru import logger
 
 from poly16z.agent.base import BaseAgent, Observation, Decision
+from poly16z.agent.formatters import ObservationFormatter, get_decision_schema
 from poly16z.api.client import PolymarketClient
+from poly16z.api.exceptions import AgentException, ValidationException
 from poly16z.risk.manager import RiskManager
+from poly16z.utils.validators import validate_confidence
 
 
 class AnthropicAgent(BaseAgent):
@@ -85,53 +88,15 @@ class AnthropicAgent(BaseAgent):
         Returns:
             Formatted prompt string
         """
-        # Format markets
-        markets_info = []
-        for market in observation.markets[:20]:  # Limit to top 20 markets
-            markets_info.append(
-                f"Market: {market.question}\n"
-                f"  ID: {market.condition_id}\n"
-                f"  Outcomes: {', '.join(market.outcomes)}\n"
-                f"  Prices: {', '.join(f'{p:.2%}' for p in market.outcome_prices)}\n"
-                f"  Volume: ${market.volume:,.0f}\n"
-                f"  Liquidity: ${market.liquidity:,.0f}\n"
-                f"  End Date: {market.end_date.strftime('%Y-%m-%d %H:%M')}\n"
-            )
-
-        # Format positions
-        positions_info = []
-        for pos in observation.positions:
-            positions_info.append(
-                f"Position in {pos.market_id}:\n"
-                f"  Outcome: {pos.outcome}\n"
-                f"  Size: {pos.size:.2f} shares\n"
-                f"  Avg Price: {pos.avg_price:.2%}\n"
-                f"  Current Price: {pos.current_price:.2%}\n"
-                f"  Unrealized P&L: ${pos.unrealized_pnl:.2f}\n"
-            )
-
-        # Build prompt
-        prompt = f"""Current Market State:
-
-Time: {observation.timestamp.strftime('%Y-%m-%d %H:%M:%S')}
-Account Balance: ${observation.balance:,.2f}
-
-Active Positions ({len(observation.positions)}):
-{chr(10).join(positions_info) if positions_info else "No open positions"}
-
-Top Markets ({len(markets_info)}):
-{chr(10).join(markets_info)}
-
-Recent Trading History:
-{self.memory.get_recent_history(5)}
-
-Based on the above information and your trading strategy, what should you do next?
-"""
-        return prompt
+        # Use shared formatter to eliminate duplication
+        formatted = ObservationFormatter.format_full_observation(
+            observation, self.memory, include_history=5, max_markets=20
+        )
+        return formatted + "\nBased on the above information and your trading strategy, what should you do next?\n"
 
     def _parse_decision(self, response: str, observation: Observation) -> Decision:
         """
-        Parse Claude's response into a Decision object.
+        Parse Claude's response into a Decision object with validation.
 
         Args:
             response: Claude's response text
@@ -139,6 +104,9 @@ Based on the above information and your trading strategy, what should you do nex
 
         Returns:
             Decision object
+
+        Raises:
+            ValidationException: If decision data is invalid
         """
         try:
             # Try to parse as JSON first
@@ -166,26 +134,46 @@ Based on the above information and your trading strategy, what should you do nex
                     "reasoning": response,
                 }
 
-            # Create decision
+            # Validate and create decision
+            action = data.get("action", "hold")
+            confidence = float(data.get("confidence", 0.5))
+
+            # Validate confidence
+            try:
+                validate_confidence(confidence)
+            except ValidationException:
+                logger.warning(f"Invalid confidence {confidence}, clamping to 0-1")
+                confidence = max(0.0, min(1.0, confidence))
+
+            # Parse price with validation
+            price = None
+            if "price" in data and data["price"] is not None:
+                price = float(data["price"])
+                if price < 0 or price > 1:
+                    logger.warning(f"Invalid price {price}, clamping to 0-1")
+                    price = max(0.0, min(1.0, price))
+
             decision = Decision(
-                action=data.get("action", "hold"),
+                action=action,
                 market_id=data.get("market_id"),
                 outcome=data.get("outcome"),
                 size=float(data.get("size", 0)),
-                price=float(data["price"]) if "price" in data else None,
+                price=price,
                 reasoning=data.get("reasoning", response),
-                confidence=float(data.get("confidence", 0.5)),
+                confidence=confidence,
             )
 
             return decision
 
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON decision: {e}")
+            raise AgentException(f"Invalid JSON in AI response: {e}")
+        except ValueError as e:
+            logger.error(f"Invalid numeric value in decision: {e}")
+            raise AgentException(f"Invalid numeric value: {e}")
         except Exception as e:
-            logger.error(f"Error parsing decision: {e}")
-            # Return safe default
-            return Decision(
-                action="hold",
-                reasoning=f"Error parsing decision: {e}",
-            )
+            logger.error(f"Unexpected error parsing decision: {e}")
+            raise AgentException(f"Error parsing decision: {e}")
 
     async def decide(self, observation: Observation) -> Decision:
         """
