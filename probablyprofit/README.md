@@ -8,9 +8,12 @@ Write trading strategies in plain English. Let AI agents execute them 24/7.
 
 *Inspired by [ai16z](https://github.com/ai16z) — autonomous AI agents for prediction markets*
 
+[![CI](https://github.com/randomness11/probablyprofit/actions/workflows/ci.yml/badge.svg)](https://github.com/randomness11/probablyprofit/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Polymarket](https://img.shields.io/badge/Polymarket-Enabled-purple.svg)](https://polymarket.com)
+
+[Architecture](ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md) · [Examples](examples/)
 
 </div>
 
@@ -26,17 +29,18 @@ cd probablyprofit
 # 2. Install dependencies
 pip install -e .
 
-# 3. Run setup wizard (creates your .env file)
-python scripts/setup_wizard.py
+# 3. Set up environment
+cp .env.example .env
+# Edit .env with your API keys
 
-# 4. Write your strategy in strategy.txt
-echo "Buy YES on any market about AI if price is below 25 cents" > strategy.txt
+# 4. Pick a strategy from examples/ (or write your own)
+# Available: conservative, aggressive, value_hunting, mean_reversion, news_driven
 
 # 5. Test in dry-run mode (no real money)
-python main.py --strategy custom --dry-run
+python main.py --strategy custom --prompt-file examples/conservative.txt --dry-run
 
 # 6. Go live!
-python main.py --strategy custom
+python main.py --strategy custom --prompt-file examples/aggressive.txt
 ```
 
 ---

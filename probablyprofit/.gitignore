@@ -41,9 +41,27 @@ venv.bak/
 .vscode/
 *.swp
 *.swo
+.DS_Store
 
 # Project specific
 logs/
 data/
 results/
 artifacts/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
