@@ -1,14 +1,19 @@
-# poly16z
+# ProbablyProfit 👀
 
 <div align="center">
 
-**AI-Powered Polymarket Trading Bots**
+**AI-Powered Trading Bots for Polymarket & Kalshi**
+
+*probably nothing*
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![WAGMI](https://img.shields.io/badge/WAGMI-🚀-green.svg)]()
 
-Build intelligent trading bots for Polymarket in minutes using natural language strategy prompts and AI (Claude, Gemini, or GPT-4).
+Build intelligent trading bots for Polymarket & Kalshi in minutes using natural language strategy prompts and AI (Claude, Gemini, or GPT-4).
+
+Write your strategy in plain English. Let AI do the rest. Probably profit.
 
 [Quick Start](#-quick-start) • [Examples](#-example-strategies) • [Documentation](#-documentation) • [Create Your Own](#-create-your-own-bot-in-10-minutes)
 
@@ -16,18 +21,21 @@ Build intelligent trading bots for Polymarket in minutes using natural language 
 
 ---
 
-A powerful, modular Python framework for creating intelligent trading bots on Polymarket using AI. Define your strategy in natural language, and let Claude, Gemini, or GPT-4 handle the decision-making.
+A powerful, modular Python framework for creating intelligent trading bots on prediction markets (Polymarket & Kalshi) using AI. Define your strategy in natural language, and let Claude, Gemini, or GPT-4 handle the decision-making.
+
+Few understand. 🧠
 
 ## ✨ Features
 
 - **🤖 Multi-Provider AI** - Choose Claude, Gemini, or GPT-4 for decision-making based on natural language strategy prompts
-- **📊 Complete Polymarket Integration** - Full API wrapper for markets, orders, positions, and real-time data
-- **🛡️ Built-in Risk Management** - Position sizing, stop-loss, take-profit, and exposure limits
+- **📊 Multi-Platform Support** - Works with Polymarket & Kalshi (more coming soon)
+- **🛡️ Built-in Risk Management** - Position sizing, stop-loss, take-profit, and exposure limits (don't get rekt)
 - **📰 Multi-Source Data Ingestion** - News APIs, RSS feeds, Twitter, and market signals
-- **📈 Backtesting & Simulation** - Test strategies on historical data before risking real capital
+- **📈 Backtesting & Simulation** - Test strategies on historical data before risking real capital (highly recommended)
 - **🔌 Modular Architecture** - Use components independently or build custom solutions
 - **⚡ Async by Default** - High-performance async/await for real-time trading
 - **📝 Type-Safe** - Fully typed with Pydantic models
+- **🎯 Natural Language Strategies** - Write your strategy in plain English, no PhD required
 
 ### 🤖 Supported AI Providers
 
@@ -42,7 +50,7 @@ Choose your preferred AI model:
 All agents share the same interface - just swap the class!
 
 ```python
-from poly16z import AnthropicAgent, GeminiAgent, OpenAIAgent
+from probablyprofit import AnthropicAgent, GeminiAgent, OpenAIAgent
 
 # Use Claude
 agent = AnthropicAgent(client, risk_manager, anthropic_api_key, STRATEGY)
@@ -60,8 +68,8 @@ agent = OpenAIAgent(client, risk_manager, openai_api_key, STRATEGY)
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/poly16z.git
-cd poly16z
+git clone https://github.com/yourusername/probablyprofit.git
+cd probablyprofit
 
 # Install dependencies
 pip install -r requirements.txt
@@ -170,7 +178,7 @@ Exit rules:
 import asyncio
 import os
 from dotenv import load_dotenv
-from poly16z import PolymarketClient, AnthropicAgent, RiskManager
+from probablyprofit import PolymarketClient, AnthropicAgent, RiskManager
 
 load_dotenv()
 
@@ -213,7 +221,7 @@ python my_bot.py
 The framework is built on a modular architecture:
 
 ```
-polymarket_bot/
+probablyprofit/
 ├── api/           # Polymarket API client
 ├── agent/         # AI agent framework (observe-decide-act)
 ├── risk/          # Risk management primitives
@@ -262,7 +270,7 @@ if risk_manager.can_open_position(size=10, price=0.60):
 
 **SignalGenerator** - Technical signals from market data
 ```python
-from polymarket_bot.data import SignalGenerator
+from probablyprofit.data import SignalGenerator
 
 signal_gen = SignalGenerator()
 signals = signal_gen.generate_signals(markets)
@@ -277,7 +285,7 @@ for signal in signals:
 Test your strategy before risking real money:
 
 ```python
-from polymarket_bot.backtesting import BacktestEngine
+from probablyprofit.backtesting import BacktestEngine
 
 # Create backtest engine
 backtest = BacktestEngine(initial_capital=1000.0)
@@ -421,7 +429,7 @@ client = PolymarketClient(
 Enable detailed logging:
 
 ```python
-from polymarket_bot.utils import setup_logging
+from probablyprofit.utils import setup_logging
 
 setup_logging(
     level="INFO",
@@ -453,7 +461,7 @@ if backtest_result.sharpe_ratio > 1.0:
 Create custom agents by extending `BaseAgent`:
 
 ```python
-from polymarket_bot.agent.base import BaseAgent, Observation, Decision
+from probablyprofit.agent.base import BaseAgent, Observation, Decision
 
 class MyCustomAgent(BaseAgent):
     async def decide(self, observation: Observation) -> Decision:
@@ -477,7 +485,7 @@ class MyCustomAgent(BaseAgent):
 Add your own data sources:
 
 ```python
-from polymarket_bot.data.news import NewsCollector
+from probablyprofit.data.news import NewsCollector
 
 class MyDataCollector:
     async def collect_data(self):
@@ -503,7 +511,7 @@ class MyAgent(BaseAgent):
 Extend risk manager:
 
 ```python
-from polymarket_bot.risk import RiskManager
+from probablyprofit.risk import RiskManager
 
 class MyRiskManager(RiskManager):
     def can_open_position(self, size, price, market_id=None):
@@ -531,13 +539,14 @@ Contributions are welcome! Please:
 
 ## ⚠️ Disclaimer
 
-**This software is for educational purposes only.**
+**This software is for educational purposes only. Not financial advice. Probably nothing.**
 
-- Trading involves risk of loss
-- Past performance doesn't guarantee future results
-- Only trade with money you can afford to lose
-- The authors are not responsible for any losses
-- Always do your own research
+- Trading involves risk of loss (you could get rekt)
+- Past performance doesn't guarantee future results (ser, seriously)
+- Only trade with money you can afford to lose (don't be that guy)
+- The authors are not responsible for any losses (DYOR)
+- This is experimental software - use at your own risk
+- Always do your own research (probably should've mentioned this first)
 
 ## 📄 License
 
@@ -545,18 +554,22 @@ MIT License - see LICENSE file for details
 
 ## 🙏 Acknowledgments
 
-- Built with [Anthropic Claude](https://anthropic.com)
-- Polymarket API integration
-- Inspired by the prediction market community
+- Built with [Anthropic Claude](https://anthropic.com), OpenAI, and Google Gemini
+- Polymarket & Kalshi API integrations
+- Inspired by the prediction market & crypto degen community
+- Shoutout to everyone who said "few understand" unironically
 
 ## 📞 Support
 
 - 📖 Documentation: [Coming soon]
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/poly16z/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/poly16z/discussions)
+- 🐛 Issues: [GitHub Issues](https://github.com/randomness11/probablyprofit/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/randomness11/probablyprofit/discussions)
+- 🐦 Twitter: Drop a reply if you're building with this
 
 ---
 
-**Happy Trading! 🚀**
+**Probably profit. 🚀**
 
-Made with ❤️ by the prediction market community
+Made with ❤️ by degens, for degens
+
+*WAGMI*

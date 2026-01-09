@@ -1,6 +1,6 @@
 # Deploy to GitHub
 
-Your poly16z repository is ready to deploy! Follow these steps:
+Your probablyprofit repository is ready to deploy! Follow these steps:
 
 ## Option 1: Using GitHub CLI (Recommended)
 
@@ -12,9 +12,9 @@ brew install gh
 gh auth login
 
 # Create repository and push
-gh repo create poly16z --public --source=. --remote=origin --push
+gh repo create probablyprofit --public --source=. --remote=origin --push
 
-# Done! Your repo is now at https://github.com/YOUR_USERNAME/poly16z
+# Done! Your repo is now at https://github.com/YOUR_USERNAME/probablyprofit
 ```
 
 ## Option 2: Using GitHub Web Interface
@@ -22,7 +22,7 @@ gh repo create poly16z --public --source=. --remote=origin --push
 ### Step 1: Create Repository on GitHub
 
 1. Go to https://github.com/new
-2. Repository name: `poly16z`
+2. Repository name: `probablyprofit`
 3. Description: `AI-powered trading bot framework for Polymarket`
 4. Set to **Public**
 5. **Do NOT** initialize with README (we already have one)
@@ -32,7 +32,7 @@ gh repo create poly16z --public --source=. --remote=origin --push
 
 ```bash
 # Add GitHub as remote (replace YOUR_USERNAME)
-git remote add origin https://github.com/YOUR_USERNAME/poly16z.git
+git remote add origin https://github.com/YOUR_USERNAME/probablyprofit.git
 
 # Push to GitHub
 git branch -M main
@@ -41,7 +41,7 @@ git push -u origin main
 
 ## After Pushing
 
-Your repository will be live at: `https://github.com/YOUR_USERNAME/poly16z`
+Your repository will be live at: `https://github.com/YOUR_USERNAME/probablyprofit`
 
 ### Recommended Next Steps
 
@@ -68,7 +68,7 @@ Your repository will be live at: `https://github.com/YOUR_USERNAME/poly16z`
 Once deployed, share your repo:
 
 ```markdown
-🚀 Just launched poly16z - an AI-powered framework for building Polymarket trading bots!
+🚀 Just launched probablyprofit - an AI-powered framework for building Polymarket trading bots!
 
 Define your trading strategy in natural language, and let Claude handle the decision-making.
 
@@ -79,7 +79,7 @@ Define your trading strategy in natural language, and let Claude handle the deci
 - Backtesting engine
 - 3 working example bots
 
-Check it out: https://github.com/YOUR_USERNAME/poly16z
+Check it out: https://github.com/YOUR_USERNAME/probablyprofit
 
 Built with @AnthropicAI Claude 💙
 ```

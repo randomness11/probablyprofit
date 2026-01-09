@@ -12,7 +12,7 @@ This guide will get you up and running in 10 minutes.
 
 ```bash
 # Navigate to the project directory
-cd poly16z
+cd probablyprofit
 
 # Install dependencies
 pip install -r requirements.txt
@@ -82,7 +82,7 @@ Create a new file `my_bot.py`:
 import asyncio
 import os
 from dotenv import load_dotenv
-from poly16z import PolymarketClient, AnthropicAgent, RiskManager
+from probablyprofit import PolymarketClient, AnthropicAgent, RiskManager
 from polymarket_bot.utils import setup_logging
 
 load_dotenv()

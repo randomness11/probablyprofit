@@ -3,14 +3,14 @@ requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "poly16z"
+name = "probablyprofit"
 version = "0.1.0"
-description = "AI-powered trading bot framework for Polymarket - inspired by a16z"
-authors = [{name = "poly16z Contributors", email = "hello@poly16z.dev"}]
+description = "AI-powered trading bot framework for Polymarket & Kalshi - probably nothing 👀"
+authors = [{name = "ProbablyProfit Contributors", email = "hello@probablyprofit.dev"}]
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
-keywords = ["polymarket", "trading", "ai", "bot", "crypto", "prediction-markets", "a16z"]
+keywords = ["polymarket", "kalshi", "trading", "ai", "bot", "crypto", "prediction-markets", "degen", "wagmi"]
 
 dependencies = [
     "httpx>=0.27.0",
@@ -49,9 +49,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/randomness11/poly16z"
-Documentation = "https://github.com/randomness11/poly16z#readme"
-Repository = "https://github.com/randomness11/poly16z"
+Homepage = "https://github.com/randomness11/probablyprofit"
+Documentation = "https://github.com/randomness11/probablyprofit#readme"
+Repository = "https://github.com/randomness11/probablyprofit"
 
 [tool.black]
 line-length = 100
@@ -62,7 +62,7 @@ line-length = 100
 target-version = "py310"
 
 [tool.setuptools]
-packages = ["poly16z"]
+packages = ["probablyprofit"]
 
 [tool.mypy]
 python_version = "3.10"

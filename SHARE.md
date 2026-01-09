@@ -1,9 +1,9 @@
-# Share poly16z
+# Share probablyprofit
 
 ## Twitter/X Post Template
 
 ```
-🚀 Introducing poly16z - Build AI-powered Polymarket trading bots in 10 minutes
+🚀 Introducing probablyprofit - Build AI-powered Polymarket trading bots in 10 minutes
 
 Just write your strategy in plain English, and Claude handles the rest.
 
@@ -20,7 +20,7 @@ Perfect for:
 🤖 Learning AI agent development
 
 Check it out 👇
-https://github.com/randomness11/poly16z
+https://github.com/randomness11/probablyprofit
 
 Built with @AnthropicAI Claude Sonnet 4.5 💙
 
@@ -29,11 +29,11 @@ Built with @AnthropicAI Claude Sonnet 4.5 💙
 
 ## Reddit Post Template
 
-**Title:** poly16z - Open-source AI framework for building Polymarket trading bots
+**Title:** probablyprofit - Open-source AI framework for building Polymarket trading bots
 
 **Body:**
 ```
-I just open-sourced poly16z, a framework for building AI-powered Polymarket trading bots.
+I just open-sourced probablyprofit, a framework for building AI-powered Polymarket trading bots.
 
 **The key insight:** Instead of coding complex trading logic, you just describe your strategy in natural language, and Claude AI handles the decision-making.
 
@@ -69,16 +69,16 @@ await agent.run()
 
 Everything is modular - use the whole framework or just the parts you need.
 
-Repo: https://github.com/randomness11/poly16z
+Repo: https://github.com/randomness11/probablyprofit
 
 Built with Claude Sonnet 4.5. MIT licensed. Contributions welcome!
 ```
 
 ## Hacker News Template
 
-**Title:** poly16z – AI framework for Polymarket trading bots
+**Title:** probablyprofit – AI framework for Polymarket trading bots
 
-**URL:** https://github.com/randomness11/poly16z
+**URL:** https://github.com/randomness11/probablyprofit
 
 **Optional comment:**
 ```
@@ -105,7 +105,7 @@ Happy to answer questions!
 ## LinkedIn Post
 
 ```
-🚀 Excited to share poly16z - an open-source framework for building
+🚀 Excited to share probablyprofit - an open-source framework for building
 AI-powered Polymarket trading bots!
 
 Instead of coding complex trading logic, you describe your strategy in
@@ -126,7 +126,7 @@ Perfect for:
 
 The framework is modular, production-ready, and MIT licensed.
 
-Check it out: https://github.com/randomness11/poly16z
+Check it out: https://github.com/randomness11/probablyprofit
 
 Built with Claude Sonnet 4.5 from Anthropic.
 
@@ -136,7 +136,7 @@ Built with Claude Sonnet 4.5 from Anthropic.
 ## Discord/Telegram
 
 ```
-🎉 Just launched poly16z!
+🎉 Just launched probablyprofit!
 
 Build AI-powered Polymarket trading bots by writing your strategy in plain English.
 
@@ -147,7 +147,7 @@ Features:
 • Backtesting
 • 3 example bots
 
-https://github.com/randomness11/poly16z
+https://github.com/randomness11/probablyprofit
 
 Built with Claude AI ⚡
 ```

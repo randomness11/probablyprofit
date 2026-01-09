@@ -7,7 +7,7 @@
 High-level wrapper for the Polymarket CLOB API.
 
 ```python
-from poly16z import PolymarketClient
+from probablyprofit import PolymarketClient
 
 client = PolymarketClient(
     api_key="your_api_key",
@@ -154,7 +154,7 @@ await agent.run()
 AI-powered agent using Claude for decision-making.
 
 ```python
-from poly16z import AnthropicAgent
+from probablyprofit import AnthropicAgent
 
 agent = AnthropicAgent(
     client=polymarket_client,
@@ -185,8 +185,8 @@ agent = AnthropicAgent(
 Risk management and position sizing.
 
 ```python
-from poly16z import RiskManager
-from poly16z.risk import RiskLimits
+from probablyprofit import RiskManager
+from probablyprofit.risk import RiskLimits
 
 limits = RiskLimits(
     max_position_size=100.0,

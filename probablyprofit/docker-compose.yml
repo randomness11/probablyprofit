@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  polybot:
+    build: .
+    container_name: probablyprofit_bot
+    volumes:
+      - ./.env:/app/.env
+      - ./data:/app/data
+    restart: unless-stopped
+    command: python main.py --strategy mean-reversion --agent openai --model gpt-4o
