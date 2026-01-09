@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProbablyProfit - Polymarket & Kalshi bots in plain English</title>
+    <meta name="description" content="Open-source framework for traders who have the strategy but don't want to debug API wrappers. Define your edge in a sentence; we handle the execution.">
+    <meta property="og:title" content="ProbablyProfit — Polymarket & Kalshi bots in plain English">
+    <meta property="og:description" content="A framework for traders who have the strategy but don't want to spend 6 hours debugging an API wrapper.">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+
+    <div class="container">
+        <nav>
+            <a href="/" class="logo">
+                <span class="logo-ascii">[±]</span>
+                <span class="logo-text">probablyprofit</span>
+            </a>
+            <div class="nav-links">
+                <a href="https://github.com/randomness11/probablyprofit/blob/main/README.md">Docs</a>
+                <a href="https://github.com/randomness11/probablyprofit/tree/main/examples">Examples</a>
+                <a href="https://github.com/randomness11/probablyprofit" class="nav-cta">
+                    <span class="pulse"></span>
+                    GitHub
+                </a>
+            </div>
+        </nav>
+
+        <main>
+            <div class="hero">
+                <div class="status-bar">
+                    <span class="status-dot"></span>
+                    <span>v1.0 stable</span>
+                    <span class="divider">/</span>
+                    <span>open source</span>
+                    <span class="divider">/</span>
+                    <span>MIT license</span>
+                </div>
+
+                <h1>
+                    <span class="line">Polymarket & Kalshi bots</span>
+                    <span class="line highlight">in plain English.</span>
+                </h1>
+
+                <p class="tagline">
+                    <strong>probablyprofit</strong> is a framework for traders who have the strategy but don't want to spend 6 hours debugging an API wrapper. Define your edge in a sentence; we handle the execution.
+                </p>
+
+                <div class="actions">
+                    <a href="https://github.com/randomness11/probablyprofit" class="btn-primary">
+                        Get Started
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    <div class="install-box" onclick="copyInstall()">
+                        <span class="prompt">$</span>
+                        <code>pip install probablyprofit</code>
+                        <span class="copy-hint" id="copyHint">click to copy</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <div class="demo-label">
+                    <span class="blink">//</span> see it in action
+                </div>
+
+                <div class="demo">
+                    <div class="window editor">
+                        <div class="window-bar">
+                            <div class="tab active">strategy.txt</div>
+                            <div class="tab">config.yml</div>
+                        </div>
+                        <div class="code-area">
+                            <div class="line-numbers">
+                                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span>
+                            </div>
+                            <pre class="code"><span class="comment"># poll-driven election arb</span>
+
+<span class="keyword">use</span> polls <span class="keyword">from</span> <span class="string">"538"</span>, <span class="string">"rcp"</span>, <span class="string">"nyt"</span>
+<span class="keyword">use</span> sentiment <span class="keyword">from</span> <span class="string">"twitter"</span>, <span class="string">"polymarket"</span>
+<span class="keyword">use</span> odds <span class="keyword">from</span> <span class="string">"betfair"</span>
+
+<span class="keyword">watch</span> <span class="string">"Trump Winner"</span>, <span class="string">"DeSantis Winner"</span>
+<span class="keyword">watch</span> <span class="string">"GOP Nominee"</span>, <span class="string">"Senate Control"</span>
+
+<span class="keyword">set</span> portfolio_max <span class="operator">=</span> <span class="number">$10k</span>
+<span class="keyword">set</span> conviction <span class="operator">=</span> avg(polls) <span class="operator">-</span> price
+
+<span class="comment"># fade the public when data disagrees</span>
+<span class="keyword">when</span> conviction <span class="operator">&gt;</span> <span class="number">0.15</span> <span class="keyword">and</span> sentiment <span class="operator">&lt;</span> <span class="number">-0.2</span>
+  <span class="keyword">if</span> odds <span class="operator">&gt;</span> price <span class="operator">+</span> <span class="number">0.10</span>
+    <span class="function">buy</span> conviction <span class="operator">*</span> <span class="number">$1000</span> <span class="keyword">of</span> YES
+    <span class="function">hedge</span> <span class="keyword">with</span> <span class="string">"Senate Control"</span> <span class="keyword">at</span> <span class="number">20%</span>
+
+<span class="comment"># correlated momentum</span>
+<span class="keyword">when</span> <span class="string">"GOP Nominee"</span> moves <span class="number">5%</span> <span class="keyword">in</span> <span class="number">1h</span>
+  <span class="function">mirror</span> move <span class="keyword">on</span> <span class="string">"Trump Winner"</span>
+  <span class="function">notify</span> <span class="string">"correlation trigger"</span></pre>
+                        </div>
+                    </div>
+
+                    <div class="connector">
+                        <div class="connector-line"></div>
+                        <div class="connector-dot"></div>
+                        <div class="connector-label">compiles to</div>
+                    </div>
+
+                    <div class="window terminal">
+                        <div class="window-bar">
+                            <div class="window-title">
+                                <span class="status-icon"></span>
+                                terminal — running
+                            </div>
+                        </div>
+                        <div class="terminal-content">
+                            <div class="term-line"><span class="prompt">$</span> probablyprofit run --live</div>
+                            <div class="term-line output"></div>
+                            <div class="term-line"><span class="success">●</span> feeds: 538, rcp, nyt, twitter, betfair</div>
+                            <div class="term-line"><span class="success">●</span> watching 4 markets</div>
+                            <div class="term-line output"></div>
+                            <div class="term-line dim">polling data: trump 47.2% avg</div>
+                            <div class="term-line dim">polymarket:   $0.41 | sentiment -0.31</div>
+                            <div class="term-line dim">betfair odds: $0.52</div>
+                            <div class="term-line output"></div>
+                            <div class="term-line"><span class="info">→</span> conviction signal: +0.18</div>
+                            <div class="term-line"><span class="success">✓</span> <span class="highlight">bought $180 YES @ $0.41</span></div>
+                            <div class="term-line"><span class="success">✓</span> hedge: $36 on Senate Control</div>
+                            <div class="term-line output"></div>
+                            <div class="term-line dim">watching...<span class="cursor"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-links">
+                <a href="https://github.com/randomness11/probablyprofit">GitHub</a>
+                <a href="https://github.com/randomness11/probablyprofit/blob/main/README.md">Documentation</a>
+                <a href="https://github.com/randomness11/probablyprofit/issues">Issues</a>
+            </div>
+            <p class="copyright">MIT License — Open source, forever free</p>
+        </footer>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>
