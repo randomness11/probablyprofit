@@ -11,13 +11,11 @@ from decimal import Decimal
 
 import httpx
 from loguru import logger
-import httpx
-from loguru import logger
 from pydantic import BaseModel
 
 try:
     from py_clob_client.client import ClobClient
-    from py_clob_client.clob_types import OrderArgs, OrderType
+    from py_clob_client.clob_types import OrderArgs, OrderType, ApiCreds
     params_avail = True
 except ImportError:
     ClobClient = None
@@ -103,9 +101,7 @@ class PolymarketClient:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        secret: Optional[str] = None,
-        passphrase: Optional[str] = None,
+        private_key: Optional[str] = None,
         chain_id: int = 137,
         testnet: bool = False,
     ):
@@ -113,26 +109,34 @@ class PolymarketClient:
         Initialize Polymarket client.
 
         Args:
-            api_key: API key for authentication
-            secret: API secret
-            passphrase: API passphrase
+            private_key: Polygon private key (starts with 0x)
             chain_id: Chain ID (137 for Polygon mainnet)
             testnet: Whether to use testnet
         """
         self.chain_id = chain_id
         self.testnet = testnet
+        self.client = None
 
         # Initialize CLOB client if credentials provided
-        if api_key and secret and passphrase:
-            self.client = ClobClient(
-                host="https://clob.polymarket.com" if not testnet else "https://clob-test.polymarket.com",
-                key=api_key,
-                chain_id=chain_id,
-            )
+        if private_key:
+            try:
+                host = "https://clob.polymarket.com" if not testnet else "https://clob-test.polymarket.com"
+                self.client = ClobClient(host=host, key=private_key, chain_id=chain_id)
+                
+                # Auto-derive L2 API credentials
+                try:
+                    logger.info("🔐 Deriving API credentials from Private Key...")
+                    creds = self.client.create_or_derive_api_creds()
+                    self.client.set_api_creds(creds)
+                    logger.info(f"✅ Authenticated as {creds.api_key}")
+                except Exception as e:
+                    logger.warning(f"Failed to auto-derive credentials: {e}")
+                    
+            except Exception as e:
+                logger.error(f"Failed to initialize CLOB client: {e}")
+                self.client = None
         else:
-            # Read-only mode
-            self.client = None
-            logger.warning("No API credentials provided - running in read-only mode")
+            logger.warning("⚠️ No Private Key provided - running in READ-ONLY mode")
 
         # HTTP client for CLOB endpoints (orders, prices)
         self.http_client = httpx.AsyncClient(
@@ -365,12 +369,37 @@ class PolymarketClient:
         try:
             logger.info(f"Placing {side} order: {size} shares @ ${price} on {outcome}")
 
+            # Resolve outcome name to token_id
+            token_id = outcome 
+            
+            # Try to resolve token ID from market metadata if outcome is a name (e.g. "Yes")
+            if len(outcome) < 10:  # Heuristic: names are short, token IDs are long hashes
+                market = await self.get_market(market_id)
+                if market:
+                    try:
+                        # Find index of outcome name
+                        idx = market.outcomes.index(outcome)
+                        
+                        # Get token IDs from metadata
+                        clob_ids = market.metadata.get("clobTokenIds")
+                        if clob_ids:
+                            if isinstance(clob_ids, str):
+                                import json
+                                clob_ids = json.loads(clob_ids)
+                            
+                            if isinstance(clob_ids, list) and idx < len(clob_ids):
+                                token_id = clob_ids[idx]
+                                logger.debug(f"Resolved outcome '{outcome}' to token ID {token_id}")
+                    except ValueError:
+                        # Outcome name not found in list, assume it might be valid or fail later
+                        pass
+
             # Create order using CLOB client
             order_args = OrderArgs(
                 price=price,
                 size=size,
                 side=side,
-                token_id=outcome,
+                token_id=token_id,
             )
 
             resp = await self.client.create_order(order_args)

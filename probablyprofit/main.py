@@ -141,9 +141,7 @@ async def main():
     if args.platform == "polymarket":
         from probablyprofit.api.client import PolymarketClient
         client = PolymarketClient(
-            api_key=os.getenv("POLYMARKET_API_KEY"),
-            secret=os.getenv("POLYMARKET_API_SECRET"),
-            passphrase=os.getenv("POLYMARKET_API_PASSPHRASE")
+            private_key=os.getenv("PRIVATE_KEY")
         )
         logger.info("📊 Connected to Polymarket")
 
