@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>probablyprofit</title>
+    <!-- Space Grotesk -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FAFAFA;
+            --fg: #050505;
+            --green: #00D54B;
+            --border: 2px solid #050505;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            border: 12px solid #050505;
+            height: 100vh;
+            overflow: hidden;
+            overflow-y: auto;
+        }
+
+        /* Nav */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: var(--border);
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: -0.05em;
+            text-decoration: none;
+            color: var(--fg);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--green);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-links a {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            text-decoration: none;
+            color: var(--fg);
+            font-size: 0.9rem;
+        }
+
+        .nav-links a:hover {
+            background: var(--green);
+            color: #000;
+        }
+
+        /* Split Layout Main */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            padding: 0;
+            position: relative;
+            background-image: radial-gradient(#000 1px, transparent 1px);
+            background-size: 24px 24px;
+            background-color: #fff;
+            overflow: hidden;
+        }
+
+        /* Left Side: Content */
+        .content-side {
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+            z-index: 2;
+        }
+
+        .badge {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            color: #fff;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            transform: rotate(-2deg);
+            display: inline-block;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            line-height: 0.9;
+            letter-spacing: -0.04em;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            max-width: 600px;
+        }
+
+        h1 span {
+            background: var(--green);
+            padding: 0 8px;
+            display: inline;
+            box-shadow: 6px 6px 0px #000;
+        }
+
+        .desc {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            max-width: 500px;
+            margin-bottom: 2.5rem;
+            background: #fff;
+            padding: 1rem;
+            border: 1px solid #000;
+            line-height: 1.5;
+        }
+
+        .desc strong {
+            font-weight: 700;
+            background: rgba(0, 213, 75, 0.2);
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            padding: 1rem 1.75rem;
+            border: 2px solid #000;
+            background: #fff;
+            color: #000;
+            box-shadow: 4px 4px 0px #000;
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+            background: var(--green);
+        }
+
+        .btn.primary {
+            background: #000;
+            color: #fff;
+        }
+
+        /* Right Side: Terminal */
+        .terminal-side {
+            padding: 4rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            /* Slight tint difference? No, keep pattern */
+            border-left: var(--border);
+        }
+
+        .terminal-block {
+            width: 100%;
+            max-width: 650px;
+            background: #000;
+            color: #fff;
+            padding: 1.5rem;
+            text-align: left;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 2px solid #000;
+            box-shadow: 12px 12px 0px var(--green);
+            position: relative;
+        }
+
+        .terminal-line {
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .p-green {
+            color: var(--green);
+        }
+
+        .p-dim {
+            color: #666;
+        }
+
+        .p-blue {
+            color: #4D96FF;
+        }
+
+        /* Footer */
+        footer {
+            border-top: var(--border);
+            padding: 1.5rem 2rem;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .logos {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .logos a:hover {
+            transform: scale(1.1);
+        }
+
+        .logos img {
+            height: 24px;
+            filter: grayscale(100%);
+        }
+
+        .copy {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            main {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+            }
+
+            .content-side,
+            .terminal-side {
+                padding: 2rem;
+                align-items: center;
+                text-align: center;
+            }
+
+            .terminal-side {
+                border-left: none;
+                border-top: var(--border);
+            }
+
+            h1 {
+                font-size: 3rem;
+            }
+
+            .content-side {
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="/" class="logo">
+            <span class="status-dot"></span>
+            PROBABLYPROFIT
+        </a>
+        <div class="nav-links">
+            <a href="https://github.com/randomness11/probablyprofit">SRC</a>
+            <a href="https://github.com/randomness11/probablyprofit#readme">DOCS</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="content-side">
+            <div class="badge">v1.0.0 // ALPHA LEAK</div>
+
+            <h1>
+                ALGORITHMIC<br>
+                <span>IN ENGLISH.</span>
+            </h1>
+
+            <div class="desc">
+                > The standard library for **Polymarket** & **Kalshi**.<br>
+                > Write your trading thesis in natural language. Let AI agents execute it.
+            </div>
+
+            <div class="cta-group">
+                <a href="https://github.com/randomness11/probablyprofit" class="btn primary">Start Building</a>
+                <a href="https://github.com/randomness11/probablyprofit/tree/main/examples" class="btn">Examples</a>
+            </div>
+        </div>
+
+        <div class="terminal-side">
+            <div class="terminal-block">
+                <div class="terminal-line"><span class="p-dim">$</span> <span>probablyprofit run "Buy YES if Trump > 60%
+                        on Poly but < 58% on Kalshi"</span>
+                </div>
+                <div class="terminal-line p-dim">----------------------------------------</div>
+                <div class="terminal-line">> ANALYZING STRATEGY: Cross-Exchange Arbitrage</div>
+                <div class="terminal-line">> AGENTS: <span class="p-green">GPT-4o (Active)</span> | <span
+                        class="p-green">Claude 3.5 (Audit)</span></div>
+                <div class="terminal-line p-dim">----------------------------------------</div>
+                <div class="terminal-line">[14:02:22] Sourcing real-time odds...</div>
+                <div class="terminal-line">[14:02:23] <span class="p-blue">OPPORTUNITY FOUND</span>: Spread = 2.4% (>
+                    2.0% threshold)</div>
+                <div class="terminal-line">[14:02:23] Executing BUY Order on Polymarket (Polygon)...</div>
+                <div class="terminal-line p-green">>> SUCCESS: Filled 50,000 shares @ $0.61</div>
+                <div class="terminal-line p-dim">>> LIVE PNL: +$420.00 (Unrealized)</div>
+                <div class="terminal-line">_</div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="logos">
+            <a href="https://polymarket.com"><img src="assets/polymarket.png"></a>
+            <a href="https://kalshi.com"><img src="assets/kalshi.png"></a>
+        </div>
+        <div class="copy">
+            MIT License // Built by <a href="https://x.com/ankitkr0"
+                style="color: inherit; text-decoration: underline;">@ankitkr0</a>
+        </div>
+    </footer>
+
+</body>
+
+</html>
