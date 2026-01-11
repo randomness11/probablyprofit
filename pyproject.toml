@@ -5,41 +5,115 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "probablyprofit"
 version = "0.1.0"
-description = "AI-powered trading bot framework for Polymarket & Kalshi - probably nothing 👀"
+description = "AI-powered prediction market trading bots. Write strategy in English, let AI trade for you."
 authors = [{name = "ProbablyProfit Contributors", email = "hello@probablyprofit.dev"}]
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
-keywords = ["polymarket", "kalshi", "trading", "ai", "bot", "crypto", "prediction-markets", "degen", "wagmi"]
+keywords = [
+    "polymarket",
+    "kalshi",
+    "prediction-markets",
+    "trading-bot",
+    "ai",
+    "llm",
+    "gpt",
+    "claude",
+    "automated-trading",
+    "crypto",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
 
+# Core dependencies - minimal install
 dependencies = [
+    # CLI & UX
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    # HTTP & async
     "httpx>=0.27.0",
-    "websockets>=12.0",
-    "anthropic>=0.39.0",
+    "aiohttp>=3.9.0",
+    # Data validation
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
+    # Config
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+    # Logging
+    "loguru>=0.7.0",
+    # Resilience
+    "tenacity>=8.2.0",
+]
+
+[project.optional-dependencies]
+# AI Providers - install what you need
+openai = ["openai>=1.0.0"]
+anthropic = ["anthropic>=0.39.0"]
+google = ["google-generativeai>=0.3.0"]
+
+# All AI providers
+ai = [
+    "openai>=1.0.0",
+    "anthropic>=0.39.0",
+    "google-generativeai>=0.3.0",
+]
+
+# Polymarket trading
+polymarket = [
     "eth-account>=0.11.0",
     "web3>=6.0.0",
     "py-clob-client>=0.20.0",
-    "kalshi-python-async>=0.1.0",
-    "pyyaml>=6.0",
-    "python-dotenv>=1.0.0",
-    "aiohttp>=3.9.0",
-    "pandas>=2.0.0",
-    "numpy>=1.24.0",
+    "websockets>=12.0",
+]
+
+# Kalshi trading
+kalshi = ["kalshi-python-async>=0.1.0"]
+
+# Intelligence layer (news, sentiment)
+intel = [
     "tweepy>=4.14.0",
     "feedparser>=6.0.0",
     "beautifulsoup4>=4.12.0",
-    "tenacity>=8.2.0",
-    "loguru>=0.7.0",
+]
+
+# Data & backtesting
+data = [
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+]
+
+# Database persistence
+db = [
     "sqlmodel>=0.0.14",
     "alembic>=1.12.0",
     "aiosqlite>=0.19.0",
+]
+
+# Web dashboard
+web = [
     "fastapi>=0.104.0",
     "uvicorn[standard]>=0.24.0",
 ]
 
-[project.optional-dependencies]
+# Full install - everything
+full = [
+    "probablyprofit[ai,polymarket,kalshi,intel,data,db,web]",
+]
+
+# Development
 dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
@@ -62,8 +136,13 @@ target-version = ['py310']
 line-length = 100
 target-version = "py310"
 
-[tool.setuptools]
-packages = ["probablyprofit"]
+[project.scripts]
+probablyprofit = "probablyprofit.cli.main:main"
+pp = "probablyprofit.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["probablyprofit*"]
 
 [tool.mypy]
 python_version = "3.10"

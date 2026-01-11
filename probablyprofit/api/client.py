@@ -143,6 +143,7 @@ class PolymarketClient:
                     logger.info("🔐 Deriving API credentials from Private Key...")
                     creds = self.client.create_or_derive_api_creds()
                     self.client.set_api_creds(creds)
+                    self._api_creds = creds  # Store for auth headers
                     logger.info(f"✅ Authenticated as {creds.api_key}")
                 except Exception as e:
                     logger.warning(f"Failed to auto-derive credentials: {e}")
@@ -168,6 +169,22 @@ class PolymarketClient:
         # Cache for market data
         self._market_cache: Dict[str, Market] = {}
         self._positions_cache: Dict[str, Position] = {}
+
+        # Store credentials for auth headers
+        self._api_creds = None
+        self._private_key = private_key
+
+    def _get_auth_headers(self) -> Dict[str, str]:
+        """Get authentication headers for API requests."""
+        headers = {}
+        if self._api_creds:
+            headers["Authorization"] = f"Bearer {self._api_creds.api_key}"
+            # Some endpoints might need additional headers
+            if hasattr(self._api_creds, 'api_secret'):
+                headers["X-Api-Secret"] = self._api_creds.api_secret
+            if hasattr(self._api_creds, 'api_passphrase'):
+                headers["X-Api-Passphrase"] = self._api_creds.api_passphrase
+        return headers
 
     async def get_markets(
         self,

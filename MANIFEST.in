@@ -1,0 +1,22 @@
+# Include documentation
+include README.md
+include LICENSE
+include CHANGELOG.md
+
+# Include configuration examples
+include .env.example
+
+# Include example strategies
+recursive-include examples *.py *.txt *.md
+
+# Include tests
+recursive-include tests *.py
+
+# Exclude development files
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude Makefile
+prune .github
+prune .pytest_cache
+prune __pycache__
+prune *.egg-info

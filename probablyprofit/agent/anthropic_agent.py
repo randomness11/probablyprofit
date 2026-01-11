@@ -5,7 +5,7 @@ AI-powered trading agent using Claude for decision-making.
 """
 
 import json
-from typing import Optional
+from typing import Optional, AsyncIterator, Callable
 from anthropic import Anthropic
 from loguru import logger
 
@@ -249,5 +249,92 @@ If you recommend holding or not trading, just respond with action: "hold" and ex
         except Exception as e:
             logger.error(f"Error getting decision from Claude: {e}")
             # Re-raise API errors so the agent loop can handle them properly
+            from probablyprofit.api.exceptions import AgentException
+            raise AgentException(f"Claude decision error: {e}")
+
+    def decide_streaming(
+        self,
+        observation: Observation,
+        on_chunk: Optional[Callable[[str], None]] = None,
+    ) -> Decision:
+        """
+        Use Claude to make a trading decision with streaming output.
+
+        This method streams the AI's response in real-time, allowing
+        the CLI to display thinking as it happens.
+
+        Args:
+            observation: Current market observation
+            on_chunk: Callback function called with each text chunk
+
+        Returns:
+            Decision based on AI analysis
+        """
+        logger.info(f"[{self.name}] Asking Claude for trading decision (streaming)...")
+
+        try:
+            # Format observation into prompt
+            observation_prompt = self._format_observation(observation)
+
+            # Build messages
+            messages = [
+                {
+                    "role": "user",
+                    "content": f"""{self.strategy_prompt}
+
+{observation_prompt}
+
+First, briefly analyze the markets and explain your thinking.
+Then provide your trading decision as a JSON object:
+```json
+{{
+    "action": "buy" | "sell" | "hold",
+    "market_id": "condition_id of the market (if buy/sell)",
+    "outcome": "outcome to bet on (if buy/sell)",
+    "size": number of shares,
+    "price": limit price between 0 and 1 (if buy/sell),
+    "reasoning": "brief explanation of your decision",
+    "confidence": 0.0 to 1.0
+}}
+```
+
+If you recommend holding or not trading, explain why and use action: "hold".
+"""
+                }
+            ]
+
+            # Stream from Claude
+            full_response = ""
+
+            with self.anthropic.messages.stream(
+                model=self.model,
+                max_tokens=2048,
+                temperature=self.temperature,
+                messages=messages,
+            ) as stream:
+                for text in stream.text_stream:
+                    full_response += text
+                    if on_chunk:
+                        on_chunk(text)
+
+            # Parse into decision
+            decision = self._parse_decision(full_response, observation)
+
+            logger.info(
+                f"[{self.name}] Decision: {decision.action} "
+                f"(confidence: {decision.confidence:.0%})"
+            )
+
+            return decision
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON from Claude: {e}")
+            return Decision(
+                action="hold",
+                reasoning=f"JSON parsing error, defaulting to hold: {e}",
+                confidence=0.0,
+            )
+        except Exception as e:
+            logger.error(f"Error getting decision from Claude: {e}")
             from probablyprofit.api.exceptions import AgentException
             raise AgentException(f"Claude decision error: {e}")
