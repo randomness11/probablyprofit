@@ -10,6 +10,7 @@ from anthropic import Anthropic
 from loguru import logger
 
 from probablyprofit.agent.base import BaseAgent, Observation, Decision
+from probablyprofit.utils.ai_rate_limiter import AIRateLimiter, anthropic_rate_limited
 from probablyprofit.agent.formatters import ObservationFormatter, get_decision_schema
 from probablyprofit.api.client import PolymarketClient
 from probablyprofit.api.exceptions import AgentException, ValidationException
@@ -75,6 +76,9 @@ class AnthropicAgent(BaseAgent):
         self.strategy_prompt = strategy_prompt
         self.model = model
         self.temperature = temperature
+
+        # Initialize rate limiter for Anthropic API
+        self._rate_limiter = AIRateLimiter.get_or_create("anthropic")
 
         logger.info(f"AnthropicAgent '{name}' initialized with model {model}")
 
@@ -188,6 +192,9 @@ class AnthropicAgent(BaseAgent):
         logger.info(f"[{self.name}] Asking Claude for trading decision...")
 
         try:
+            # Apply rate limiting before API call
+            await self._rate_limiter.acquire(estimated_tokens=2000)
+
             # Format observation into prompt
             observation_prompt = self._format_observation(observation)
 
@@ -226,6 +233,13 @@ If you recommend holding or not trading, just respond with action: "hold" and ex
             # Extract response
             response_text = response.content[0].text
             logger.debug(f"Claude response: {response_text[:200]}...")
+
+            # Record successful request and token usage
+            self._rate_limiter.record_success()
+            if hasattr(response, 'usage') and response.usage:
+                self._rate_limiter.record_tokens(
+                    response.usage.input_tokens + response.usage.output_tokens
+                )
 
             # Parse into decision
             decision = self._parse_decision(response_text, observation)

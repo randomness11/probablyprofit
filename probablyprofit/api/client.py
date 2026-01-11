@@ -44,6 +44,8 @@ from probablyprofit.utils.resilience import (
     CircuitBreaker,
     RateLimiter,
 )
+from probablyprofit.utils.cache import AsyncTTLCache, market_cache, price_cache
+from probablyprofit.api.async_wrapper import run_sync, AsyncClientWrapper
 
 # Circuit breakers for different API endpoints
 _gamma_circuit = CircuitBreaker("polymarket-gamma", failure_threshold=5, timeout=60.0)
@@ -166,9 +168,14 @@ class PolymarketClient:
             timeout=30.0,
         )
 
-        # Cache for market data
-        self._market_cache: Dict[str, Market] = {}
+        # Cache for market data (now using TTL cache)
+        self._market_cache: AsyncTTLCache[Market] = AsyncTTLCache(
+            ttl=60.0, max_size=1000, name="polymarket-markets"
+        )
         self._positions_cache: Dict[str, Position] = {}
+
+        # Wrap sync client for async use if available
+        self._async_clob = AsyncClientWrapper(self.client, timeout=30.0) if self.client else None
 
         # Store credentials for auth headers
         self._api_creds = None
@@ -293,7 +300,8 @@ class PolymarketClient:
                         metadata=market_data,
                     )
                     markets.append(market)
-                    self._market_cache[market.condition_id] = market
+                    # Use TTL cache instead of dict
+                    self._market_cache.set(market.condition_id, market)
                 except Exception as parse_error:
                     logger.debug(f"Skipping market due to parse error: {parse_error}")
                     continue
@@ -321,9 +329,10 @@ class PolymarketClient:
         Returns:
             Market object or None
         """
-        # Check cache first
-        if condition_id in self._market_cache:
-            return self._market_cache[condition_id]
+        # Check TTL cache first
+        cached = self._market_cache.get(condition_id)
+        if cached is not None:
+            return cached
 
         try:
             response = await self.http_client.get(f"/markets/{condition_id}")
@@ -343,7 +352,7 @@ class PolymarketClient:
                 metadata=market_data,
             )
 
-            self._market_cache[condition_id] = market
+            self._market_cache.set(condition_id, market)
             return market
 
         except Exception as e:
@@ -446,7 +455,7 @@ class PolymarketClient:
                         # Outcome name not found in list, assume it might be valid or fail later
                         pass
 
-            # Create order using CLOB client
+            # Create order using CLOB client (sync method wrapped for async)
             order_args = OrderArgs(
                 price=price,
                 size=size,
@@ -454,7 +463,12 @@ class PolymarketClient:
                 token_id=token_id,
             )
 
-            resp = await self.client.create_order(order_args)
+            # Use async wrapper to safely call sync method
+            if self._async_clob:
+                resp = await self._async_clob.create_order(order_args)
+            else:
+                # Fallback: run in executor
+                resp = await run_sync(self.client.create_order, order_args)
 
             if not resp:
                 raise OrderException("Empty response from order API")
@@ -501,7 +515,11 @@ class PolymarketClient:
 
         try:
             logger.info(f"Cancelling order {order_id}")
-            resp = await self.client.cancel(order_id)
+            # Use async wrapper for sync method
+            if self._async_clob:
+                resp = await self._async_clob.cancel(order_id)
+            else:
+                resp = await run_sync(self.client.cancel, order_id)
             return True
         except Exception as e:
             logger.error(f"Error cancelling order: {e}")
