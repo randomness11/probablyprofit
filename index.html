@@ -3,13 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProbablyProfit - Polymarket & Kalshi bots in plain English</title>
-    <meta name="description" content="Open-source framework for traders who have the strategy but don't want to debug API wrappers. Define your edge in a sentence; we handle the execution.">
-    <meta property="og:title" content="ProbablyProfit — Polymarket & Kalshi bots in plain English">
-    <meta property="og:description" content="A framework for traders who have the strategy but don't want to spend 6 hours debugging an API wrapper.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>ProbablyProfit - AI-powered prediction market bots</title>
+    <meta name="description" content="Write your trading strategy in plain English. AI analyzes markets and executes trades. Works with Polymarket & Kalshi.">
+    <meta property="og:title" content="ProbablyProfit — AI prediction market bots in plain English">
+    <meta property="og:description" content="pip install, write strategy, profit. Open-source framework for AI-powered prediction market trading.">
     <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="icon" type="image/png" href="assets/logo.png">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- SVG Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%230d0d0d'/><text x='50' y='68' font-family='monospace' font-size='45' font-weight='bold' fill='%2322c55e' text-anchor='middle'>[±]</text></svg>">
 </head>
 
 <body>
@@ -26,9 +29,13 @@
             <div class="nav-links">
                 <a href="https://github.com/randomness11/probablyprofit/blob/main/README.md">Docs</a>
                 <a href="https://github.com/randomness11/probablyprofit/tree/main/examples">Examples</a>
+<a href="https://twitter.com/ankitkr0" class="nav-link-twitter" target="_blank">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    @ankitkr0
+                </a>
                 <a href="https://github.com/randomness11/probablyprofit" class="nav-cta">
                     <span class="pulse"></span>
-                    GitHub
+                    <span class="github-stars" id="githubStars">GitHub</span>
                 </a>
             </div>
         </nav>
@@ -37,7 +44,7 @@
             <div class="hero">
                 <div class="status-bar">
                     <span class="status-dot"></span>
-                    <span>v1.0 stable</span>
+                    <span>v0.1.0</span>
                     <span class="divider">/</span>
                     <span>open source</span>
                     <span class="divider">/</span>
@@ -45,13 +52,29 @@
                 </div>
 
                 <h1>
-                    <span class="line">Polymarket & Kalshi bots</span>
+                    <span class="line">AI prediction market bots</span>
                     <span class="line highlight">in plain English.</span>
                 </h1>
 
                 <p class="tagline">
-                    <strong>probablyprofit</strong> is a framework for traders who have the strategy but don't want to spend 6 hours debugging an API wrapper. Define your edge in a sentence; we handle the execution.
+                    <strong>probablyprofit</strong> turns your trading ideas into working bots. Write strategy in English, pick your AI (GPT-4, Claude, Gemini), and let it trade for you.
                 </p>
+
+                <!-- Platform Logos -->
+                <div class="platforms">
+                    <span class="platforms-label">Works with</span>
+                    <div class="platform-logos">
+                        <a href="https://polymarket.com" target="_blank" class="platform-logo" title="Polymarket">
+                            <img src="https://img.logo.dev/polymarket.com?token=pk_FkhQvSRITrC7pQ3urso_Cg&size=60" alt="Polymarket" />
+                            <span>Polymarket</span>
+                        </a>
+                        <span class="platforms-divider">+</span>
+                        <a href="https://kalshi.com" target="_blank" class="platform-logo" title="Kalshi">
+                            <img src="https://img.logo.dev/kalshi.com?token=pk_FkhQvSRITrC7pQ3urso_Cg&size=60" alt="Kalshi" />
+                            <span>Kalshi</span>
+                        </a>
+                    </div>
+                </div>
 
                 <div class="actions">
                     <a href="https://github.com/randomness11/probablyprofit" class="btn-primary">
@@ -77,65 +100,291 @@
                     <div class="window editor">
                         <div class="window-bar">
                             <div class="tab active">strategy.txt</div>
-                            <div class="tab">config.yml</div>
                         </div>
                         <div class="code-area">
                             <div class="line-numbers">
-                                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span>
+                                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span>
                             </div>
-                            <pre class="code"><span class="comment"># poll-driven election arb</span>
+                            <pre class="code"><span class="comment"># my_strategy.txt - just plain English!</span>
 
-<span class="keyword">use</span> polls <span class="keyword">from</span> <span class="string">"538"</span>, <span class="string">"rcp"</span>, <span class="string">"nyt"</span>
-<span class="keyword">use</span> sentiment <span class="keyword">from</span> <span class="string">"twitter"</span>, <span class="string">"polymarket"</span>
-<span class="keyword">use</span> odds <span class="keyword">from</span> <span class="string">"betfair"</span>
+You are a value investor for prediction markets.
 
-<span class="keyword">watch</span> <span class="string">"Trump Winner"</span>, <span class="string">"DeSantis Winner"</span>
-<span class="keyword">watch</span> <span class="string">"GOP Nominee"</span>, <span class="string">"Senate Control"</span>
+<span class="keyword">GOAL:</span> Find mispriced markets where the crowd
+is wrong, and profit from the correction.
 
-<span class="keyword">set</span> portfolio_max <span class="operator">=</span> <span class="number">$10k</span>
-<span class="keyword">set</span> conviction <span class="operator">=</span> avg(polls) <span class="operator">-</span> price
+<span class="keyword">RULES:</span>
+- BUY YES when market price is below your
+  estimated probability by 15%+
+- BUY NO when market price is above your
+  estimated probability by 15%+
+- Trade size: $5-20 per position
+- Maximum 5 open positions
 
-<span class="comment"># fade the public when data disagrees</span>
-<span class="keyword">when</span> conviction <span class="operator">&gt;</span> <span class="number">0.15</span> <span class="keyword">and</span> sentiment <span class="operator">&lt;</span> <span class="number">-0.2</span>
-  <span class="keyword">if</span> odds <span class="operator">&gt;</span> price <span class="operator">+</span> <span class="number">0.10</span>
-    <span class="function">buy</span> conviction <span class="operator">*</span> <span class="number">$1000</span> <span class="keyword">of</span> YES
-    <span class="function">hedge</span> <span class="keyword">with</span> <span class="string">"Senate Control"</span> <span class="keyword">at</span> <span class="number">20%</span>
-
-<span class="comment"># correlated momentum</span>
-<span class="keyword">when</span> <span class="string">"GOP Nominee"</span> moves <span class="number">5%</span> <span class="keyword">in</span> <span class="number">1h</span>
-  <span class="function">mirror</span> move <span class="keyword">on</span> <span class="string">"Trump Winner"</span>
-  <span class="function">notify</span> <span class="string">"correlation trigger"</span></pre>
+<span class="keyword">AVOID:</span>
+- Markets you don't understand
+- Prices between 40-60% (too uncertain)
+- Low volume markets (< $5,000)</pre>
                         </div>
                     </div>
 
                     <div class="connector">
                         <div class="connector-line"></div>
                         <div class="connector-dot"></div>
-                        <div class="connector-label">compiles to</div>
+                        <div class="connector-label">AI analyzes</div>
                     </div>
 
-                    <div class="window terminal">
+                    <div class="window terminal" id="terminal">
                         <div class="window-bar">
+                            <div class="window-controls">
+                                <button class="term-btn run" onclick="runTerminal()" title="Run">▶</button>
+                                <button class="term-btn reset" onclick="resetTerminal()" title="Reset">↺</button>
+                            </div>
                             <div class="window-title">
-                                <span class="status-icon"></span>
-                                terminal — running
+                                <span class="status-icon" id="terminalStatus"></span>
+                                <span id="terminalTitle">terminal — click ▶ to run</span>
                             </div>
                         </div>
-                        <div class="terminal-content">
-                            <div class="term-line"><span class="prompt">$</span> probablyprofit run --live</div>
-                            <div class="term-line output"></div>
-                            <div class="term-line"><span class="success">●</span> feeds: 538, rcp, nyt, twitter, betfair</div>
-                            <div class="term-line"><span class="success">●</span> watching 4 markets</div>
-                            <div class="term-line output"></div>
-                            <div class="term-line dim">polling data: trump 47.2% avg</div>
-                            <div class="term-line dim">polymarket:   $0.41 | sentiment -0.31</div>
-                            <div class="term-line dim">betfair odds: $0.52</div>
-                            <div class="term-line output"></div>
-                            <div class="term-line"><span class="info">→</span> conviction signal: +0.18</div>
-                            <div class="term-line"><span class="success">✓</span> <span class="highlight">bought $180 YES @ $0.41</span></div>
-                            <div class="term-line"><span class="success">✓</span> hedge: $36 on Senate Control</div>
-                            <div class="term-line output"></div>
-                            <div class="term-line dim">watching...<span class="cursor"></span></div>
+                        <div class="terminal-content" id="terminalContent">
+                            <div class="term-line"><span class="prompt">$</span> <span class="typing-cursor">_</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategy Examples Gallery -->
+            <div class="strategies-section">
+                <h2>Example strategies</h2>
+                <p class="strategies-subtitle">Copy, modify, and run. Each strategy is just a text file.</p>
+                <div class="strategies-gallery">
+                    <div class="strategy-card active" onclick="showStrategy(0)">
+                        <div class="strategy-icon"><i data-lucide="scale"></i></div>
+                        <h3>Value Investor</h3>
+                        <p>Find mispriced markets</p>
+                    </div>
+                    <div class="strategy-card" onclick="showStrategy(1)">
+                        <div class="strategy-icon"><i data-lucide="rocket"></i></div>
+                        <h3>Momentum</h3>
+                        <p>Ride trending markets</p>
+                    </div>
+                    <div class="strategy-card" onclick="showStrategy(2)">
+                        <div class="strategy-icon"><i data-lucide="target"></i></div>
+                        <h3>Contrarian</h3>
+                        <p>Bet against the crowd</p>
+                    </div>
+                    <div class="strategy-card" onclick="showStrategy(3)">
+                        <div class="strategy-icon"><i data-lucide="newspaper"></i></div>
+                        <h3>News Trader</h3>
+                        <p>React to breaking news</p>
+                    </div>
+                </div>
+                <div class="strategy-preview">
+                    <div class="strategy-preview-header">
+                        <span class="strategy-filename" id="strategyFilename">value_investor.txt</span>
+                        <button class="copy-strategy-btn" onclick="copyStrategy()">Copy</button>
+                    </div>
+                    <pre class="strategy-content" id="strategyContent">You are a value investor for prediction markets.
+
+GOAL: Find markets where price doesn't reflect true probability.
+Look for cognitive biases, recency bias, and overreaction.
+
+BUY when:
+- Market price is 15%+ below your estimate
+- High volume (>$10k traded)
+- Clear resolution criteria
+
+AVOID:
+- Markets with ambiguous outcomes
+- Prices between 40-60% (too uncertain)
+- Markets resolving in >3 months
+
+SIZING: $10-25 per trade, max 5 positions</pre>
+                </div>
+            </div>
+
+            <!-- Powered By Section -->
+            <div class="powered-section">
+                <span class="powered-label">Powered by your choice of AI</span>
+                <div class="ai-logos">
+                    <div class="ai-logo" title="OpenAI GPT-4">
+                        <img src="https://img.logo.dev/openai.com?token=pk_FkhQvSRITrC7pQ3urso_Cg&size=40" alt="OpenAI" />
+                        <span>GPT-4</span>
+                    </div>
+                    <div class="ai-logo" title="Anthropic Claude">
+                        <img src="https://img.logo.dev/anthropic.com?token=pk_FkhQvSRITrC7pQ3urso_Cg&size=40" alt="Anthropic" />
+                        <span>Claude</span>
+                    </div>
+                    <div class="ai-logo" title="Google Gemini">
+                        <img src="https://img.logo.dev/google.com?token=pk_FkhQvSRITrC7pQ3urso_Cg&size=40" alt="Google" />
+                        <span>Gemini</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features-section">
+                <h2>Built for serious traders</h2>
+                <div class="features-grid">
+                    <div class="feature">
+                        <div class="feature-icon"><i data-lucide="bot"></i></div>
+                        <h3>Multi-AI Support</h3>
+                        <p>GPT-4o, Claude, Gemini. Use one or let them vote together with ensemble mode.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon"><i data-lucide="trending-up"></i></div>
+                        <h3>Kelly Sizing</h3>
+                        <p>Auto-size positions based on edge. Quarter Kelly for safety, full Kelly for aggression.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon"><i data-lucide="shield"></i></div>
+                        <h3>Risk Management</h3>
+                        <p>Position limits, daily loss limits, auto stop-losses, and take-profit built in.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon"><i data-lucide="file-text"></i></div>
+                        <h3>Plain English</h3>
+                        <p>No code required. Write strategy like you'd explain to a friend. AI does the rest.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon"><i data-lucide="flask-conical"></i></div>
+                        <h3>Paper Trading</h3>
+                        <p>Test strategies with virtual money before going live. Backtest on historical data.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon"><i data-lucide="zap"></i></div>
+                        <h3>Real-time Streaming</h3>
+                        <p>WebSocket price feeds, live position monitoring, instant trade execution.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works Section -->
+            <div class="how-section">
+                <h2>How it works</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">01</div>
+                        <div class="step-content">
+                            <h3>Write your strategy</h3>
+                            <p>Describe your trading approach in plain English. No code needed - just explain what you want like you'd tell a friend.</p>
+                        </div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step">
+                        <div class="step-number">02</div>
+                        <div class="step-content">
+                            <h3>Pick your AI</h3>
+                            <p>Choose GPT-4, Claude, or Gemini. Each has different strengths. Use ensemble mode to combine their analysis.</p>
+                        </div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step">
+                        <div class="step-number">03</div>
+                        <div class="step-content">
+                            <h3>Let it trade</h3>
+                            <p>AI reads markets, applies your strategy, and executes trades. Paper trade first, then go live when ready.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="faq-section">
+                <h2>FAQ</h2>
+                <div class="faq-grid">
+                    <div class="faq-item" onclick="toggleFaq(this)">
+                        <div class="faq-question">
+                            <span>Is this safe to use?</span>
+                            <span class="faq-icon">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Yes. Built-in risk limits prevent catastrophic losses. Start with paper trading (no real money) to test strategies. When live, you control max position sizes, daily loss limits, and which markets the bot can trade.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item" onclick="toggleFaq(this)">
+                        <div class="faq-question">
+                            <span>How much does it cost?</span>
+                            <span class="faq-icon">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>ProbablyProfit is free and open source. You pay only for AI API usage (typically $0.01-0.05 per market analysis). No platform fees, no profit sharing, no subscriptions.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item" onclick="toggleFaq(this)">
+                        <div class="faq-question">
+                            <span>What markets can it trade?</span>
+                            <span class="faq-icon">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Currently supports Polymarket (crypto, requires VPN in US) and Kalshi (regulated US exchange). Both are binary prediction markets where you bet on real-world events.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item" onclick="toggleFaq(this)">
+                        <div class="faq-question">
+                            <span>Will this make me money?</span>
+                            <span class="faq-icon">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>No guarantees. Prediction markets are competitive. AI helps analyze faster, but edge comes from your strategy. Backtest thoroughly, start small, and never trade money you can't afford to lose.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Example Section -->
+            <div class="code-section">
+                <h2>Or use the Python API</h2>
+                <div class="code-example">
+                    <div class="code-header">
+                        <span class="code-lang">python</span>
+                        <button class="copy-code-btn" onclick="copyCode()">Copy</button>
+                    </div>
+                    <pre class="code-block"><span class="kw">from</span> probablyprofit <span class="kw">import</span> AnthropicAgent, PolymarketClient
+
+<span class="comment"># Connect to Polymarket</span>
+client = PolymarketClient(private_key=<span class="str">"0x..."</span>)
+
+<span class="comment"># Create AI agent with your strategy</span>
+agent = AnthropicAgent(
+    client=client,
+    strategy_prompt=<span class="str">"""
+    Buy undervalued YES positions on high-volume
+    political markets. Max $20 per trade.
+    """</span>
+)
+
+<span class="comment"># Start trading</span>
+<span class="kw">await</span> agent.run_loop()</pre>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="cta-section">
+                <div class="cta-content">
+                    <h2>Ready to start trading?</h2>
+                    <p>Install in seconds. Write strategy in minutes. Start paper trading immediately.</p>
+                    <div class="cta-actions">
+                        <a href="https://github.com/randomness11/probablyprofit" class="btn-primary">
+                            View on GitHub
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <div class="cta-install">
+                            <code>pip install probablyprofit</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="cta-terminal">
+                    <div class="mini-term">
+                        <div class="mini-term-bar">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                        </div>
+                        <div class="mini-term-content">
+                            <div><span class="prompt">$</span> pip install probablyprofit</div>
+                            <div class="dim">Installing...</div>
+                            <div><span class="success">✓</span> Successfully installed</div>
+                            <div><span class="prompt">$</span> probablyprofit run<span class="cursor"></span></div>
                         </div>
                     </div>
                 </div>
@@ -147,12 +396,19 @@
                 <a href="https://github.com/randomness11/probablyprofit">GitHub</a>
                 <a href="https://github.com/randomness11/probablyprofit/blob/main/README.md">Documentation</a>
                 <a href="https://github.com/randomness11/probablyprofit/issues">Issues</a>
+                <a href="https://twitter.com/ankitkr0" target="_blank">Twitter</a>
             </div>
-            <p class="copyright">MIT License — Open source, forever free</p>
+            <p class="copyright">
+                Made by <a href="https://twitter.com/ankitkr0" target="_blank" class="credit-link">@ankitkr0</a> — MIT License
+            </p>
         </footer>
     </div>
 
     <script src="assets/js/main.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
 </body>
 
 </html>
