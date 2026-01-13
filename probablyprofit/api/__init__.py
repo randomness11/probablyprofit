@@ -21,6 +21,9 @@ def __getattr__(name):
     elif name == "WebSocketClient":
         from probablyprofit.api.websocket import WebSocketClient
         return WebSocketClient
+    elif name == "OrderManager":
+        from probablyprofit.api.order_manager import OrderManager
+        return OrderManager
     raise AttributeError(f"module 'probablyprofit.api' has no attribute '{name}'")
 
 
@@ -31,4 +34,5 @@ __all__ = [
     "Position",
     "KalshiClient",
     "WebSocketClient",
+    "OrderManager",
 ]

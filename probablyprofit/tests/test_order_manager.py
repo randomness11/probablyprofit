@@ -314,7 +314,12 @@ class TestOrderManager:
     def mock_client(self):
         """Create a mock client."""
         client = MagicMock()
-        client.place_order = AsyncMock(return_value=MagicMock(order_id="ex_order_123"))
+        # Use side_effect to return unique order IDs
+        order_counter = [0]
+        def make_order_response():
+            order_counter[0] += 1
+            return MagicMock(order_id=f"ex_order_{order_counter[0]}")
+        client.place_order = AsyncMock(side_effect=lambda *args, **kwargs: make_order_response())
         client.cancel_order = AsyncMock(return_value=True)
         return client
 

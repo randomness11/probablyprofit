@@ -225,9 +225,9 @@ async def get_equity_curve(days: int = Query(30, ge=1, le=365)):
             return [
                 EquityCurvePoint(
                     timestamp=s.timestamp,
-                    equity=s.balance,
+                    equity=s.balance + s.total_exposure,
                     cash=s.balance,
-                    positions_value=0.0,  # TODO: Calculate from position snapshots
+                    positions_value=s.total_exposure,
                 )
                 for s in snapshots
             ]

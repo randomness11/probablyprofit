@@ -40,6 +40,12 @@ def __getattr__(name):
             return OpenAIAgent
         except ImportError:
             return None
+    elif name == "OrderManager":
+        from probablyprofit.api.order_manager import OrderManager
+        return OrderManager
+    elif name == "KalshiClient":
+        from probablyprofit.api.kalshi_client import KalshiClient
+        return KalshiClient
     raise AttributeError(f"module 'probablyprofit' has no attribute '{name}'")
 
 
@@ -51,6 +57,8 @@ __all__ = [
     "BacktestEngine",
     "GeminiAgent",
     "OpenAIAgent",
+    "OrderManager",
+    "KalshiClient",
 ]
 
 # Load environment variables (this is lightweight)

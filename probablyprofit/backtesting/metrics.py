@@ -190,6 +190,10 @@ class PerformanceMetrics:
             win_rate = 0.0
             profit_factor = 0.0
 
+        # Calculate avg win/loss
+        avg_win = sum(wins) / len(wins) if wins else 0.0
+        avg_loss = abs(sum(losses)) / len(losses) if losses else 0.0
+
         return {
             "sharpe_ratio": sharpe,
             "sortino_ratio": sortino,
@@ -198,4 +202,8 @@ class PerformanceMetrics:
             "win_rate": win_rate,
             "profit_factor": profit_factor,
             "total_trades": total_trades,
+            "winning_trades": len(wins),
+            "losing_trades": len(losses),
+            "avg_win": avg_win,
+            "avg_loss": avg_loss,
         }

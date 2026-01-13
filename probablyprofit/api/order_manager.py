@@ -298,6 +298,14 @@ class OrderBook:
         async with self._lock:
             key = order.order_id or order.client_order_id
 
+            # If order was stored by client_order_id but now has order_id, clean up old entry
+            if order.order_id and order.client_order_id and order.client_order_id in self._active:
+                del self._active[order.client_order_id]
+                # Update market index
+                if order.market_id in self._by_market:
+                    self._by_market[order.market_id].discard(order.client_order_id)
+                    self._by_market[order.market_id].add(key)
+
             if order.is_terminal:
                 # Move to history
                 if key in self._active:
