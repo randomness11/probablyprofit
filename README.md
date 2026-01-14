@@ -6,7 +6,12 @@
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776ab?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Status](https://img.shields.io/badge/Status-Beta-orange?style=flat-square)](https://github.com/randomness11/probablyprofit)
 [![Twitter](https://img.shields.io/badge/Twitter-@ankitkr0-1da1f2?style=flat-square&logo=twitter&logoColor=white)](https://twitter.com/ankitkr0)
+
+> **⚠️ BETA SOFTWARE** — This project is under active development and testing. Use at your own risk. Start with paper trading. Never risk money you can't afford to lose.
+
+**[Quick Start](#60-second-setup)** · **[Examples](#real-examples)** · **[Python API](#python-api)** · **[CLI](#cli-reference)**
 
 </div>
 
@@ -27,34 +32,50 @@ Avoid: politics you don't understand, markets < $5k volume, coin flips.
 One prompt. Claude reads 500+ markets. Finds mispriced bets. Executes trades. Manages risk. 24/7.
 
 ```bash
-pip install probablyprofit
+pip install probablyprofit[full]
 probablyprofit run -s strategy.txt --live
 ```
 
-**You just mass-deployed a AI trader squad to prediction markets.**
+---
+
+## What This Is
+
+Everyone's building AI wrappers. We built **infrastructure for AI-native trading**.
+
+| Platform | What It Is | ProbablyProfit |
+|----------|-----------|----------------|
+| **Polymarket** | $2B+ volume prediction market, crypto rails | ✅ Full support |
+| **Kalshi** | Regulated US exchange, real USD | ✅ Full support |
+
+**You describe your edge in English. The AI handles:**
+- Scanning hundreds of markets in seconds
+- Calculating expected value using reasoning
+- Sizing positions with Kelly criterion
+- Executing via CLOB (limit orders, not AMM slippage)
+- Tracking P&L, managing risk, never sleeping
 
 ---
 
-## What People Don't Get
+## 60-Second Setup
 
-Everyone's building AI wrappers. We built the trading terminal.
+```bash
+# 1. Install
+pip install probablyprofit[full]
 
-- **Polymarket** → $2B+ volume prediction market on crypto rails
-- **Kalshi** → Regulated US exchange, real USD
-- **ProbablyProfit** → The AI layer that trades both
+# 2. Configure
+cp .env.example .env
+# Add: ANTHROPIC_API_KEY and POLYMARKET_PRIVATE_KEY
 
-You describe your edge in English. The AI handles everything else:
-- Scans hundreds of markets in seconds
-- Calculates expected value using reasoning
-- Sizes positions with Kelly criterion
-- Executes via CLOB (limit orders, not AMM slippage)
-- Tracks P&L, manages risk, never sleeps
+# 3. Paper trade (virtual money - start here!)
+probablyprofit run "Buy YES under 0.30 on high-volume markets" --paper
 
-**This isn't a toy.** This is the infrastructure for AI-native trading.
+# 4. Go live when confident
+probablyprofit run -s my_strategy.txt --live
+```
 
 ---
 
-## The Stack
+## The Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -89,33 +110,17 @@ You describe your edge in English. The AI handles everything else:
 ┌──────────────────────┐         ┌────────────────────────────┐
 │     POLYMARKET       │         │          KALSHI            │
 │   Crypto / Global    │         │     Regulated / US         │
-│   ETH Settlement     │         │     USD Settlement         │
+│   USDC Settlement    │         │     USD Settlement         │
 └──────────────────────┘         └────────────────────────────┘
 ```
 
 ---
 
-## 60-Second Setup
+## Real Examples
 
-```bash
-# Install
-pip install probablyprofit[full]
+### Value Investor Strategy
 
-# Configure (interactive)
-probablyprofit setup
-
-# Paper trade first (virtual money)
-probablyprofit run "Buy YES under 0.30 on high-volume markets" --paper
-
-# Go live when ready
-probablyprofit run -s my_strategy.txt --live
-```
-
----
-
-## Real Example: Value Strategy
-
-Save this as `value.txt`:
+Save as `value.txt`:
 
 ```
 You are a value investor for prediction markets.
@@ -127,37 +132,80 @@ BUY YES when:
 - Your estimated probability is 20%+ higher than market price
 - Resolution criteria is unambiguous
 - Volume > $10,000 (liquidity matters)
-- Time to resolution > 7 days (avoid last-minute chaos)
+- Time to resolution > 7 days
 
 BUY NO when:
 - Market is 20%+ overpriced vs your estimate
 - Same liquidity/clarity requirements
 
-POSITION SIZING:
+SIZING:
 - Base: $20 per trade
 - High conviction (30%+ edge): $50
-- Maximum 5 concurrent positions
+- Max 5 concurrent positions
 - Never more than 20% of bankroll at risk
 
-EXIT RULES:
+EXIT:
 - Take profit at 2x
 - Stop loss at -30%
-- Close 24 hours before resolution
+- Close 24h before resolution
 
 AVOID:
-- Markets you don't deeply understand
-- Prices between 0.40-0.60 (coin flips)
-- Celebrity/meme markets (unpredictable)
-- Anything with ambiguous resolution
+- Markets you don't understand
+- Prices 0.40-0.60 (coin flips)
+- Celebrity/meme markets
+- Ambiguous resolution criteria
 ```
 
 Run it:
-
 ```bash
 probablyprofit run -s value.txt --paper
 ```
 
-Watch it scan markets, reason about probabilities, and execute trades.
+### More Strategy Ideas
+
+<details>
+<summary><b>Arbitrage Hunter</b></summary>
+
+```
+Find price discrepancies between related markets.
+If "Trump wins" is 0.45 and "Biden wins" is 0.58, something's wrong.
+The two should sum to ~1.00. Trade the gap.
+```
+</details>
+
+<details>
+<summary><b>News Reactor</b></summary>
+
+```
+You have access to recent knowledge. Find news that markets haven't priced in.
+When you find significant news affecting an outcome:
+- Verify the source
+- Estimate probability shift
+- Enter within 5 minutes
+- Size based on edge magnitude
+```
+</details>
+
+<details>
+<summary><b>Contrarian</b></summary>
+
+```
+When markets move 20%+ in a day on no real news, fade the move.
+Crowds overreact. Reversion is your edge.
+Wait for the spike. Enter against it. Exit when price normalizes.
+```
+</details>
+
+<details>
+<summary><b>Base Rate Specialist</b></summary>
+
+```
+Focus on categories where you know historical base rates.
+- Elections: incumbents win X% of the time
+- Sports: home teams win Y% of the time
+Find markets where price diverges from base rate.
+```
+</details>
 
 ---
 
@@ -171,17 +219,23 @@ from probablyprofit import (
     PolymarketClient,
     AnthropicAgent,
     RiskManager,
+    RiskLimits,
     OrderManager
 )
 
 async def main():
-    # Setup clients
+    # Setup
     client = PolymarketClient(private_key="0x...")
+
     risk = RiskManager(
         initial_capital=1000.0,
-        max_position_size=50.0,
-        max_drawdown=0.20  # Stop at 20% loss
+        limits=RiskLimits(
+            max_position_size=50.0,
+            max_total_exposure=500.0,
+            max_daily_loss=100.0
+        )
     )
+
     orders = OrderManager(client=client)
 
     # Create AI agent
@@ -192,11 +246,11 @@ async def main():
         strategy_prompt=open("value.txt").read()
     )
 
-    # Register callbacks
-    orders.on_fill = lambda order, fill: print(f"Filled: {fill.size}@{fill.price}")
-    orders.on_complete = lambda order: print(f"Order complete: {order.order_id}")
+    # Callbacks
+    orders.on_fill = lambda o, f: print(f"Filled: {f.size}@{f.price}")
+    orders.on_complete = lambda o: print(f"Complete: {o.order_id}")
 
-    # Run forever
+    # Run
     await agent.run_loop()
 
 asyncio.run(main())
@@ -206,62 +260,25 @@ asyncio.run(main())
 
 ## Features
 
-| Feature | What It Does |
-|---------|--------------|
-| **Plain English Strategies** | No code. Describe your edge like you'd explain to a friend. |
+| Feature | Description |
+|---------|-------------|
+| **Plain English Strategies** | No code needed. Describe your edge like you'd tell a friend. |
 | **Multi-AI Support** | Claude, GPT-4, Gemini. Or ensemble mode for consensus. |
-| **Order Management** | Full lifecycle: submit → partial fills → complete. Callbacks for everything. |
+| **Order Management** | Full lifecycle: submit → partial fills → complete. Event callbacks. |
 | **Risk Engine** | Kelly sizing, position limits, stop-loss, take-profit, max drawdown. |
-| **Dual Platform** | Polymarket (crypto, global) + Kalshi (regulated, US). Same interface. |
-| **Paper Trading** | Test strategies with virtual money before risking real capital. |
-| **Backtesting** | Simulate on historical data to validate your edge. |
-| **WebSocket Feeds** | Real-time price streams for reactive strategies. |
-| **Web Dashboard** | Monitor positions, P&L, and agent decisions in your browser. |
-| **Persistence** | SQLite storage for trades, decisions, and performance metrics. |
-
----
-
-## Strategy Ideas
-
-### Arbitrage Hunter
-```
-Find price discrepancies between related markets.
-If "Trump wins" is 0.45 and "Biden wins" is 0.58, something's wrong.
-The two should sum to ~1.00. Trade the gap.
-```
-
-### News Reactor
-```
-You have mass knowledge. You'll find news that market hasn't reacted to.
-When you find significant news affecting a market's outcome:
-- Verify the source
-- Estimate probability shift
-- Enter within 5 minutes
-- Size based on edge magnitude
-```
-
-### Contrarian
-```
-When markets move 20%+ in a day on no real news, fade the move.
-Crowds overreact. Reversion is your edge.
-Wait for the spike. Enter against it. Exit when price normalizes.
-```
-
-### Base Rate Specialist
-```
-Focus on categories where you know historical base rates.
-Elections: incumbents win X% of the time.
-Sports: home teams win Y% of the time.
-Find markets where price diverges significantly from base rate.
-```
+| **Dual Platform** | Polymarket + Kalshi. Same interface. |
+| **Paper Trading** | Test strategies with virtual money first. |
+| **Backtesting** | Validate on historical data. |
+| **WebSocket Feeds** | Real-time price streams. |
+| **Web Dashboard** | Monitor positions and P&L in browser. |
+| **Persistence** | SQLite storage for trades and metrics. |
 
 ---
 
 ## CLI Reference
 
 ```bash
-# Core commands
-probablyprofit setup                    # Interactive configuration
+# Trading
 probablyprofit run "strategy" --paper   # Paper trading
 probablyprofit run -s file.txt --live   # Live trading
 probablyprofit run --dry-run "..."      # Analyze only (no trades)
@@ -272,12 +289,13 @@ probablyprofit markets -q "trump"       # Search markets
 probablyprofit market <id>              # Market details
 
 # Portfolio
-probablyprofit balance                  # Check wallet
-probablyprofit positions                # View open positions
+probablyprofit balance                  # Wallet balance
+probablyprofit positions                # Open positions
 probablyprofit orders                   # View orders
 probablyprofit history                  # Trade history
 
 # Tools
+probablyprofit setup                    # Interactive config
 probablyprofit backtest -s strat.txt    # Backtest strategy
 probablyprofit dashboard                # Launch web UI
 ```
@@ -289,27 +307,27 @@ probablyprofit dashboard                # Launch web UI
 ### Environment Variables
 
 ```bash
-# AI Providers (pick one or more)
-export ANTHROPIC_API_KEY=sk-ant-...
-export OPENAI_API_KEY=sk-...
-export GOOGLE_API_KEY=...
+# AI Provider (pick one)
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+GOOGLE_API_KEY=...
 
-# Polymarket (Ethereum wallet)
-export POLYMARKET_PRIVATE_KEY=0x...
+# Polymarket
+POLYMARKET_PRIVATE_KEY=0x...
 
-# Kalshi (API credentials)
-export KALSHI_API_KEY=...
-export KALSHI_PRIVATE_KEY_PATH=/path/to/key.pem
+# Kalshi (optional)
+KALSHI_API_KEY=...
+KALSHI_PRIVATE_KEY_PATH=/path/to/key.pem
 ```
 
-### Config File
+### Config File (optional)
 
 ```yaml
 # ~/.probablyprofit/config.yaml
 
 agent:
   default_model: claude-sonnet-4-20250514
-  loop_interval: 300  # seconds between scans
+  loop_interval: 300
 
 risk:
   initial_capital: 1000.0
@@ -333,58 +351,63 @@ platforms:
 | [Polymarket](https://polymarket.com) | Crypto | Global* | USDC on Polygon | Ethereum wallet |
 | [Kalshi](https://kalshi.com) | Regulated | US only | USD | RSA key pair |
 
-*Polymarket blocks US IPs but doesn't KYC. Use at your own risk.
+*Polymarket blocks US IPs but doesn't KYC.
 
 ---
 
-## Why This Exists
+## Why Prediction Markets + AI
 
-Prediction markets are the most efficient information aggregation mechanism ever created. They're also massively inefficient in practice:
+Prediction markets are the most efficient price discovery mechanism. But they're also inefficient:
 
-- **Information asymmetry**: You know things the crowd doesn't
-- **Behavioral biases**: Crowds overreact to news, underreact to base rates
-- **Liquidity gaps**: Small markets are mispriced because nobody's watching
-- **Speed**: News moves faster than markets update
+- **Information asymmetry** — You know things the crowd doesn't
+- **Behavioral biases** — Overreaction to news, underreaction to base rates
+- **Liquidity gaps** — Small markets are mispriced
+- **Speed** — News moves faster than markets
 
-AI changes the game. It can:
-- Read and reason about hundreds of markets simultaneously
+AI changes everything:
+- Read and reason about hundreds of markets at once
 - Apply your edge consistently without emotion
 - Execute 24/7 without fatigue
-- Learn from outcomes (coming soon)
+- Scale your insight
 
-**ProbablyProfit is the interface between your insight and the market.**
+**ProbablyProfit = Your edge × AI execution**
 
 ---
 
-## Disclaimer
+## Risk Warning
 
-**This is experimental software. Use at your own risk.**
+> **🚨 THIS IS BETA SOFTWARE. YOU WILL PROBABLY LOSE MONEY.**
 
-- Trading involves risk of total loss
-- Past performance doesn't predict future results
-- AI can and will make mistakes
-- Only trade money you can afford to lose
-- The authors are not responsible for any losses
-- This is not financial advice
+**Seriously, read this:**
+
+- **This software is experimental** — Bugs exist. Features may break. APIs change.
+- **AI makes mistakes** — LLMs hallucinate. They will make bad trades. Count on it.
+- **Trading is risky** — You can lose 100% of your capital. Many traders do.
+- **Past performance means nothing** — Backtests lie. Paper trading isn't real.
+- **Start small** — Paper trade first. Then $10. Then $50. Scale slowly.
+- **Never risk rent money** — Only trade what you can literally set on fire.
+- **This is not financial advice** — We're developers, not financial advisors.
+- **You are responsible** — No refunds. No support guarantees. Your keys, your risk.
+
+By using this software, you accept full responsibility for any losses.
 
 ---
 
 ## Contributing
 
-PRs welcome. See [CONTRIBUTING.md](probablyprofit/CONTRIBUTING.md)
-
-Key areas:
-- New AI provider integrations
-- Additional exchange support
+PRs welcome. Key areas:
+- New exchange integrations
 - Strategy templates
 - Risk management improvements
 - Documentation
+
+See [CONTRIBUTING.md](probablyprofit/CONTRIBUTING.md)
 
 ---
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+MIT — see [LICENSE](LICENSE)
 
 ---
 
@@ -394,6 +417,6 @@ Built by [@ankitkr0](https://twitter.com/ankitkr0)
 
 **You give it a strategy. It gives you edge.**
 
-**[± ProbablyProfit](https://randomness11.github.io/probablyprofit/)**
+**[± ProbablyProfit](https://github.com/randomness11/probablyprofit)**
 
 </div>
