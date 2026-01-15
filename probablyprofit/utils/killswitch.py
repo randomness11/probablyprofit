@@ -175,6 +175,7 @@ class KillSwitch:
 
 class KillSwitchError(Exception):
     """Raised when kill switch is active."""
+
     pass
 
 

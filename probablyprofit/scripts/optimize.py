@@ -20,9 +20,11 @@ from loguru import logger
 
 from probablyprofit.agent.mock_agent import create_mock_agent_factory
 from probablyprofit.api.client import PolymarketClient
-from probablyprofit.backtesting.optimizer import (ParameterRange,
-                                                  StrategyOptimizer,
-                                                  print_optimization_report)
+from probablyprofit.backtesting.optimizer import (
+    ParameterRange,
+    StrategyOptimizer,
+    print_optimization_report,
+)
 from probablyprofit.risk.manager import RiskManager
 
 

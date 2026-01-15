@@ -683,6 +683,7 @@ def get_quick_status() -> Dict[str, Any]:
 
 class ConfigValidationError(Exception):
     """Raised when configuration validation fails."""
+
     pass
 
 
@@ -731,8 +732,7 @@ def validate_config(config: Config, strict: bool = False) -> List[str]:
         warnings.append("OpenAI API key doesn't start with 'sk-' - may be invalid")
 
     if config.anthropic_api_key and not (
-        config.anthropic_api_key.startswith("sk-ant-") or
-        config.anthropic_api_key.startswith("sk-")
+        config.anthropic_api_key.startswith("sk-ant-") or config.anthropic_api_key.startswith("sk-")
     ):
         warnings.append("Anthropic API key format looks unusual")
 
@@ -742,9 +742,7 @@ def validate_config(config: Config, strict: bool = False) -> List[str]:
         if key.startswith("0x"):
             key = key[2:]
         if len(key) != 64:
-            errors.append(
-                f"Private key should be 64 hex characters (got {len(key)})"
-            )
+            errors.append(f"Private key should be 64 hex characters (got {len(key)})")
         else:
             try:
                 int(key, 16)
@@ -753,19 +751,13 @@ def validate_config(config: Config, strict: bool = False) -> List[str]:
 
     # Validate risk settings
     if config.risk.max_position_pct <= 0 or config.risk.max_position_pct > 1:
-        warnings.append(
-            f"max_position_pct should be 0-1, got {config.risk.max_position_pct}"
-        )
+        warnings.append(f"max_position_pct should be 0-1, got {config.risk.max_position_pct}")
 
     if config.risk.max_daily_loss_pct <= 0 or config.risk.max_daily_loss_pct > 1:
-        warnings.append(
-            f"max_daily_loss_pct should be 0-1, got {config.risk.max_daily_loss_pct}"
-        )
+        warnings.append(f"max_daily_loss_pct should be 0-1, got {config.risk.max_daily_loss_pct}")
 
     if config.risk.kelly_fraction <= 0 or config.risk.kelly_fraction > 1:
-        warnings.append(
-            f"kelly_fraction should be 0-1, got {config.risk.kelly_fraction}"
-        )
+        warnings.append(f"kelly_fraction should be 0-1, got {config.risk.kelly_fraction}")
 
     # Validate API settings
     if config.api.http_timeout <= 0:
@@ -795,8 +787,8 @@ def validate_config(config: Config, strict: bool = False) -> List[str]:
 
     if strict and errors:
         raise ConfigValidationError(
-            f"Configuration validation failed with {len(errors)} error(s):\n" +
-            "\n".join(f"  - {e}" for e in errors)
+            f"Configuration validation failed with {len(errors)} error(s):\n"
+            + "\n".join(f"  - {e}" for e in errors)
         )
 
     return errors + warnings

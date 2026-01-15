@@ -24,6 +24,7 @@ from loguru import logger
 @dataclass
 class MetricPoint:
     """A single metric data point."""
+
     timestamp: datetime
     value: float
     labels: Dict[str, str] = field(default_factory=dict)
@@ -194,13 +195,17 @@ class Histogram:
                 for bucket in self.buckets:
                     cumulative += self._counts[label_key].get(bucket, 0)
                     if label_key:
-                        lines.append(f'{self.name}_bucket{{le="{bucket}",{label_key}}} {cumulative}')
+                        lines.append(
+                            f'{self.name}_bucket{{le="{bucket}",{label_key}}} {cumulative}'
+                        )
                     else:
                         lines.append(f'{self.name}_bucket{{le="{bucket}"}} {cumulative}')
 
                 # +Inf bucket
                 if label_key:
-                    lines.append(f'{self.name}_bucket{{le="+Inf",{label_key}}} {self._count[label_key]}')
+                    lines.append(
+                        f'{self.name}_bucket{{le="+Inf",{label_key}}} {self._count[label_key]}'
+                    )
                 else:
                     lines.append(f'{self.name}_bucket{{le="+Inf"}} {self._count[label_key]}')
 
@@ -329,25 +334,23 @@ def get_trading_metrics() -> Dict[str, Any]:
             "API request latency",
             buckets=(0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
         ),
-
         # Trading metrics
         "trades_total": registry.counter("pp_trades_total", "Total trades executed"),
         "trades_volume": registry.counter("pp_trades_volume_usd", "Total trading volume in USD"),
         "decisions": registry.counter("pp_decisions_total", "Total trading decisions"),
-
         # Portfolio metrics
         "balance": registry.gauge("pp_balance_usd", "Current balance in USD"),
         "positions": registry.gauge("pp_positions_count", "Number of open positions"),
         "exposure": registry.gauge("pp_exposure_pct", "Current exposure percentage"),
         "daily_pnl": registry.gauge("pp_daily_pnl_usd", "Daily P&L in USD"),
-
         # Agent metrics
         "agent_loops": registry.counter("pp_agent_loops_total", "Total agent loop iterations"),
         "agent_errors": registry.counter("pp_agent_errors_total", "Total agent errors"),
-
         # WebSocket metrics
         "ws_messages": registry.counter("pp_websocket_messages_total", "Total WebSocket messages"),
-        "ws_reconnects": registry.counter("pp_websocket_reconnects_total", "WebSocket reconnections"),
+        "ws_reconnects": registry.counter(
+            "pp_websocket_reconnects_total", "WebSocket reconnections"
+        ),
     }
 
 

@@ -9,8 +9,7 @@ from typing import Any, Dict, List
 from loguru import logger
 
 from probablyprofit.plugins import PluginType, registry
-from probablyprofit.plugins.base import (DataSourcePlugin, OutputPlugin,
-                                         PluginConfig, StrategyPlugin)
+from probablyprofit.plugins.base import DataSourcePlugin, OutputPlugin, PluginConfig, StrategyPlugin
 from probablyprofit.plugins.hooks import Hook, hooks
 
 # ============================================================================

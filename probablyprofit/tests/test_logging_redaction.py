@@ -117,9 +117,7 @@ class TestRedactDict:
         from probablyprofit.utils.logging import redact_dict
 
         # redact_dict looks at key names, list items may need pattern matching
-        data = {
-            "api_keys": ["sk-key1-abcdefghijklmnop", "sk-key2-qrstuvwxyz123456"]
-        }
+        data = {"api_keys": ["sk-key1-abcdefghijklmnop", "sk-key2-qrstuvwxyz123456"]}
         result = redact_dict(data)
 
         # The key "api_keys" contains "key" so values should be redacted

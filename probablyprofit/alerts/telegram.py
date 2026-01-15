@@ -81,9 +81,7 @@ class TelegramAlerter:
         self.bot_token = bot_token or config.telegram.bot_token
         self.chat_id = chat_id or config.telegram.chat_id
         self.alert_levels = set(
-            AlertLevel(level) for level in (
-                alert_levels or config.telegram.alert_levels
-            )
+            AlertLevel(level) for level in (alert_levels or config.telegram.alert_levels)
         )
         self.rate_limit = rate_limit_per_minute
 
@@ -240,9 +238,7 @@ class TelegramAlerter:
                     logger.debug(f"Telegram alert sent: {title}")
                     return True
                 else:
-                    logger.error(
-                        f"Telegram API error: {response.status_code} - {response.text}"
-                    )
+                    logger.error(f"Telegram API error: {response.status_code} - {response.text}")
                     return False
 
             except Exception as e:
@@ -294,8 +290,7 @@ class TelegramAlerter:
         """Alert when approaching daily loss limit."""
         return await self.warning(
             "Daily Loss Limit Approaching",
-            f"Current loss: ${abs(current_loss):.2f}\n"
-            f"Limit: ${max_loss:.2f} ({pct:.0%} used)",
+            f"Current loss: ${abs(current_loss):.2f}\n" f"Limit: ${max_loss:.2f} ({pct:.0%} used)",
             current_loss=current_loss,
             max_loss=max_loss,
             usage_pct=pct,
@@ -353,8 +348,7 @@ class TelegramAlerter:
         """Alert when bot starts."""
         return await self.info(
             "Bot Started",
-            f"Agent: {agent_name}\n"
-            f"Capital: ${capital:.2f}",
+            f"Agent: {agent_name}\n" f"Capital: ${capital:.2f}",
             agent=agent_name,
             capital=capital,
         )
@@ -368,9 +362,7 @@ class TelegramAlerter:
         """Alert when bot stops."""
         return await self.info(
             "Bot Stopped",
-            f"Agent: {agent_name}\n"
-            f"Reason: {reason}\n"
-            f"Final Capital: ${final_capital:.2f}",
+            f"Agent: {agent_name}\n" f"Reason: {reason}\n" f"Final Capital: ${final_capital:.2f}",
             agent=agent_name,
             reason=reason,
             final_capital=final_capital,

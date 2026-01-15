@@ -18,11 +18,13 @@ from loguru import logger
 
 class ConnectionState(Enum):
     """WebSocket connection states."""
+
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
     CONNECTED = "connected"
     RECONNECTING = "reconnecting"
     FAILED = "failed"
+
 
 try:
     import websockets
@@ -421,7 +423,9 @@ class WebSocketClient:
             await asyncio.sleep(wait_time)
 
             if await self.connect():
-                logger.info(f"[WebSocket] Reconnected successfully after {self._reconnect_count} attempt(s)")
+                logger.info(
+                    f"[WebSocket] Reconnected successfully after {self._reconnect_count} attempt(s)"
+                )
                 return
 
         logger.error("[WebSocket] Max reconnection attempts reached")
@@ -514,9 +518,7 @@ class WebSocketClient:
             "last_message_time": (
                 self._last_message_time.isoformat() if self._last_message_time else None
             ),
-            "connected_at": (
-                self._connected_at.isoformat() if self._connected_at else None
-            ),
+            "connected_at": (self._connected_at.isoformat() if self._connected_at else None),
             "uptime_seconds": uptime,
             "reconnect_attempts": self._reconnect_count,
             "total_reconnects": self._total_reconnects,

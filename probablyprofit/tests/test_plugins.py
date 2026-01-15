@@ -4,11 +4,14 @@ Tests for the plugin system.
 
 import pytest
 
-from probablyprofit.plugins.base import (BasePlugin, DataSourcePlugin,
-                                         OutputPlugin, PluginConfig,
-                                         StrategyPlugin)
-from probablyprofit.plugins.registry import (PluginInfo, PluginRegistry,
-                                             PluginType)
+from probablyprofit.plugins.base import (
+    BasePlugin,
+    DataSourcePlugin,
+    OutputPlugin,
+    PluginConfig,
+    StrategyPlugin,
+)
+from probablyprofit.plugins.registry import PluginInfo, PluginRegistry, PluginType
 
 
 class TestPluginConfig:

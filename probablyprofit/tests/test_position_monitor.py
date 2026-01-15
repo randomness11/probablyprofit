@@ -10,9 +10,11 @@ import pytest
 
 from probablyprofit.api.client import Position
 from probablyprofit.risk.manager import RiskManager
-from probablyprofit.trading.position_monitor import (MonitoredPosition,
-                                                     PositionAlert,
-                                                     PositionMonitor)
+from probablyprofit.trading.position_monitor import (
+    MonitoredPosition,
+    PositionAlert,
+    PositionMonitor,
+)
 
 
 @pytest.fixture

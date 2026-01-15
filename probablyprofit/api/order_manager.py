@@ -18,11 +18,14 @@ from typing import Any, Callable, Dict, List, Optional, Set
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from probablyprofit.api.exceptions import (OrderCancelError, OrderException,
-                                           OrderModifyError,
-                                           OrderNotFoundError,
-                                           PartialFillError,
-                                           ValidationException)
+from probablyprofit.api.exceptions import (
+    OrderCancelError,
+    OrderException,
+    OrderModifyError,
+    OrderNotFoundError,
+    PartialFillError,
+    ValidationException,
+)
 from probablyprofit.config import get_config
 
 
@@ -465,7 +468,7 @@ class OrderManager:
                     await self.cancel_order(
                         order.order_id or order.client_order_id,
                         reason=f"Partial fill timeout ({order.fill_ratio:.1%} filled, "
-                               f"remaining {order.remaining_size:.2f})"
+                        f"remaining {order.remaining_size:.2f})",
                     )
                     cancelled_orders.append(order)
 

@@ -10,16 +10,22 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from loguru import logger
 
-from probablyprofit.web.api.models import (ArbitrageOpportunityResponse,
-                                           ArbitrageResponse, CorrelationGroup,
-                                           EquityCurvePoint, ExposureResponse,
-                                           HealthResponse, MarketResponse,
-                                           PaperPortfolioResponse,
-                                           PaperPositionResponse,
-                                           PaperTradeResponse,
-                                           PerformanceResponse,
-                                           PositionExposure, StatusResponse,
-                                           TradeResponse)
+from probablyprofit.web.api.models import (
+    ArbitrageOpportunityResponse,
+    ArbitrageResponse,
+    CorrelationGroup,
+    EquityCurvePoint,
+    ExposureResponse,
+    HealthResponse,
+    MarketResponse,
+    PaperPortfolioResponse,
+    PaperPositionResponse,
+    PaperTradeResponse,
+    PerformanceResponse,
+    PositionExposure,
+    StatusResponse,
+    TradeResponse,
+)
 
 router = APIRouter(prefix="/api")
 
@@ -626,8 +632,7 @@ def _get_arbitrage_detector():
     """Get or create the arbitrage detector singleton."""
     global _arbitrage_detector
     if _arbitrage_detector is None:
-        from probablyprofit.arbitrage.detector import (ArbitrageConfig,
-                                                       ArbitrageDetector)
+        from probablyprofit.arbitrage.detector import ArbitrageConfig, ArbitrageDetector
 
         _arbitrage_detector = ArbitrageDetector(config=ArbitrageConfig(min_profit_pct=0.02))
     return _arbitrage_detector

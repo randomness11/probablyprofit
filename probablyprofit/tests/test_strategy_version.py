@@ -263,8 +263,7 @@ class TestGlobalFunctions:
 
     def test_get_active_strategy(self):
         """Test get_active_strategy convenience function."""
-        from probablyprofit.agent.strategy_version import (get_active_strategy,
-                                                            register_strategy)
+        from probablyprofit.agent.strategy_version import get_active_strategy, register_strategy
 
         register_strategy("Current active strategy")
         active = get_active_strategy()

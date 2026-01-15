@@ -47,6 +47,7 @@ def _get_keyring():
     """Lazy import keyring to handle optional dependency."""
     try:
         import keyring
+
         return keyring
     except ImportError:
         return None
@@ -58,6 +59,7 @@ def _get_cryptography():
         from cryptography.fernet import Fernet
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
         return {"Fernet": Fernet, "PBKDF2HMAC": PBKDF2HMAC, "hashes": hashes}
     except ImportError:
         return None
@@ -380,11 +382,13 @@ class SecretsManager:
     def _serialize(self, data: Dict[str, str]) -> bytes:
         """Serialize secrets dict to bytes."""
         import json
+
         return json.dumps(data).encode("utf-8")
 
     def _deserialize(self, data: bytes) -> Dict[str, str]:
         """Deserialize bytes to secrets dict."""
         import json
+
         return json.loads(data.decode("utf-8"))
 
     def get_all(self) -> Dict[str, Optional[str]]:
@@ -420,8 +424,7 @@ class SecretsManager:
             "keyring_available": self._keyring_available,
             "encryption_available": self._crypto_available,
             "keyring_backend": (
-                type(self._keyring.get_keyring()).__name__
-                if self._keyring_available else None
+                type(self._keyring.get_keyring()).__name__ if self._keyring_available else None
             ),
         }
 

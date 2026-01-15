@@ -8,11 +8,16 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from probablyprofit.api.exceptions import NetworkException, RateLimitException
-from probablyprofit.utils.resilience import (CircuitBreaker, CircuitState,
-                                             RateLimiter, RetryConfig,
-                                             calculate_delay,
-                                             get_resilience_status,
-                                             reset_all_circuit_breakers, retry)
+from probablyprofit.utils.resilience import (
+    CircuitBreaker,
+    CircuitState,
+    RateLimiter,
+    RetryConfig,
+    calculate_delay,
+    get_resilience_status,
+    reset_all_circuit_breakers,
+    retry,
+)
 
 
 class TestRetry:

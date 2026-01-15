@@ -15,10 +15,12 @@ import asyncio
 from loguru import logger
 
 from probablyprofit.plugins import PluginType, registry
-from probablyprofit.plugins.examples import (MomentumStrategyPlugin,
-                                             SlackNotificationPlugin,
-                                             WhaleTrackerPlugin,
-                                             list_example_plugins)
+from probablyprofit.plugins.examples import (
+    MomentumStrategyPlugin,
+    SlackNotificationPlugin,
+    WhaleTrackerPlugin,
+    list_example_plugins,
+)
 from probablyprofit.plugins.hooks import Hook, hooks
 
 

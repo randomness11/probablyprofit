@@ -3,8 +3,7 @@
 from probablyprofit.agent.anthropic_agent import AnthropicAgent
 from probablyprofit.agent.base import BaseAgent
 from probablyprofit.agent.ensemble import EnsembleAgent, VotingStrategy
-from probablyprofit.agent.fallback import (FallbackAgent, FallbackConfig,
-                                           create_fallback_agent)
+from probablyprofit.agent.fallback import FallbackAgent, FallbackConfig, create_fallback_agent
 
 # Optional AI providers
 try:

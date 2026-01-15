@@ -168,7 +168,9 @@ class TTLCache(Generic[T]):
                 del self._cache[key]
 
             if expired_keys:
-                logger.debug(f"[Cache] '{self.name}' cleaned up {len(expired_keys)} expired entries")
+                logger.debug(
+                    f"[Cache] '{self.name}' cleaned up {len(expired_keys)} expired entries"
+                )
 
             return len(expired_keys)
 

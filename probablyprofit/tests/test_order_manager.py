@@ -7,11 +7,16 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from probablyprofit.api.exceptions import (OrderCancelError, OrderModifyError,
-                                           OrderNotFoundError)
-from probablyprofit.api.order_manager import (Fill, ManagedOrder, OrderBook,
-                                              OrderManager, OrderSide,
-                                              OrderStatus, OrderType)
+from probablyprofit.api.exceptions import OrderCancelError, OrderModifyError, OrderNotFoundError
+from probablyprofit.api.order_manager import (
+    Fill,
+    ManagedOrder,
+    OrderBook,
+    OrderManager,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+)
 
 
 class TestManagedOrder:

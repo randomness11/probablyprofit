@@ -7,9 +7,7 @@ import tempfile
 
 import pytest
 
-from probablyprofit.agent.strategy import (CustomStrategy,
-                                           MeanReversionStrategy,
-                                           NewsTradingStrategy)
+from probablyprofit.agent.strategy import CustomStrategy, MeanReversionStrategy, NewsTradingStrategy
 
 
 class TestMeanReversionStrategy:

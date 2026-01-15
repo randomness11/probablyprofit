@@ -11,10 +11,14 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from probablyprofit.storage.models import (BalanceSnapshot, DecisionRecord,
-                                           ObservationRecord,
-                                           PerformanceMetric, PositionSnapshot,
-                                           TradeRecord)
+from probablyprofit.storage.models import (
+    BalanceSnapshot,
+    DecisionRecord,
+    ObservationRecord,
+    PerformanceMetric,
+    PositionSnapshot,
+    TradeRecord,
+)
 
 
 class TradeRepository:

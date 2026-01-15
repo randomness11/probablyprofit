@@ -5,6 +5,7 @@ Revises:
 Create Date: 2025-01-15
 
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -93,8 +94,12 @@ def upgrade() -> None:
         sa.Column("unrealized_pnl", sa.Float(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_position_snapshots_timestamp"), "position_snapshots", ["timestamp"], unique=False)
-    op.create_index(op.f("ix_position_snapshots_market_id"), "position_snapshots", ["market_id"], unique=False)
+    op.create_index(
+        op.f("ix_position_snapshots_timestamp"), "position_snapshots", ["timestamp"], unique=False
+    )
+    op.create_index(
+        op.f("ix_position_snapshots_market_id"), "position_snapshots", ["market_id"], unique=False
+    )
 
     # Create balance_snapshots table
     op.create_table(
@@ -108,7 +113,9 @@ def upgrade() -> None:
         sa.Column("total_pnl", sa.Float(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_balance_snapshots_timestamp"), "balance_snapshots", ["timestamp"], unique=False)
+    op.create_index(
+        op.f("ix_balance_snapshots_timestamp"), "balance_snapshots", ["timestamp"], unique=False
+    )
 
     # Create performance_metrics table
     op.create_table(
@@ -127,7 +134,9 @@ def upgrade() -> None:
         sa.Column("profit_factor", sa.Float(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_performance_metrics_date"), "performance_metrics", ["date"], unique=False)
+    op.create_index(
+        op.f("ix_performance_metrics_date"), "performance_metrics", ["date"], unique=False
+    )
 
     # Create backtest_runs table
     op.create_table(

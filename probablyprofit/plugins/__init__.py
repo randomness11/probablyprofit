@@ -9,9 +9,14 @@ Extensible plugin architecture for adding custom:
 - Output handlers
 """
 
-from probablyprofit.plugins.base import (AgentPlugin, BasePlugin,
-                                         DataSourcePlugin, OutputPlugin,
-                                         RiskPlugin, StrategyPlugin)
+from probablyprofit.plugins.base import (
+    AgentPlugin,
+    BasePlugin,
+    DataSourcePlugin,
+    OutputPlugin,
+    RiskPlugin,
+    StrategyPlugin,
+)
 from probablyprofit.plugins.hooks import Hook, HookManager
 from probablyprofit.plugins.registry import PluginRegistry, PluginType
 

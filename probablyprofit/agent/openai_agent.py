@@ -12,16 +12,16 @@ from loguru import logger
 from openai import OpenAI
 
 from probablyprofit.agent.base import BaseAgent, Decision, Observation
-from probablyprofit.agent.formatters import (ObservationFormatter,
-                                             get_decision_schema)
+from probablyprofit.agent.formatters import ObservationFormatter, get_decision_schema
 from probablyprofit.api.client import PolymarketClient
-from probablyprofit.api.exceptions import (AgentException, NetworkException,
-                                           ValidationException)
+from probablyprofit.api.exceptions import AgentException, NetworkException, ValidationException
 from probablyprofit.risk.manager import RiskManager
 from probablyprofit.utils.resilience import retry
-from probablyprofit.utils.validators import (validate_confidence,
-                                             validate_strategy,
-                                             wrap_strategy_safely)
+from probablyprofit.utils.validators import (
+    validate_confidence,
+    validate_strategy,
+    wrap_strategy_safely,
+)
 
 
 class OpenAIAgent(BaseAgent):

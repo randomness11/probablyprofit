@@ -40,12 +40,15 @@ except ImportError:
     KalshiSDK = None
     SDK_AVAILABLE = False
 
-from probablyprofit.api.exceptions import (APIException,
-                                           AuthenticationException,
-                                           NetworkException, OrderException,
-                                           OrderNotFoundError,
-                                           RateLimitException,
-                                           ValidationException)
+from probablyprofit.api.exceptions import (
+    APIException,
+    AuthenticationException,
+    NetworkException,
+    OrderException,
+    OrderNotFoundError,
+    RateLimitException,
+    ValidationException,
+)
 from probablyprofit.config import get_config
 
 

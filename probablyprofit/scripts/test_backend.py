@@ -29,8 +29,7 @@ async def test_imports():
 
         print("  ✅ web.api.routes imported")
 
-        from probablyprofit.web.api.websocket import (manager,
-                                                      websocket_endpoint)
+        from probablyprofit.web.api.websocket import manager, websocket_endpoint
 
         print("  ✅ web.api.websocket imported")
 
@@ -83,11 +82,8 @@ async def test_database_integration():
     print("\n🧪 Testing database integration...")
 
     try:
-        from probablyprofit.storage.database import (get_db_manager,
-                                                     initialize_database)
-        from probablyprofit.storage.models import (DecisionRecord,
-                                                   ObservationRecord,
-                                                   TradeRecord)
+        from probablyprofit.storage.database import get_db_manager, initialize_database
+        from probablyprofit.storage.models import DecisionRecord, ObservationRecord, TradeRecord
 
         print("  ✅ Database models imported")
 
@@ -111,8 +107,7 @@ async def test_mock_agent_state():
     try:
         from datetime import datetime
 
-        from probablyprofit.agent.base import (AgentMemory, BaseAgent,
-                                               Decision, Observation)
+        from probablyprofit.agent.base import AgentMemory, BaseAgent, Decision, Observation
         from probablyprofit.risk.manager import RiskManager
         from probablyprofit.web.app import get_agent_state, set_agent_state
 
@@ -156,11 +151,13 @@ async def test_api_endpoints():
     try:
         from datetime import datetime
 
-        from probablyprofit.web.api.models import (EquityCurvePoint,
-                                                   MarketResponse,
-                                                   PerformanceResponse,
-                                                   StatusResponse,
-                                                   TradeResponse)
+        from probablyprofit.web.api.models import (
+            EquityCurvePoint,
+            MarketResponse,
+            PerformanceResponse,
+            StatusResponse,
+            TradeResponse,
+        )
 
         # Test model creation
         status = StatusResponse(

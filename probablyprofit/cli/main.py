@@ -49,8 +49,13 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
-from probablyprofit.config import (Config, get_quick_status, load_config,
-                                   save_config, validate_api_key)
+from probablyprofit.config import (
+    Config,
+    get_quick_status,
+    load_config,
+    save_config,
+    validate_api_key,
+)
 
 console = Console()
 
@@ -217,7 +222,9 @@ def setup(reconfigure: bool = False):
 
     # Explain trading modes
     console.print("\n[bold cyan]Trading Modes[/bold cyan]")
-    console.print("  [yellow]Dry-run[/yellow]  - Simulate trades on live market data (safe for testing)")
+    console.print(
+        "  [yellow]Dry-run[/yellow]  - Simulate trades on live market data (safe for testing)"
+    )
     console.print("  [cyan]Paper[/cyan]    - Virtual portfolio with simulated money")
     console.print("  [red]Live[/red]     - Real money trades (requires wallet + confirmation)")
     console.print("[dim]Switch modes with --dry-run, --paper, or --live flags[/dim]\n")
@@ -304,9 +311,7 @@ def setup(reconfigure: bool = False):
     "--dry-run", "-d", is_flag=True, default=None, help="Simulate trades without real money"
 )
 @click.option("--live", is_flag=True, help="Enable live trading (overrides dry-run)")
-@click.option(
-    "--confirm-live", is_flag=True, help="Confirm live trading (required for live mode)"
-)
+@click.option("--confirm-live", is_flag=True, help="Confirm live trading (required for live mode)")
 @click.option("--skip-preflight", is_flag=True, help="Skip preflight checks (not recommended)")
 @click.option(
     "--agent",
@@ -437,7 +442,9 @@ def run(
             console.print()
 
             if not report.passed:
-                console.print("[red]Preflight checks FAILED. Fix the issues above before trading.[/red]")
+                console.print(
+                    "[red]Preflight checks FAILED. Fix the issues above before trading.[/red]"
+                )
                 return
         except ImportError:
             console.print("[yellow]Preflight checks not available, skipping...[/yellow]\n")
@@ -451,13 +458,12 @@ def run(
             console.print(
                 "[yellow]To enable live trading, you must pass --confirm-live flag.[/yellow]"
             )
-            console.print("Example: probablyprofit run --live --confirm-live \"Your strategy\"\n")
+            console.print('Example: probablyprofit run --live --confirm-live "Your strategy"\n')
             return
 
         # Double confirmation via interactive prompt
         confirmation = Prompt.ask(
-            "[bold red]Type 'YES' to confirm live trading[/bold red]",
-            default="no"
+            "[bold red]Type 'YES' to confirm live trading[/bold red]", default="no"
         )
 
         if confirmation != "YES":
@@ -468,6 +474,7 @@ def run(
 
         # Log to audit file
         import time
+
         audit_file = Path.home() / ".probablyprofit" / "live_trading.log"
         audit_file.parent.mkdir(parents=True, exist_ok=True)
         with open(audit_file, "a") as f:
@@ -519,14 +526,11 @@ def run(
 
         # Import the right agent
         if selected_agent == "openai":
-            from probablyprofit.agent.openai_agent import \
-                OpenAIAgent as AgentClass
+            from probablyprofit.agent.openai_agent import OpenAIAgent as AgentClass
         elif selected_agent == "anthropic":
-            from probablyprofit.agent.anthropic_agent import \
-                AnthropicAgent as AgentClass
+            from probablyprofit.agent.anthropic_agent import AnthropicAgent as AgentClass
         else:
-            from probablyprofit.agent.gemini_agent import \
-                GeminiAgent as AgentClass
+            from probablyprofit.agent.gemini_agent import GeminiAgent as AgentClass
 
         # Initialize client
         client = PolymarketClient(private_key=config.private_key)
@@ -583,8 +587,7 @@ def run(
 
         # Enable news if requested
         if news:
-            from probablyprofit.agent.intelligence import \
-                wrap_with_intelligence
+            from probablyprofit.agent.intelligence import wrap_with_intelligence
 
             agent_instance = wrap_with_intelligence(agent_instance, enable_news=True)
             console.print("[dim]News intelligence enabled[/dim]\n")
@@ -1096,7 +1099,9 @@ def emergency_stop(reason: str):
         kill_switch = get_kill_switch()
 
         if kill_switch.is_active():
-            console.print(f"[yellow]Kill switch already active: {kill_switch.get_reason()}[/yellow]")
+            console.print(
+                f"[yellow]Kill switch already active: {kill_switch.get_reason()}[/yellow]"
+            )
         else:
             activate_kill_switch(reason)
             console.print(f"[red]Kill switch ACTIVATED[/red]")
@@ -1242,8 +1247,8 @@ def backup_db(output: Optional[str], compress: bool):
             if compress:
                 import gzip
 
-                with open(db_path, 'rb') as f_in:
-                    with gzip.open(output, 'wb') as f_out:
+                with open(db_path, "rb") as f_in:
+                    with gzip.open(output, "wb") as f_out:
                         shutil.copyfileobj(f_in, f_out)
             else:
                 shutil.copy2(db_path, output)
@@ -1323,8 +1328,8 @@ def restore_db(backup_file: str, force: bool):
             if backup_file.endswith(".gz"):
                 import gzip
 
-                with gzip.open(backup_file, 'rb') as f_in:
-                    with open(db_path, 'wb') as f_out:
+                with gzip.open(backup_file, "rb") as f_in:
+                    with open(db_path, "wb") as f_out:
                         shutil.copyfileobj(f_in, f_out)
             else:
                 shutil.copy2(backup_file, db_path)

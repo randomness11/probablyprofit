@@ -221,7 +221,7 @@ class ArbitrageDetector:
 
         # Sort by profit and limit
         self._opportunities.sort(key=lambda o: o.net_profit_pct, reverse=True)
-        self._opportunities = self._opportunities[: 10]
+        self._opportunities = self._opportunities[:10]
 
         self._last_scan = datetime.now()
 

@@ -273,9 +273,12 @@ class TestHelperFunctions:
 
         metrics = get_trading_metrics()
         # Just verify it doesn't raise
-        assert metrics["api_requests"].get(
-            labels={"endpoint": "/api/markets", "method": "GET", "status": "200"}
-        ) >= 1
+        assert (
+            metrics["api_requests"].get(
+                labels={"endpoint": "/api/markets", "method": "GET", "status": "200"}
+            )
+            >= 1
+        )
 
     def test_record_trade(self):
         """Test recording trade."""
@@ -284,14 +287,11 @@ class TestHelperFunctions:
         record_trade("BUY", 100.0, "polymarket")
 
         metrics = get_trading_metrics()
-        assert metrics["trades_total"].get(
-            labels={"side": "BUY", "platform": "polymarket"}
-        ) >= 1
+        assert metrics["trades_total"].get(labels={"side": "BUY", "platform": "polymarket"}) >= 1
 
     def test_update_portfolio_metrics(self):
         """Test updating portfolio metrics."""
-        from probablyprofit.utils.metrics import (get_trading_metrics,
-                                                   update_portfolio_metrics)
+        from probablyprofit.utils.metrics import get_trading_metrics, update_portfolio_metrics
 
         update_portfolio_metrics(
             balance=5000.0,

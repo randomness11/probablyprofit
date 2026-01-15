@@ -31,21 +31,29 @@ except ImportError:
 # Import eth-account for wallet operations when py-clob-client unavailable
 try:
     from eth_account import Account
+
     eth_account_avail = True
 except ImportError:
     Account = None
     eth_account_avail = False
 
 from probablyprofit.api.async_wrapper import AsyncClientWrapper, run_sync
-from probablyprofit.api.exceptions import (APIException, NetworkException,
-                                           OrderException, RateLimitException,
-                                           ValidationException)
+from probablyprofit.api.exceptions import (
+    APIException,
+    NetworkException,
+    OrderException,
+    RateLimitException,
+    ValidationException,
+)
 from probablyprofit.config import get_config
 from probablyprofit.utils.cache import AsyncTTLCache, market_cache, price_cache
 from probablyprofit.utils.resilience import CircuitBreaker, RateLimiter, retry
-from probablyprofit.utils.validators import (validate_non_negative,
-                                             validate_positive, validate_price,
-                                             validate_side)
+from probablyprofit.utils.validators import (
+    validate_non_negative,
+    validate_positive,
+    validate_price,
+    validate_side,
+)
 
 
 def _get_circuit_breakers():
@@ -896,6 +904,7 @@ class PolymarketClient:
                 await get_rate_limiter().acquire()
                 if hasattr(self.client, "get_balance"):
                     import asyncio
+
                     loop = asyncio.get_event_loop()
                     balance = await asyncio.wait_for(
                         loop.run_in_executor(None, self.client.get_balance), timeout=5.0
@@ -926,11 +935,8 @@ class PolymarketClient:
                 payload = {
                     "jsonrpc": "2.0",
                     "method": "eth_call",
-                    "params": [
-                        {"to": usdc_contract, "data": data},
-                        "latest"
-                    ],
-                    "id": 1
+                    "params": [{"to": usdc_contract, "data": data}, "latest"],
+                    "id": 1,
                 }
 
                 async with httpx.AsyncClient(timeout=10.0) as rpc_client:
@@ -941,7 +947,9 @@ class PolymarketClient:
                             # USDC has 6 decimals
                             balance_wei = int(result["result"], 16)
                             balance_usdc = balance_wei / 1_000_000
-                            logger.info(f"💰 Fetched USDC balance from Polygon: ${balance_usdc:.2f}")
+                            logger.info(
+                                f"💰 Fetched USDC balance from Polygon: ${balance_usdc:.2f}"
+                            )
                             return balance_usdc
             except Exception as e:
                 logger.debug(f"Blockchain balance query failed: {e}")
@@ -950,6 +958,7 @@ class PolymarketClient:
         if self._api_creds:
             try:
                 import asyncio
+
                 await get_rate_limiter().acquire()
                 response = await asyncio.wait_for(
                     self.http_client.get(

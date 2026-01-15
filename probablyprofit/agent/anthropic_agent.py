@@ -11,18 +11,17 @@ from anthropic import Anthropic
 from loguru import logger
 
 from probablyprofit.agent.base import BaseAgent, Decision, Observation
-from probablyprofit.agent.formatters import (ObservationFormatter,
-                                             get_decision_schema)
+from probablyprofit.agent.formatters import ObservationFormatter, get_decision_schema
 from probablyprofit.api.client import PolymarketClient
-from probablyprofit.api.exceptions import (AgentException, NetworkException,
-                                           ValidationException)
+from probablyprofit.api.exceptions import AgentException, NetworkException, ValidationException
 from probablyprofit.risk.manager import RiskManager
-from probablyprofit.utils.ai_rate_limiter import (AIRateLimiter,
-                                                  anthropic_rate_limited)
+from probablyprofit.utils.ai_rate_limiter import AIRateLimiter, anthropic_rate_limited
 from probablyprofit.utils.resilience import retry
-from probablyprofit.utils.validators import (validate_confidence,
-                                             validate_strategy,
-                                             wrap_strategy_safely)
+from probablyprofit.utils.validators import (
+    validate_confidence,
+    validate_strategy,
+    wrap_strategy_safely,
+)
 
 
 class AnthropicAgent(BaseAgent):

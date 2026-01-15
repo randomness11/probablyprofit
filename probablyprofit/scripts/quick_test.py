@@ -34,8 +34,7 @@ print("\n2️⃣  Testing API response models...")
 try:
     from datetime import datetime
 
-    from probablyprofit.web.api.models import (PerformanceResponse,
-                                               StatusResponse, TradeResponse)
+    from probablyprofit.web.api.models import PerformanceResponse, StatusResponse, TradeResponse
 
     status = StatusResponse(
         running=True,
@@ -96,8 +95,7 @@ except Exception as e:
 # Test 4: Database models
 print("\n4️⃣  Testing database models...")
 try:
-    from probablyprofit.storage.models import (DecisionRecord,
-                                               ObservationRecord, TradeRecord)
+    from probablyprofit.storage.models import DecisionRecord, ObservationRecord, TradeRecord
 
     print(f"   ✅ TradeRecord model available")
     print(f"   ✅ ObservationRecord model available")

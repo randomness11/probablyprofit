@@ -15,8 +15,7 @@ from typing import Any, Callable, Optional, Set, Type, TypeVar, Union
 
 from loguru import logger
 
-from probablyprofit.api.exceptions import (APIException, NetworkException,
-                                           RateLimitException)
+from probablyprofit.api.exceptions import APIException, NetworkException, RateLimitException
 
 # Type variable for generic return types
 T = TypeVar("T")

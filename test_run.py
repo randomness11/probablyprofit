@@ -5,9 +5,11 @@ import sys
 
 # Suppress warnings
 import warnings
+
 warnings.filterwarnings("ignore")
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 print("Loading modules...")
@@ -26,6 +28,7 @@ HIGH VOLUME trading bot. Find BEST opportunity:
 Be AGGRESSIVE. Recommend your best trade with reasoning.
 """
 
+
 async def main():
     print("Initializing client...")
     sys.stdout.flush()
@@ -42,7 +45,7 @@ async def main():
         openai_api_key=os.getenv("OPENAI_API_KEY"),
         strategy_prompt=STRATEGY,
         model="gpt-4o",
-        dry_run=True
+        dry_run=True,
     )
 
     print("Fetching markets...")
@@ -79,6 +82,7 @@ async def main():
     sys.stdout.flush()
 
     await client.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

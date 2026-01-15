@@ -15,29 +15,35 @@ from loguru import logger
 # Patterns that look like secrets (compiled for performance)
 SECRET_PATTERNS: List[Pattern] = [
     # API keys (common formats)
-    re.compile(r'sk-[a-zA-Z0-9]{20,}'),  # OpenAI
-    re.compile(r'sk-ant-[a-zA-Z0-9\-]{20,}'),  # Anthropic
-    re.compile(r'AIza[a-zA-Z0-9_\-]{35}'),  # Google
-    re.compile(r'pplx-[a-zA-Z0-9]{20,}'),  # Perplexity
-
+    re.compile(r"sk-[a-zA-Z0-9]{20,}"),  # OpenAI
+    re.compile(r"sk-ant-[a-zA-Z0-9\-]{20,}"),  # Anthropic
+    re.compile(r"AIza[a-zA-Z0-9_\-]{35}"),  # Google
+    re.compile(r"pplx-[a-zA-Z0-9]{20,}"),  # Perplexity
     # Ethereum private keys (64 hex chars, with or without 0x)
-    re.compile(r'0x[a-fA-F0-9]{64}'),
-    re.compile(r'(?<![a-fA-F0-9])[a-fA-F0-9]{64}(?![a-fA-F0-9])'),
-
+    re.compile(r"0x[a-fA-F0-9]{64}"),
+    re.compile(r"(?<![a-fA-F0-9])[a-fA-F0-9]{64}(?![a-fA-F0-9])"),
     # Bearer tokens
-    re.compile(r'Bearer\s+[a-zA-Z0-9\-_.~+/]+=*', re.IGNORECASE),
-
+    re.compile(r"Bearer\s+[a-zA-Z0-9\-_.~+/]+=*", re.IGNORECASE),
     # Generic long alphanumeric strings that look like keys (32+ chars)
-    re.compile(r'(?<![a-zA-Z0-9])[a-zA-Z0-9]{32,}(?![a-zA-Z0-9])'),
+    re.compile(r"(?<![a-zA-Z0-9])[a-zA-Z0-9]{32,}(?![a-zA-Z0-9])"),
 ]
 
 # Keywords that indicate a value might be sensitive
 SENSITIVE_KEYWORDS = [
-    'api_key', 'apikey', 'api-key',
-    'secret', 'password', 'passwd',
-    'private_key', 'privatekey', 'private-key',
-    'token', 'bearer', 'auth',
-    'credential', 'key',
+    "api_key",
+    "apikey",
+    "api-key",
+    "secret",
+    "password",
+    "passwd",
+    "private_key",
+    "privatekey",
+    "private-key",
+    "token",
+    "bearer",
+    "auth",
+    "credential",
+    "key",
 ]
 
 # Values to always redact (populated at runtime)
@@ -74,16 +80,17 @@ def redact_string(text: str, show_chars: int = 4) -> str:
     # Redact known secrets first (exact match)
     for secret in _known_secrets:
         if secret in result:
-            redacted = '*' * (len(secret) - show_chars) + secret[-show_chars:]
+            redacted = "*" * (len(secret) - show_chars) + secret[-show_chars:]
             result = result.replace(secret, redacted)
 
     # Redact patterns that look like secrets
     for pattern in SECRET_PATTERNS:
+
         def replacer(match):
             value = match.group(0)
             if len(value) <= show_chars:
-                return '*' * len(value)
-            return '*' * (len(value) - show_chars) + value[-show_chars:]
+                return "*" * len(value)
+            return "*" * (len(value) - show_chars) + value[-show_chars:]
 
         result = pattern.sub(replacer, result)
 
@@ -115,7 +122,9 @@ def redact_dict(data: Dict[str, Any], depth: int = 0, max_depth: int = 10) -> Di
         if isinstance(value, str):
             if is_sensitive_key:
                 # Key suggests this is sensitive - redact more aggressively
-                result[key] = '*' * max(len(value) - 4, 0) + value[-4:] if len(value) > 4 else '****'
+                result[key] = (
+                    "*" * max(len(value) - 4, 0) + value[-4:] if len(value) > 4 else "****"
+                )
             else:
                 # Apply pattern-based redaction
                 result[key] = redact_string(value)
@@ -123,9 +132,11 @@ def redact_dict(data: Dict[str, Any], depth: int = 0, max_depth: int = 10) -> Di
             result[key] = redact_dict(value, depth + 1, max_depth)
         elif isinstance(value, list):
             result[key] = [
-                redact_dict(item, depth + 1, max_depth) if isinstance(item, dict)
-                else redact_string(item) if isinstance(item, str)
-                else item
+                (
+                    redact_dict(item, depth + 1, max_depth)
+                    if isinstance(item, dict)
+                    else redact_string(item) if isinstance(item, str) else item
+                )
                 for item in value
             ]
         else:
@@ -148,12 +159,12 @@ class SecretFilter:
             True (always emit the record, but with redacted content)
         """
         # Redact the message
-        if 'message' in record:
-            record['message'] = redact_string(record['message'])
+        if "message" in record:
+            record["message"] = redact_string(record["message"])
 
         # Redact extra data if present
-        if 'extra' in record and record['extra']:
-            record['extra'] = redact_dict(record['extra'])
+        if "extra" in record and record["extra"]:
+            record["extra"] = redact_dict(record["extra"])
 
         return True
 

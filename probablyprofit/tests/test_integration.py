@@ -416,19 +416,21 @@ class TestFullTradeFlow:
 
         # Create mock client with all required methods
         mock_client = MagicMock()
-        mock_client.get_markets = AsyncMock(return_value=[
-            Market(
-                condition_id="test_market_123",
-                question="Will it rain tomorrow?",
-                description="Test market",
-                end_date=datetime.now(),
-                outcomes=["Yes", "No"],
-                outcome_prices=[0.5, 0.5],
-                volume=10000,
-                liquidity=5000,
-                active=True,
-            )
-        ])
+        mock_client.get_markets = AsyncMock(
+            return_value=[
+                Market(
+                    condition_id="test_market_123",
+                    question="Will it rain tomorrow?",
+                    description="Test market",
+                    end_date=datetime.now(),
+                    outcomes=["Yes", "No"],
+                    outcome_prices=[0.5, 0.5],
+                    volume=10000,
+                    liquidity=5000,
+                    active=True,
+                )
+            ]
+        )
         mock_client.get_positions = AsyncMock(return_value=[])
         mock_client.get_balance = AsyncMock(return_value=1000.0)
         mock_client.place_order = AsyncMock(return_value=None)
@@ -502,7 +504,7 @@ class TestFullTradeFlow:
                         size=10.0,
                         price=0.5,
                         confidence=0.7,
-                        reasoning="Test buy"
+                        reasoning="Test buy",
                     )
                 return Decision(action="hold", reasoning="No markets")
 
@@ -645,11 +647,7 @@ class TestAlertingIntegration:
             alerter = TelegramAlerter(bot_token="", chat_id="")
 
             # Should return False but not raise (unconfigured)
-            result = await alerter.send_alert(
-                AlertLevel.INFO,
-                "Test",
-                "Test message"
-            )
+            result = await alerter.send_alert(AlertLevel.INFO, "Test", "Test message")
             assert result is False
         finally:
             # Restore env vars
@@ -676,7 +674,7 @@ class TestAlertingIntegration:
                 "side": "BUY",
                 "size": 100.0,
                 "price": 0.5,
-            }
+            },
         )
 
         formatted = alerter._format_message(alert)

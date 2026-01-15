@@ -8,6 +8,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from collections import deque
 from datetime import datetime
+
 # Note: Type checking import to avoid circular dependency if needed, but BaseStrategy doesn't import BaseAgent
 from typing import TYPE_CHECKING, Any, Deque, Dict, List, Optional
 
@@ -119,8 +120,7 @@ class AgentMemory(BaseModel):
             try:
                 import json
 
-                from probablyprofit.storage.repositories import \
-                    ObservationRepository
+                from probablyprofit.storage.repositories import ObservationRepository
 
                 async with self._db_manager.get_session() as session:
                     await ObservationRepository.create(
@@ -154,8 +154,7 @@ class AgentMemory(BaseModel):
             try:
                 import json
 
-                from probablyprofit.storage.repositories import \
-                    DecisionRepository
+                from probablyprofit.storage.repositories import DecisionRepository
 
                 async with self._db_manager.get_session() as session:
                     await DecisionRepository.create(

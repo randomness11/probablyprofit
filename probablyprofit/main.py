@@ -15,12 +15,17 @@ from probablyprofit.agent.ensemble import EnsembleAgent, VotingStrategy
 from probablyprofit.agent.fallback import FallbackAgent, create_fallback_agent
 from probablyprofit.agent.gemini_agent import GeminiAgent
 from probablyprofit.agent.openai_agent import OpenAIAgent
-from probablyprofit.agent.strategy import (ArbitrageStrategy, CalendarStrategy,
-                                           ContrarianStrategy, CustomStrategy,
-                                           MeanReversionStrategy,
-                                           MomentumStrategy,
-                                           NewsTradingStrategy, ValueStrategy,
-                                           VolatilityStrategy)
+from probablyprofit.agent.strategy import (
+    ArbitrageStrategy,
+    CalendarStrategy,
+    ContrarianStrategy,
+    CustomStrategy,
+    MeanReversionStrategy,
+    MomentumStrategy,
+    NewsTradingStrategy,
+    ValueStrategy,
+    VolatilityStrategy,
+)
 from probablyprofit.api.client import PolymarketClient
 from probablyprofit.risk.manager import RiskManager
 

@@ -18,30 +18,27 @@ from probablyprofit.api.exceptions import ValidationException
 # Patterns that may indicate prompt injection attempts
 SUSPICIOUS_PATTERNS = [
     # System prompt manipulation
-    (r'ignore\s+(previous|above|all)\s+(instructions?|prompts?)', 'ignore instructions'),
-    (r'disregard\s+(previous|above|all)', 'disregard instructions'),
-    (r'forget\s+(everything|previous|above)', 'forget instructions'),
-    (r'new\s+system\s+prompt', 'system prompt override'),
-    (r'you\s+are\s+now', 'role override'),
-    (r'act\s+as\s+if', 'behavior override'),
-    (r'pretend\s+(you|to\s+be)', 'role pretending'),
-
+    (r"ignore\s+(previous|above|all)\s+(instructions?|prompts?)", "ignore instructions"),
+    (r"disregard\s+(previous|above|all)", "disregard instructions"),
+    (r"forget\s+(everything|previous|above)", "forget instructions"),
+    (r"new\s+system\s+prompt", "system prompt override"),
+    (r"you\s+are\s+now", "role override"),
+    (r"act\s+as\s+if", "behavior override"),
+    (r"pretend\s+(you|to\s+be)", "role pretending"),
     # Code execution attempts
-    (r'```\s*(python|javascript|bash|shell|exec)', 'code block'),
-    (r'import\s+os', 'code import'),
-    (r'subprocess', 'subprocess'),
-    (r'eval\s*\(', 'eval attempt'),
-    (r'exec\s*\(', 'exec attempt'),
-
+    (r"```\s*(python|javascript|bash|shell|exec)", "code block"),
+    (r"import\s+os", "code import"),
+    (r"subprocess", "subprocess"),
+    (r"eval\s*\(", "eval attempt"),
+    (r"exec\s*\(", "exec attempt"),
     # Data exfiltration
-    (r'(send|post|transmit)\s+(to|data)', 'data exfiltration'),
-    (r'(api|private)\s*key', 'key extraction'),
-    (r'credentials?', 'credential access'),
-
+    (r"(send|post|transmit)\s+(to|data)", "data exfiltration"),
+    (r"(api|private)\s*key", "key extraction"),
+    (r"credentials?", "credential access"),
     # Jailbreak attempts
-    (r'DAN\s+mode', 'jailbreak attempt'),
-    (r'developer\s+mode', 'jailbreak attempt'),
-    (r'unrestricted\s+mode', 'jailbreak attempt'),
+    (r"DAN\s+mode", "jailbreak attempt"),
+    (r"developer\s+mode", "jailbreak attempt"),
+    (r"unrestricted\s+mode", "jailbreak attempt"),
 ]
 
 # Maximum allowed strategy length
@@ -49,8 +46,8 @@ MAX_STRATEGY_LENGTH = 10000
 
 # Characters that should be stripped or escaped
 DANGEROUS_CHARS = [
-    '\x00',  # Null byte
-    '\x1b',  # Escape
+    "\x00",  # Null byte
+    "\x1b",  # Escape
 ]
 
 
@@ -273,11 +270,11 @@ def sanitize_strategy_text(
     # Remove dangerous characters
     sanitized = text
     for char in DANGEROUS_CHARS:
-        sanitized = sanitized.replace(char, '')
+        sanitized = sanitized.replace(char, "")
 
     # Normalize whitespace (collapse multiple spaces/newlines)
-    sanitized = re.sub(r'\n{3,}', '\n\n', sanitized)
-    sanitized = re.sub(r' {3,}', '  ', sanitized)
+    sanitized = re.sub(r"\n{3,}", "\n\n", sanitized)
+    sanitized = re.sub(r" {3,}", "  ", sanitized)
 
     # Check length
     if len(sanitized) > max_length:
@@ -323,15 +320,27 @@ def validate_strategy(
 
     # Check minimum length
     if len(sanitized) < min_length:
-        raise ValidationException(
-            f"Strategy text too short (minimum {min_length} characters)"
-        )
+        raise ValidationException(f"Strategy text too short (minimum {min_length} characters)")
 
     # Basic content validation - should contain some trading-related terms
     trading_terms = [
-        'buy', 'sell', 'trade', 'market', 'price', 'position',
-        'risk', 'profit', 'loss', 'volume', 'momentum', 'trend',
-        'signal', 'indicator', 'strategy', 'capital', 'exposure',
+        "buy",
+        "sell",
+        "trade",
+        "market",
+        "price",
+        "position",
+        "risk",
+        "profit",
+        "loss",
+        "volume",
+        "momentum",
+        "trend",
+        "signal",
+        "indicator",
+        "strategy",
+        "capital",
+        "exposure",
     ]
 
     text_lower = sanitized.lower()

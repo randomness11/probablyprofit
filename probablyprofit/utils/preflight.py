@@ -137,20 +137,19 @@ class PreflightChecker:
                 result = await check(dry_run=dry_run)
                 report.checks.append(result)
             except Exception as e:
-                report.checks.append(CheckResult(
-                    name=check.__name__.replace("_check_", "").title(),
-                    status=CheckStatus.FAIL,
-                    message=f"Check crashed: {e}",
-                ))
+                report.checks.append(
+                    CheckResult(
+                        name=check.__name__.replace("_check_", "").title(),
+                        status=CheckStatus.FAIL,
+                        message=f"Check crashed: {e}",
+                    )
+                )
 
         # Log summary
         if report.passed:
             logger.info(f"Preflight checks passed ({len(report.checks)} checks)")
         else:
-            logger.error(
-                f"Preflight checks FAILED: "
-                f"{len(report.failed_checks)} failures"
-            )
+            logger.error(f"Preflight checks FAILED: " f"{len(report.failed_checks)} failures")
 
         return report
 
@@ -281,6 +280,7 @@ class PreflightChecker:
             async with db.get_session() as session:
                 # Execute a simple query
                 from sqlalchemy import text
+
                 await session.execute(text("SELECT 1"))
 
             return CheckResult(
@@ -323,19 +323,22 @@ class PreflightChecker:
         try:
             if best == "openai":
                 import openai
+
                 client = openai.OpenAI(api_key=api_key, timeout=10.0)
                 # Quick validation - list models
                 client.models.list()
             elif best == "anthropic":
                 import anthropic
+
                 client = anthropic.Anthropic(api_key=api_key, timeout=10.0)
                 # Quick validation - count tokens
                 client.messages.count_tokens(
                     model="claude-sonnet-4-5-20250929",
-                    messages=[{"role": "user", "content": "test"}]
+                    messages=[{"role": "user", "content": "test"}],
                 )
             elif best == "google":
                 import google.generativeai as genai
+
                 genai.configure(api_key=api_key)
                 list(genai.list_models())
 
@@ -375,6 +378,7 @@ class PreflightChecker:
         # Try to validate the bot token
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
                     f"https://api.telegram.org/bot{config.telegram.bot_token}/getMe"
