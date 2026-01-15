@@ -73,7 +73,13 @@ class RiskManager:
         self.trades: List[Trade] = []
         self.daily_pnl = 0.0
         self.current_exposure = 0.0
-        self.open_positions: Dict[str, float] = {}
+        self.open_positions: Dict[str, float] = {}  # market_id -> (size, entry_price)
+        self.position_prices: Dict[str, float] = {}  # market_id -> entry_price
+
+        # Drawdown tracking
+        self.peak_capital = initial_capital
+        self.max_drawdown_pct = get_config().risk.max_drawdown_pct
+        self._drawdown_halt = False  # Flag to halt trading on max drawdown
 
         # Thread-safe locks for state modification
         self._state_lock = threading.Lock()
@@ -81,12 +87,74 @@ class RiskManager:
 
         logger.info(f"Risk manager initialized with ${initial_capital:,.2f} capital")
         logger.info(f"Limits: {self.limits}")
+        logger.info(f"Max drawdown limit: {self.max_drawdown_pct:.0%}")
 
     def _get_async_lock(self) -> asyncio.Lock:
         """Get or create async lock (lazy init for event loop compatibility)."""
         if self._async_lock is None:
             self._async_lock = asyncio.Lock()
         return self._async_lock
+
+    def recalculate_exposure(self) -> float:
+        """
+        Recalculate total exposure from open positions.
+
+        This fixes the bug where exposure only increases and never decreases.
+        Should be called after positions are closed.
+
+        Returns:
+            Updated current exposure value
+        """
+        with self._state_lock:
+            total_exposure = 0.0
+            for market_id, size in self.open_positions.items():
+                price = self.position_prices.get(market_id, 0.5)  # Default to 0.5 if no price
+                total_exposure += abs(size * price)
+            self.current_exposure = total_exposure
+            return total_exposure
+
+    def get_current_drawdown(self) -> float:
+        """
+        Calculate current drawdown from peak capital.
+
+        Returns:
+            Drawdown as a percentage (0.0 to 1.0)
+        """
+        if self.peak_capital <= 0:
+            return 0.0
+        return (self.peak_capital - self.current_capital) / self.peak_capital
+
+    def update_peak_capital(self) -> None:
+        """Update peak capital if current capital is higher."""
+        with self._state_lock:
+            if self.current_capital > self.peak_capital:
+                self.peak_capital = self.current_capital
+                logger.debug(f"New peak capital: ${self.peak_capital:,.2f}")
+
+    def check_drawdown_limit(self) -> bool:
+        """
+        Check if max drawdown limit has been exceeded.
+
+        Returns:
+            True if drawdown exceeds limit (trading should halt)
+        """
+        drawdown = self.get_current_drawdown()
+        if drawdown >= self.max_drawdown_pct:
+            if not self._drawdown_halt:
+                self._drawdown_halt = True
+                logger.error(
+                    f"MAX DRAWDOWN EXCEEDED: {drawdown:.1%} >= {self.max_drawdown_pct:.1%}. "
+                    f"Trading halted. Peak: ${self.peak_capital:,.2f}, "
+                    f"Current: ${self.current_capital:,.2f}"
+                )
+            return True
+        return False
+
+    def reset_drawdown_halt(self) -> None:
+        """Reset the drawdown halt flag (use with caution)."""
+        with self._state_lock:
+            self._drawdown_halt = False
+            logger.warning("Drawdown halt flag reset manually")
 
     def can_open_position(
         self,
@@ -105,6 +173,11 @@ class RiskManager:
         Returns:
             True if position is within risk limits
         """
+        # Check drawdown halt first
+        if self._drawdown_halt or self.check_drawdown_limit():
+            logger.warning("Trading halted due to max drawdown limit")
+            return False
+
         position_value = size * price
 
         # Check position size limit
@@ -395,6 +468,7 @@ class RiskManager:
         size: float,
         price: float,
         pnl: float = 0.0,
+        market_id: Optional[str] = None,
     ) -> None:
         """
         Record a trade (thread-safe).
@@ -403,6 +477,7 @@ class RiskManager:
             size: Trade size (positive for buy, negative for sell)
             price: Execution price
             pnl: Realized P&L
+            market_id: Optional market ID for position tracking
         """
         import time
 
@@ -415,16 +490,27 @@ class RiskManager:
 
         with self._state_lock:
             self.trades.append(trade)
-            self.current_exposure += abs(size * price)
             self.current_capital += pnl
             self.daily_pnl += pnl
 
-        logger.info(f"Trade recorded: {size:+.2f} shares @ ${price:.4f} " f"(P&L: ${pnl:+.2f})")
+        # Update peak capital after profitable trade
+        if pnl > 0:
+            self.update_peak_capital()
+
+        # Check drawdown after loss
+        if pnl < 0:
+            self.check_drawdown_limit()
+
+        # Recalculate exposure from actual positions (fixes the accumulation bug)
+        self.recalculate_exposure()
+
+        logger.info(f"Trade recorded: {size:+.2f} shares @ ${price:.4f} (P&L: ${pnl:+.2f})")
 
     def update_position(
         self,
         market_id: str,
         size: float,
+        price: Optional[float] = None,
     ) -> None:
         """
         Update position tracking (thread-safe).
@@ -432,13 +518,23 @@ class RiskManager:
         Args:
             market_id: Market identifier
             size: Position size (0 to close)
+            price: Entry price for the position
         """
         with self._state_lock:
             if size == 0:
+                # Position closed
                 if market_id in self.open_positions:
                     del self.open_positions[market_id]
+                if market_id in self.position_prices:
+                    del self.position_prices[market_id]
             else:
+                # Position opened/updated
                 self.open_positions[market_id] = size
+                if price is not None:
+                    self.position_prices[market_id] = price
+
+        # Recalculate exposure after position change
+        self.recalculate_exposure()
 
     def reset_daily_stats(self) -> None:
         """Reset daily statistics (thread-safe)."""
@@ -457,9 +553,12 @@ class RiskManager:
             total_trades = len(self.trades)
             winning_trades = sum(1 for t in self.trades if t.pnl > 0)
             total_pnl = sum(t.pnl for t in self.trades)
+            current_drawdown = self.get_current_drawdown()
 
             return {
                 "current_capital": self.current_capital,
+                "initial_capital": self.initial_capital,
+                "peak_capital": self.peak_capital,
                 "total_pnl": total_pnl,
                 "daily_pnl": self.daily_pnl,
                 "current_exposure": self.current_exposure,
@@ -467,6 +566,9 @@ class RiskManager:
                 "total_trades": total_trades,
                 "win_rate": winning_trades / total_trades if total_trades > 0 else 0.0,
                 "return_pct": (self.current_capital - self.initial_capital) / self.initial_capital,
+                "current_drawdown": current_drawdown,
+                "max_drawdown_limit": self.max_drawdown_pct,
+                "drawdown_halt": self._drawdown_halt,
             }
 
     def __repr__(self) -> str:
@@ -628,7 +730,11 @@ class RiskManager:
                 "current_capital": self.current_capital,
                 "current_exposure": self.current_exposure,
                 "daily_pnl": self.daily_pnl,
+                "peak_capital": self.peak_capital,
+                "max_drawdown_pct": self.max_drawdown_pct,
+                "drawdown_halt": self._drawdown_halt,
                 "open_positions": dict(self.open_positions),
+                "position_prices": dict(self.position_prices),
                 "trades": [
                     {
                         "size": t.size,
@@ -661,7 +767,11 @@ class RiskManager:
         manager.current_capital = data.get("current_capital", manager.initial_capital)
         manager.current_exposure = data.get("current_exposure", 0.0)
         manager.daily_pnl = data.get("daily_pnl", 0.0)
+        manager.peak_capital = data.get("peak_capital", manager.initial_capital)
+        manager.max_drawdown_pct = data.get("max_drawdown_pct", 0.30)
+        manager._drawdown_halt = data.get("drawdown_halt", False)
         manager.open_positions = data.get("open_positions", {})
+        manager.position_prices = data.get("position_prices", {})
         manager.trades = [
             Trade(
                 size=t["size"],

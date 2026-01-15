@@ -276,6 +276,10 @@ def setup(reconfigure: bool = False):
 )
 @click.option("--live", is_flag=True, help="Enable live trading (overrides dry-run)")
 @click.option(
+    "--confirm-live", is_flag=True, help="Confirm live trading (required for live mode)"
+)
+@click.option("--skip-preflight", is_flag=True, help="Skip preflight checks (not recommended)")
+@click.option(
     "--agent",
     "-a",
     type=click.Choice(["openai", "anthropic", "google", "auto"]),
@@ -303,6 +307,8 @@ def run(
     strategy_file: Optional[str],
     dry_run: Optional[bool],
     live: bool,
+    confirm_live: bool,
+    skip_preflight: bool,
     agent: str,
     interval: int,
     paper: bool,
@@ -379,6 +385,64 @@ def run(
         is_dry_run = dry_run
     else:
         is_dry_run = config.dry_run  # Use config default
+
+    # Run preflight checks (unless skipped)
+    if not skip_preflight:
+        console.print("[bold]Running preflight checks...[/bold]\n")
+        try:
+            from probablyprofit.utils.preflight import run_preflight_checks_sync
+
+            report = run_preflight_checks_sync(dry_run=is_dry_run)
+
+            # Show results
+            for check in report.checks:
+                if check.status.value == "pass":
+                    console.print(f"  [green]\u2713[/green] {check.name}: {check.message}")
+                elif check.status.value == "fail":
+                    console.print(f"  [red]\u2717[/red] {check.name}: {check.message}")
+                elif check.status.value == "warn":
+                    console.print(f"  [yellow]![/yellow] {check.name}: {check.message}")
+                else:
+                    console.print(f"  [dim]-[/dim] {check.name}: {check.message}")
+
+            console.print()
+
+            if not report.passed:
+                console.print("[red]Preflight checks FAILED. Fix the issues above before trading.[/red]")
+                return
+        except ImportError:
+            console.print("[yellow]Preflight checks not available, skipping...[/yellow]\n")
+
+    # Live trading confirmation
+    if not is_dry_run:
+        console.print("[bold red]WARNING: LIVE TRADING MODE[/bold red]")
+        console.print("[red]You are about to trade with REAL MONEY.[/red]\n")
+
+        if not confirm_live:
+            console.print(
+                "[yellow]To enable live trading, you must pass --confirm-live flag.[/yellow]"
+            )
+            console.print("Example: probablyprofit run --live --confirm-live \"Your strategy\"\n")
+            return
+
+        # Double confirmation via interactive prompt
+        confirmation = Prompt.ask(
+            "[bold red]Type 'YES' to confirm live trading[/bold red]",
+            default="no"
+        )
+
+        if confirmation != "YES":
+            console.print("[yellow]Live trading cancelled.[/yellow]")
+            return
+
+        console.print("[green]Live trading confirmed. Be careful![/green]\n")
+
+        # Log to audit file
+        import time
+        audit_file = Path.home() / ".probablyprofit" / "live_trading.log"
+        audit_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(audit_file, "a") as f:
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Live trading started\n")
 
     # Determine agent
     if agent == "auto":
@@ -980,6 +1044,105 @@ def completion(shell: str):
         console.print(comp.source())
     else:
         console.print(f"[red]Unknown shell: {shell}[/red]")
+
+
+@cli.command(name="emergency-stop")
+@click.option("--reason", "-r", default="Manual emergency stop", help="Reason for stop")
+def emergency_stop(reason: str):
+    """
+    Activate emergency kill switch to halt all trading.
+
+    This immediately stops all trading activity. Use when you need
+    to halt trading due to market conditions, bugs, or emergencies.
+
+    Example:
+
+        probablyprofit emergency-stop --reason "Market crash"
+    """
+    console.print("[bold red]EMERGENCY STOP[/bold red]\n")
+
+    try:
+        from probablyprofit.utils.killswitch import activate_kill_switch, get_kill_switch
+
+        kill_switch = get_kill_switch()
+
+        if kill_switch.is_active():
+            console.print(f"[yellow]Kill switch already active: {kill_switch.get_reason()}[/yellow]")
+        else:
+            activate_kill_switch(reason)
+            console.print(f"[red]Kill switch ACTIVATED[/red]")
+            console.print(f"Reason: {reason}\n")
+            console.print("All trading has been halted.")
+            console.print("To resume, run: probablyprofit resume-trading")
+
+    except ImportError:
+        console.print("[red]Kill switch module not available.[/red]")
+
+
+@cli.command(name="resume-trading")
+def resume_trading():
+    """
+    Deactivate kill switch and resume trading.
+
+    Use this after resolving the issue that triggered the emergency stop.
+    """
+    console.print("[bold]Resume Trading[/bold]\n")
+
+    try:
+        from probablyprofit.utils.killswitch import deactivate_kill_switch, get_kill_switch
+
+        kill_switch = get_kill_switch()
+
+        if not kill_switch.is_active():
+            console.print("[green]Kill switch is not active. Trading already enabled.[/green]")
+        else:
+            reason = kill_switch.get_reason()
+            console.print(f"[yellow]Kill switch was active: {reason}[/yellow]")
+
+            if Confirm.ask("Are you sure you want to resume trading?", default=False):
+                deactivate_kill_switch()
+                console.print("[green]Kill switch DEACTIVATED. Trading can resume.[/green]")
+            else:
+                console.print("[yellow]Cancelled. Kill switch remains active.[/yellow]")
+
+    except ImportError:
+        console.print("[red]Kill switch module not available.[/red]")
+
+
+@cli.command(name="preflight")
+def preflight():
+    """
+    Run preflight health checks.
+
+    Validates system readiness before trading.
+    """
+    console.print("[bold]Preflight Health Checks[/bold]\n")
+
+    try:
+        from probablyprofit.utils.preflight import run_preflight_checks_sync
+
+        report = run_preflight_checks_sync(dry_run=True)
+
+        # Show results
+        for check in report.checks:
+            if check.status.value == "pass":
+                console.print(f"  [green]\u2713[/green] {check.name}: {check.message}")
+            elif check.status.value == "fail":
+                console.print(f"  [red]\u2717[/red] {check.name}: {check.message}")
+            elif check.status.value == "warn":
+                console.print(f"  [yellow]![/yellow] {check.name}: {check.message}")
+            else:
+                console.print(f"  [dim]-[/dim] {check.name}: {check.message}")
+
+        console.print()
+
+        if report.passed:
+            console.print("[green]All checks passed![/green]")
+        else:
+            console.print("[red]Some checks failed. Fix issues before trading.[/red]")
+
+    except ImportError:
+        console.print("[red]Preflight module not available.[/red]")
 
 
 def main():

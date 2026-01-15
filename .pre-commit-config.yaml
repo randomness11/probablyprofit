@@ -67,6 +67,58 @@ repos:
         additional_dependencies: ['bandit[toml]']
         exclude: ^tests/
 
+  # Secret detection - CRITICAL for production
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args:
+          - '--baseline'
+          - '.secrets.baseline'
+        exclude: |
+          (?x)^(
+            \.env\.example|
+            package-lock\.json|
+            poetry\.lock|
+            .*\.lock
+          )$
+
+  # Additional secret patterns check
+  - repo: local
+    hooks:
+      - id: check-api-keys
+        name: Check for hardcoded API keys
+        entry: python -c "
+import sys, re;
+patterns = [
+    (r'sk-[a-zA-Z0-9]{20,}', 'OpenAI API key'),
+    (r'sk-ant-[a-zA-Z0-9-]{20,}', 'Anthropic API key'),
+    (r'pplx-[a-zA-Z0-9]{20,}', 'Perplexity API key'),
+    (r'AIza[a-zA-Z0-9_-]{35}', 'Google API key'),
+    (r'0x[a-fA-F0-9]{64}', 'Private key (check if real)'),
+];
+exit_code = 0;
+for f in sys.argv[1:]:
+    try:
+        content = open(f).read();
+        for pattern, name in patterns:
+            matches = re.findall(pattern, content);
+            for m in matches:
+                if 'your_' not in m.lower() and '_key' not in m.lower():
+                    print(f'POTENTIAL SECRET in {f}: {name} found');
+                    exit_code = 1
+    except: pass
+sys.exit(exit_code)
+"
+        language: python
+        types: [text]
+        exclude: |
+          (?x)^(
+            \.env\.example|
+            \.secrets\.baseline|
+            .*\.md
+          )$
+
 # Configuration for CI/CD
 ci:
   autofix_commit_msg: |

@@ -387,22 +387,30 @@ class OrderManager:
     - Reconciliation with exchange
     """
 
-    def __init__(self, client: Any = None, platform: str = "polymarket"):
+    def __init__(
+        self,
+        client: Any = None,
+        platform: str = "polymarket",
+        partial_fill_timeout: float = 300.0,  # 5 minutes default
+    ):
         """
         Initialize order manager.
 
         Args:
             client: API client (PolymarketClient or KalshiClient)
             platform: Platform name
+            partial_fill_timeout: Seconds to wait before auto-canceling partial fills
         """
         self.client = client
         self.platform = platform
+        self.partial_fill_timeout = partial_fill_timeout
         self.order_book = OrderBook(max_history=get_config().api.positions_cache_max_size)
 
         # Event callbacks
         self._on_fill: List[FillCallback] = []
         self._on_status_change: List[OrderCallback] = []
         self._on_complete: List[OrderCallback] = []
+        self._on_partial_fill_timeout: List[OrderCallback] = []
 
         # Polling state
         self._polling = False
@@ -420,6 +428,61 @@ class OrderManager:
     def on_complete(self, callback: OrderCallback) -> None:
         """Register callback for order completion events."""
         self._on_complete.append(callback)
+
+    def on_partial_fill_timeout(self, callback: OrderCallback) -> None:
+        """Register callback for partial fill timeout events."""
+        self._on_partial_fill_timeout.append(callback)
+
+    async def check_partial_fill_timeouts(self) -> List[ManagedOrder]:
+        """
+        Check for orders that have been partially filled for too long.
+
+        Returns:
+            List of orders that were cancelled due to timeout
+        """
+        cancelled_orders = []
+        active_orders = await self.order_book.get_active()
+        now = datetime.now()
+
+        for order in active_orders:
+            if order.status != OrderStatus.PARTIALLY_FILLED:
+                continue
+
+            # Find the last fill time
+            if not order.fills:
+                continue
+
+            last_fill_time = max(f.timestamp for f in order.fills)
+            time_since_fill = (now - last_fill_time).total_seconds()
+
+            if time_since_fill >= self.partial_fill_timeout:
+                logger.warning(
+                    f"Partial fill timeout for order {order.order_id}: "
+                    f"{order.fill_ratio:.1%} filled, {time_since_fill:.0f}s since last fill"
+                )
+
+                try:
+                    await self.cancel_order(
+                        order.order_id or order.client_order_id,
+                        reason=f"Partial fill timeout ({order.fill_ratio:.1%} filled, "
+                               f"remaining {order.remaining_size:.2f})"
+                    )
+                    cancelled_orders.append(order)
+
+                    # Notify listeners
+                    for callback in self._on_partial_fill_timeout:
+                        try:
+                            if asyncio.iscoroutinefunction(callback):
+                                await callback(order)
+                            else:
+                                callback(order)
+                        except Exception as e:
+                            logger.warning(f"Partial fill timeout callback error: {e}")
+
+                except Exception as e:
+                    logger.error(f"Failed to cancel timed-out order {order.order_id}: {e}")
+
+        return cancelled_orders
 
     async def submit_order(
         self,
@@ -801,7 +864,14 @@ class OrderManager:
         """Background polling loop."""
         while self._polling:
             try:
+                # Reconcile order status with exchange
                 await self.reconcile()
+
+                # Check for partial fill timeouts
+                timed_out = await self.check_partial_fill_timeouts()
+                if timed_out:
+                    logger.info(f"Cancelled {len(timed_out)} orders due to partial fill timeout")
+
             except Exception as e:
                 logger.warning(f"Polling error: {e}")
 

@@ -86,7 +86,7 @@ class AgentConfig:
 
     # Checkpointing
     checkpoint_interval: int = 5  # loops
-    risk_save_interval: int = 10  # loops
+    risk_save_interval: int = 3  # loops (reduced from 10 for production safety)
 
 
 @dataclass
@@ -99,6 +99,9 @@ class RiskConfig:
     max_daily_loss_pct: float = 0.20
     max_total_exposure_pct: float = 0.50
 
+    # Drawdown limits
+    max_drawdown_pct: float = 0.30  # Stop trading if 30% down from peak
+
     # Sizing
     kelly_fraction: float = 0.25
     min_confidence_to_trade: float = 0.6
@@ -106,6 +109,20 @@ class RiskConfig:
     # Stop loss / Take profit
     default_stop_loss_pct: float = 0.20
     default_take_profit_pct: float = 0.50
+
+
+@dataclass
+class TelegramConfig:
+    """Telegram alerting configuration."""
+
+    bot_token: Optional[str] = None
+    chat_id: Optional[str] = None
+    alert_levels: List[str] = field(default_factory=lambda: ["WARNING", "CRITICAL"])
+    rate_limit_per_minute: int = 30
+
+    def is_configured(self) -> bool:
+        """Check if Telegram is properly configured."""
+        return bool(self.bot_token and self.chat_id)
 
 
 @dataclass
@@ -185,6 +202,7 @@ class Config:
     risk: RiskConfig = field(default_factory=RiskConfig)
     strategy: StrategyConfig = field(default_factory=StrategyConfig)
     arbitrage: ArbitrageConfig = field(default_factory=ArbitrageConfig)
+    telegram: TelegramConfig = field(default_factory=TelegramConfig)
 
     def get_available_agents(self) -> List[str]:
         """Get list of configured AI providers."""
@@ -495,10 +513,92 @@ def load_config() -> Config:
     if os.getenv("PLATFORM"):
         config.platform = os.getenv("PLATFORM")
 
+    # Load Telegram configuration
+    config.telegram.bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    config.telegram.chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    if os.getenv("TELEGRAM_ALERT_LEVELS"):
+        config.telegram.alert_levels = [
+            level.strip().upper()
+            for level in os.getenv("TELEGRAM_ALERT_LEVELS", "").split(",")
+            if level.strip()
+        ]
+
+    # Load max drawdown from env
+    if os.getenv("MAX_DRAWDOWN_PCT"):
+        config.risk.max_drawdown_pct = float(os.getenv("MAX_DRAWDOWN_PCT"))
+
     # Determine if configured
     config.is_configured = len(config.get_available_agents()) > 0
 
     return config
+
+
+# Known placeholder/test values that should never be used in production
+PLACEHOLDER_PATTERNS = [
+    "your_",
+    "_here",
+    "your-",
+    "example",
+    "test_",
+    "demo_",
+    "placeholder",
+]
+
+TEST_PRIVATE_KEY = "0x1111111111111111111111111111111111111111111111111111111111111111"
+
+
+def is_placeholder_value(value: str) -> bool:
+    """Check if a value appears to be a placeholder."""
+    if not value:
+        return True
+    value_lower = value.lower()
+    return any(pattern in value_lower for pattern in PLACEHOLDER_PATTERNS)
+
+
+def is_test_private_key(key: Optional[str]) -> bool:
+    """Check if private key is the known test key."""
+    if not key:
+        return False
+    # Normalize the key
+    normalized = key.lower().strip()
+    if not normalized.startswith("0x"):
+        normalized = "0x" + normalized
+    return normalized == TEST_PRIVATE_KEY.lower()
+
+
+def validate_production_credentials(config: Config) -> List[str]:
+    """
+    Validate credentials are safe for production use.
+
+    Returns list of critical issues that must be resolved before live trading.
+    """
+    issues = []
+
+    # Check private key
+    if config.private_key:
+        if is_test_private_key(config.private_key):
+            issues.append(
+                "CRITICAL: Using test private key (0x1111...). "
+                "This key has no funds and is publicly known. "
+                "Set a real private key for live trading."
+            )
+        elif is_placeholder_value(config.private_key):
+            issues.append(
+                "CRITICAL: Private key appears to be a placeholder value. "
+                "Set a real private key for live trading."
+            )
+
+    # Check AI API keys
+    if config.openai_api_key and is_placeholder_value(config.openai_api_key):
+        issues.append("OpenAI API key appears to be a placeholder value.")
+
+    if config.anthropic_api_key and is_placeholder_value(config.anthropic_api_key):
+        issues.append("Anthropic API key appears to be a placeholder value.")
+
+    if config.google_api_key and is_placeholder_value(config.google_api_key):
+        issues.append("Google API key appears to be a placeholder value.")
+
+    return issues
 
 
 def save_config(config: Config) -> None:
@@ -616,6 +716,15 @@ def validate_config(config: Config, strict: bool = False) -> List[str]:
             "Live trading enabled but no wallet configured. "
             "Set PRIVATE_KEY or enable dry_run mode"
         )
+
+    # Production credential validation for live trading
+    if not config.dry_run:
+        prod_issues = validate_production_credentials(config)
+        for issue in prod_issues:
+            if issue.startswith("CRITICAL:"):
+                errors.append(issue)
+            else:
+                warnings.append(issue)
 
     # Validate API key formats (basic checks)
     if config.openai_api_key and not config.openai_api_key.startswith("sk-"):
