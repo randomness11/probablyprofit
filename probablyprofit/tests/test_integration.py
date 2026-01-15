@@ -402,4 +402,289 @@ class TestTelegramAlerter:
         assert "123.4" in formatted  # Formatted number
 
 
+class TestFullTradeFlow:
+    """Tests for complete trading flow."""
+
+    @pytest.mark.asyncio
+    async def test_observe_decide_act_cycle(self):
+        """Test full observe -> decide -> act cycle with mock."""
+        from unittest.mock import AsyncMock, MagicMock
+        from probablyprofit.agent.base import Decision, Observation
+        from probablyprofit.api.client import Market
+        from probablyprofit.risk.manager import RiskManager
+        from datetime import datetime
+
+        # Create mock client with all required methods
+        mock_client = MagicMock()
+        mock_client.get_markets = AsyncMock(return_value=[
+            Market(
+                condition_id="test_market_123",
+                question="Will it rain tomorrow?",
+                description="Test market",
+                end_date=datetime.now(),
+                outcomes=["Yes", "No"],
+                outcome_prices=[0.5, 0.5],
+                volume=10000,
+                liquidity=5000,
+                active=True,
+            )
+        ])
+        mock_client.get_positions = AsyncMock(return_value=[])
+        mock_client.get_balance = AsyncMock(return_value=1000.0)
+        mock_client.place_order = AsyncMock(return_value=None)
+
+        risk_manager = RiskManager(initial_capital=1000.0)
+
+        # Import agent base
+        from probablyprofit.agent.base import BaseAgent
+
+        class TestAgent(BaseAgent):
+            async def decide(self, observation: Observation) -> Decision:
+                return Decision(action="hold", reasoning="Test hold")
+
+        agent = TestAgent(
+            client=mock_client,
+            risk_manager=risk_manager,
+            name="TestAgent",
+            dry_run=True,
+            enable_persistence=False,
+        )
+
+        # Test observe
+        observation = await agent.observe()
+        assert len(observation.markets) == 1
+        assert observation.balance == 1000.0
+
+        # Test decide
+        decision = await agent.decide(observation)
+        assert decision.action == "hold"
+
+        # Test act
+        success = await agent.act(decision)
+        assert success is True
+
+    @pytest.mark.asyncio
+    async def test_buy_order_execution(self):
+        """Test buy order execution through agent."""
+        from unittest.mock import AsyncMock, MagicMock
+        from probablyprofit.agent.base import BaseAgent, Decision, Observation
+        from probablyprofit.api.client import Market, Order
+        from probablyprofit.risk.manager import RiskManager
+        from datetime import datetime
+
+        mock_market = Market(
+            condition_id="buy_test_market",
+            question="Test buy market",
+            description="",
+            end_date=datetime.now(),
+            outcomes=["Yes", "No"],
+            outcome_prices=[0.5, 0.5],
+            volume=10000,
+            liquidity=5000,
+            active=True,
+        )
+
+        mock_client = MagicMock()
+        mock_client.get_markets = AsyncMock(return_value=[mock_market])
+        mock_client.get_positions = AsyncMock(return_value=[])
+        mock_client.get_balance = AsyncMock(return_value=1000.0)
+        mock_client.place_order = AsyncMock(return_value=None)
+
+        risk_manager = RiskManager(initial_capital=1000.0)
+
+        class BuyAgent(BaseAgent):
+            async def decide(self, observation: Observation) -> Decision:
+                if observation.markets:
+                    return Decision(
+                        action="buy",
+                        market_id=observation.markets[0].condition_id,
+                        outcome="Yes",
+                        size=10.0,
+                        price=0.5,
+                        confidence=0.7,
+                        reasoning="Test buy"
+                    )
+                return Decision(action="hold", reasoning="No markets")
+
+        agent = BuyAgent(
+            client=mock_client,
+            risk_manager=risk_manager,
+            name="BuyAgent",
+            dry_run=True,
+            enable_persistence=False,
+        )
+
+        observation = await agent.observe()
+        decision = await agent.decide(observation)
+
+        assert decision.action == "buy"
+        assert decision.size == 10.0
+
+        # Execute (in dry run mode, should succeed without placing real order)
+        success = await agent.act(decision)
+        assert success is True
+
+
+class TestCrashRecovery:
+    """Tests for crash recovery functionality."""
+
+    @pytest.mark.asyncio
+    async def test_risk_state_persistence(self):
+        """Test that risk state can be saved and loaded."""
+        import tempfile
+        import os
+        from probablyprofit.risk.manager import RiskManager
+
+        rm1 = RiskManager(initial_capital=1000.0)
+
+        # Simulate some trading
+        rm1.current_capital = 1200.0
+        rm1.daily_pnl = 200.0
+        rm1.update_position("market1", 50, price=0.6)
+        rm1.update_peak_capital()
+
+        # Verify state
+        assert rm1.current_capital == 1200.0
+        assert rm1.peak_capital == 1200.0
+        assert "market1" in rm1.open_positions
+
+        # Export state
+        state_dict = rm1.to_dict()
+
+        # Create new manager from state
+        rm2 = RiskManager.from_dict(state_dict)
+
+        assert rm2.current_capital == 1200.0
+        assert rm2.peak_capital == 1200.0
+        assert rm2.daily_pnl == 200.0
+        assert "market1" in rm2.open_positions
+
+    def test_drawdown_persistence(self):
+        """Test that drawdown state persists correctly."""
+        from probablyprofit.risk.manager import RiskManager
+
+        rm = RiskManager(initial_capital=1000.0)
+        rm.max_drawdown_pct = 0.25
+
+        # Simulate loss
+        rm.current_capital = 700.0  # 30% drawdown
+        rm.check_drawdown_limit()
+
+        assert rm._drawdown_halt is True
+
+        # Export and restore
+        state = rm.to_dict()
+        rm2 = RiskManager.from_dict(state)
+
+        assert rm2._drawdown_halt is True
+        assert rm2.max_drawdown_pct == 0.25
+
+
+class TestKillSwitchIntegration:
+    """Tests for kill switch integration with agent."""
+
+    def test_kill_switch_check_in_agent(self):
+        """Test that kill switch check is properly imported in agent."""
+        from probablyprofit.agent.base import is_kill_switch_active, get_kill_switch
+        from probablyprofit.utils.killswitch import KillSwitch
+
+        # Verify the imports exist and work
+        assert callable(is_kill_switch_active)
+        assert callable(get_kill_switch)
+
+        # Test the kill switch itself
+        ks = get_kill_switch()
+        assert isinstance(ks, KillSwitch)
+
+    def test_kill_switch_stops_agent_flag(self):
+        """Test that agent running flag can be set to False."""
+        from unittest.mock import MagicMock
+        from probablyprofit.agent.base import BaseAgent, Decision, Observation
+        from probablyprofit.risk.manager import RiskManager
+
+        mock_client = MagicMock()
+        risk_manager = RiskManager(initial_capital=1000.0)
+
+        class TestAgent(BaseAgent):
+            async def decide(self, observation: Observation) -> Decision:
+                return Decision(action="hold", reasoning="Test")
+
+        agent = TestAgent(
+            client=mock_client,
+            risk_manager=risk_manager,
+            name="TestAgent",
+            enable_persistence=False,
+        )
+
+        # Agent starts not running
+        assert not agent.running
+
+        # Set running and then stop
+        agent.running = True
+        assert agent.running
+
+        agent.running = False
+        assert not agent.running
+
+
+class TestAlertingIntegration:
+    """Tests for alerting integration."""
+
+    @pytest.mark.asyncio
+    async def test_alerter_send_without_credentials(self):
+        """Test that alerter gracefully handles missing credentials."""
+        import os
+        from probablyprofit.alerts.telegram import TelegramAlerter, AlertLevel
+
+        # Clear any existing env vars
+        old_token = os.environ.pop("TELEGRAM_BOT_TOKEN", None)
+        old_chat = os.environ.pop("TELEGRAM_CHAT_ID", None)
+
+        try:
+            # Create alerter without credentials
+            alerter = TelegramAlerter(bot_token="", chat_id="")
+
+            # Should return False but not raise (unconfigured)
+            result = await alerter.send_alert(
+                AlertLevel.INFO,
+                "Test",
+                "Test message"
+            )
+            assert result is False
+        finally:
+            # Restore env vars
+            if old_token:
+                os.environ["TELEGRAM_BOT_TOKEN"] = old_token
+            if old_chat:
+                os.environ["TELEGRAM_CHAT_ID"] = old_chat
+
+    @pytest.mark.asyncio
+    async def test_trade_alert_formatting(self):
+        """Test trade alert message formatting."""
+        from probablyprofit.alerts.telegram import TelegramAlerter, Alert, AlertLevel
+        from datetime import datetime
+
+        alerter = TelegramAlerter()
+
+        alert = Alert(
+            level=AlertLevel.INFO,
+            title="Trade Executed",
+            message="BUY 100 shares @ $0.50",
+            timestamp=datetime.now(),
+            metadata={
+                "market": "Will Bitcoin hit $100k?",
+                "side": "BUY",
+                "size": 100.0,
+                "price": 0.5,
+            }
+        )
+
+        formatted = alerter._format_message(alert)
+
+        assert "Trade Executed" in formatted
+        assert "BUY 100 shares" in formatted
+        assert "market" in formatted
+        assert "0.5" in formatted
+
+
 # Run tests with: pytest probablyprofit/tests/test_integration.py -v

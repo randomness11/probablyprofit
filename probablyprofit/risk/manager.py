@@ -13,6 +13,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from probablyprofit.config import get_config
+from probablyprofit.alerts.telegram import get_alerter
 
 
 class RiskLimits(BaseModel):
@@ -147,8 +148,63 @@ class RiskManager:
                     f"Trading halted. Peak: ${self.peak_capital:,.2f}, "
                     f"Current: ${self.current_capital:,.2f}"
                 )
+                # Send Telegram alert (fire and forget)
+                self._schedule_drawdown_alert(drawdown)
             return True
         return False
+
+    def _schedule_drawdown_alert(self, drawdown: float) -> None:
+        """Schedule async alert for max drawdown exceeded."""
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                asyncio.create_task(self._send_drawdown_alert(drawdown))
+            else:
+                loop.run_until_complete(self._send_drawdown_alert(drawdown))
+        except RuntimeError:
+            # No event loop, skip alert
+            logger.warning("Could not send drawdown alert - no event loop")
+
+    async def _send_drawdown_alert(self, drawdown: float) -> None:
+        """Send max drawdown exceeded alert."""
+        try:
+            alerter = get_alerter()
+            await alerter.alert_max_drawdown_exceeded(
+                drawdown_pct=drawdown,
+                peak_capital=self.peak_capital,
+                current_capital=self.current_capital,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send drawdown alert: {e}")
+
+    def _schedule_daily_loss_alert(self, exceeded: bool, pct: float = 1.0) -> None:
+        """Schedule async alert for daily loss limit."""
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                asyncio.create_task(self._send_daily_loss_alert(exceeded, pct))
+            else:
+                loop.run_until_complete(self._send_daily_loss_alert(exceeded, pct))
+        except RuntimeError:
+            logger.warning("Could not send daily loss alert - no event loop")
+
+    async def _send_daily_loss_alert(self, exceeded: bool, pct: float) -> None:
+        """Send daily loss limit alert."""
+        try:
+            alerter = get_alerter()
+            if exceeded:
+                await alerter.alert_daily_loss_exceeded(
+                    current_loss=self.daily_pnl,
+                    max_loss=self.limits.max_daily_loss,
+                )
+            else:
+                await alerter.alert_daily_loss_approaching(
+                    current_loss=self.daily_pnl,
+                    max_loss=self.limits.max_daily_loss,
+                    pct=pct,
+                )
+        except Exception as e:
+            logger.warning(f"Failed to send daily loss alert: {e}")
 
     def reset_drawdown_halt(self) -> None:
         """Reset the drawdown halt flag (use with caution)."""
@@ -208,7 +264,15 @@ class RiskManager:
                 f"Daily loss ${abs(self.daily_pnl):.2f} exceeds max "
                 f"${self.limits.max_daily_loss:.2f} - trading halted"
             )
+            # Send alert for daily loss exceeded
+            self._schedule_daily_loss_alert(exceeded=True)
             return False
+
+        # Warn if approaching daily loss limit (>80% used)
+        daily_loss_pct = abs(self.daily_pnl) / self.limits.max_daily_loss
+        if daily_loss_pct >= 0.8 and not getattr(self, "_daily_loss_warned", False):
+            self._daily_loss_warned = True
+            self._schedule_daily_loss_alert(exceeded=False, pct=daily_loss_pct)
 
         # Check capital
         if position_value > self.current_capital * 0.5:
@@ -540,6 +604,7 @@ class RiskManager:
         """Reset daily statistics (thread-safe)."""
         with self._state_lock:
             self.daily_pnl = 0.0
+            self._daily_loss_warned = False
         logger.info("Daily statistics reset")
 
     def get_stats(self) -> Dict[str, float]:

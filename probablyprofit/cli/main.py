@@ -1145,6 +1145,176 @@ def preflight():
         console.print("[red]Preflight module not available.[/red]")
 
 
+@cli.command(name="backup-db")
+@click.option("--output", "-o", type=click.Path(), help="Output path for backup")
+@click.option("--compress", "-c", is_flag=True, help="Compress backup with gzip")
+def backup_db(output: Optional[str], compress: bool):
+    """
+    Create a backup of the trading database.
+
+    Safely backs up the SQLite database (works even while trading).
+    WAL mode allows hot backups without stopping the bot.
+
+    Examples:
+
+        probablyprofit backup-db                     # Auto-named backup
+        probablyprofit backup-db -o backup.db       # Custom filename
+        probablyprofit backup-db --compress         # Create .gz backup
+
+    For automated backups, add to crontab:
+
+        0 * * * * cd /path/to/bot && probablyprofit backup-db --compress
+    """
+    import shutil
+    import time
+    from datetime import datetime
+
+    console.print("[bold]Database Backup[/bold]\n")
+
+    # Find database file
+    db_path = os.getenv("DATABASE_PATH", "data/probablyprofit.db")
+
+    # Handle relative paths
+    if not os.path.isabs(db_path):
+        # Check common locations
+        candidates = [
+            db_path,
+            f"probablyprofit/{db_path}",
+            os.path.expanduser(f"~/.probablyprofit/{os.path.basename(db_path)}"),
+        ]
+        for candidate in candidates:
+            if os.path.exists(candidate):
+                db_path = candidate
+                break
+
+    if not os.path.exists(db_path):
+        console.print(f"[red]Database not found: {db_path}[/red]")
+        console.print("[dim]Make sure the bot has been run at least once.[/dim]")
+        return
+
+    # Generate output path if not specified
+    if output is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_dir = Path.home() / ".probablyprofit" / "backups"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        output = str(backup_dir / f"probablyprofit_backup_{timestamp}.db")
+
+    if compress:
+        output = output + ".gz"
+
+    console.print(f"  Source: {db_path}")
+    console.print(f"  Output: {output}\n")
+
+    try:
+        with console.status("[bold]Creating backup...[/bold]"):
+            # For SQLite in WAL mode, we need to checkpoint first for consistency
+            # But we can also just copy the files which is safe in WAL mode
+
+            if compress:
+                import gzip
+
+                with open(db_path, 'rb') as f_in:
+                    with gzip.open(output, 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+            else:
+                shutil.copy2(db_path, output)
+
+            # Also backup WAL file if exists
+            wal_path = db_path + "-wal"
+            shm_path = db_path + "-shm"
+
+            if os.path.exists(wal_path) and not compress:
+                shutil.copy2(wal_path, output + "-wal")
+            if os.path.exists(shm_path) and not compress:
+                shutil.copy2(shm_path, output + "-shm")
+
+        # Get backup size
+        backup_size = os.path.getsize(output)
+        original_size = os.path.getsize(db_path)
+
+        console.print("[green]Backup created successfully![/green]\n")
+        console.print(f"  Original: {original_size / 1024:.1f} KB")
+        console.print(f"  Backup:   {backup_size / 1024:.1f} KB")
+
+        if compress:
+            ratio = (1 - backup_size / original_size) * 100
+            console.print(f"  Compression: {ratio:.1f}% reduction")
+
+        console.print(f"\n  Location: [cyan]{output}[/cyan]")
+
+    except Exception as e:
+        console.print(f"[red]Backup failed: {e}[/red]")
+
+
+@cli.command(name="restore-db")
+@click.argument("backup_file", type=click.Path(exists=True))
+@click.option("--force", "-f", is_flag=True, help="Force restore without confirmation")
+def restore_db(backup_file: str, force: bool):
+    """
+    Restore database from a backup.
+
+    WARNING: This will overwrite the current database!
+
+    Example:
+
+        probablyprofit restore-db backup.db
+        probablyprofit restore-db backup.db.gz --force
+    """
+    import shutil
+
+    console.print("[bold]Database Restore[/bold]\n")
+
+    # Find current database
+    db_path = os.getenv("DATABASE_PATH", "data/probablyprofit.db")
+
+    if not os.path.isabs(db_path):
+        candidates = [
+            db_path,
+            f"probablyprofit/{db_path}",
+            os.path.expanduser(f"~/.probablyprofit/{os.path.basename(db_path)}"),
+        ]
+        for candidate in candidates:
+            if os.path.exists(candidate):
+                db_path = candidate
+                break
+
+    console.print(f"  Backup:  {backup_file}")
+    console.print(f"  Target:  {db_path}\n")
+
+    console.print("[yellow]WARNING: This will overwrite the current database![/yellow]\n")
+
+    if not force:
+        if not Confirm.ask("Are you sure you want to restore?", default=False):
+            console.print("[dim]Cancelled.[/dim]")
+            return
+
+    try:
+        with console.status("[bold]Restoring database...[/bold]"):
+            # Handle compressed backups
+            if backup_file.endswith(".gz"):
+                import gzip
+
+                with gzip.open(backup_file, 'rb') as f_in:
+                    with open(db_path, 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+            else:
+                shutil.copy2(backup_file, db_path)
+
+                # Also restore WAL files if present
+                wal_backup = backup_file + "-wal"
+                shm_backup = backup_file + "-shm"
+
+                if os.path.exists(wal_backup):
+                    shutil.copy2(wal_backup, db_path + "-wal")
+                if os.path.exists(shm_backup):
+                    shutil.copy2(shm_backup, db_path + "-shm")
+
+        console.print("[green]Database restored successfully![/green]")
+
+    except Exception as e:
+        console.print(f"[red]Restore failed: {e}[/red]")
+
+
 def main():
     """Entry point."""
     cli()

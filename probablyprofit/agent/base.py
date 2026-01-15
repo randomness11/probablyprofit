@@ -17,6 +17,8 @@ from pydantic import BaseModel, ConfigDict
 from probablyprofit.api.client import Market, Order, PolymarketClient, Position
 from probablyprofit.config import get_config
 from probablyprofit.risk.manager import RiskManager
+from probablyprofit.utils.killswitch import is_kill_switch_active, get_kill_switch, KillSwitchError
+from probablyprofit.alerts.telegram import get_alerter
 
 if TYPE_CHECKING:
     from probablyprofit.agent.strategy import BaseStrategy
@@ -477,6 +479,17 @@ class BaseAgent(ABC):
                 logger.info(
                     f"[{self.name}] ✅ BUY order placed: ${decision.size:.2f} on '{market_name}'"
                 )
+                # Send trade alert
+                try:
+                    alerter = get_alerter()
+                    await alerter.alert_trade_executed(
+                        market=market_name,
+                        side="BUY",
+                        size=order.size,
+                        price=order.price,
+                    )
+                except Exception:
+                    pass
                 return True
 
             return False
@@ -518,6 +531,17 @@ class BaseAgent(ABC):
                 logger.info(
                     f"[{self.name}] ✅ SELL order placed: ${decision.size:.2f} on '{market_name}'"
                 )
+                # Send trade alert
+                try:
+                    alerter = get_alerter()
+                    await alerter.alert_trade_executed(
+                        market=market_name,
+                        side="SELL",
+                        size=order.size,
+                        price=order.price,
+                    )
+                except Exception:
+                    pass
                 return True
 
             return False
@@ -535,6 +559,16 @@ class BaseAgent(ABC):
         """
         logger.info(f"[{self.name}] Starting agent loop (interval: {self.loop_interval}s)")
         self.running = True
+
+        # Send bot started alert
+        alerter = get_alerter()
+        try:
+            await alerter.alert_bot_started(
+                agent_name=self.name,
+                capital=self.risk_manager.current_capital,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send bot started alert: {e}")
 
         # Get config values for error recovery
         cfg = get_config()
@@ -559,6 +593,20 @@ class BaseAgent(ABC):
         try:
             while self.running:
                 self._loop_count += 1
+
+                # Check kill switch before each iteration
+                if is_kill_switch_active():
+                    reason = get_kill_switch().get_reason() or "Unknown"
+                    logger.warning(f"[{self.name}] Kill switch active: {reason}. Stopping agent.")
+                    try:
+                        await alerter.critical(
+                            "Kill Switch Activated",
+                            f"Agent {self.name} stopped.\nReason: {reason}",
+                        )
+                    except Exception:
+                        pass
+                    self.running = False
+                    break
 
                 try:
                     # Observe
@@ -597,6 +645,15 @@ class BaseAgent(ABC):
                         f"(consecutive: {self._consecutive_errors})"
                     )
 
+                    # Send error alert
+                    try:
+                        await alerter.alert_error(
+                            error_type=type(e).__name__,
+                            error_message=f"Agent: {self.name}\nLoop: {self._loop_count}\n{str(e)[:200]}",
+                        )
+                    except Exception:
+                        pass
+
                     # Checkpoint on error
                     if recovery_manager:
                         await recovery_manager.checkpoint(self, force=True, error=e)
@@ -607,6 +664,13 @@ class BaseAgent(ABC):
                             f"[{self.name}] Too many consecutive errors ({self._consecutive_errors}). "
                             f"Stopping agent to prevent further issues."
                         )
+                        try:
+                            await alerter.critical(
+                                "Agent Halted - Too Many Errors",
+                                f"Agent {self.name} stopped after {self._consecutive_errors} consecutive errors.",
+                            )
+                        except Exception:
+                            pass
                         self.running = False
                         break
 
@@ -643,6 +707,17 @@ class BaseAgent(ABC):
     async def _cleanup(self) -> None:
         """Perform graceful shutdown cleanup."""
         logger.info(f"[{self.name}] Performing cleanup...")
+
+        # Send bot stopped alert
+        try:
+            alerter = get_alerter()
+            await alerter.alert_bot_stopped(
+                agent_name=self.name,
+                reason="Graceful shutdown",
+                final_capital=self.risk_manager.current_capital,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send bot stopped alert: {e}")
 
         try:
             # Save risk manager state for crash recovery

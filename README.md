@@ -281,6 +281,7 @@ asyncio.run(main())
 probablyprofit run "strategy" --paper       # Paper trading (simulated)
 probablyprofit run -s file.txt --live       # Live trading (real money)
 probablyprofit run --dry-run "strategy"     # Analysis only (no trades)
+probablyprofit run -s file.txt --live --confirm-live  # Live with confirmation
 
 # Market Data
 probablyprofit markets                      # List active markets
@@ -293,10 +294,111 @@ probablyprofit positions                    # Open positions
 probablyprofit orders                       # Active orders
 probablyprofit history                      # Trade history
 
+# Production Safety
+probablyprofit preflight                    # Run preflight health checks
+probablyprofit emergency-stop               # Activate kill switch
+probablyprofit resume-trading               # Deactivate kill switch
+probablyprofit backup-db                    # Backup database
+probablyprofit backup-db --compress         # Compressed backup
+probablyprofit restore-db backup.db.gz      # Restore from backup
+
 # Tools
 probablyprofit setup                        # Interactive configuration
 probablyprofit backtest -s strategy.txt     # Backtest a strategy
 probablyprofit dashboard                    # Launch web UI
+```
+
+---
+
+## Production Features
+
+### Kill Switch
+
+The kill switch immediately halts all trading. Use it in emergencies:
+
+```bash
+# CLI
+probablyprofit emergency-stop --reason "Market crash"
+probablyprofit resume-trading
+
+# File-based (works across processes)
+touch /tmp/probablyprofit.stop              # Activates kill switch
+rm /tmp/probablyprofit.stop                 # Deactivates
+
+# Signal-based
+kill -USR1 <pid>                            # Activate
+kill -USR2 <pid>                            # Deactivate
+
+# HTTP API (when dashboard is running)
+curl -X POST http://localhost:8000/api/emergency-stop?reason=Market+crash
+curl -X POST http://localhost:8000/api/emergency-stop/deactivate
+curl http://localhost:8000/api/emergency-stop/status
+```
+
+### Preflight Checks
+
+Run health checks before trading:
+
+```bash
+probablyprofit preflight
+```
+
+Checks include:
+- API key validation
+- Wallet connectivity
+- Database accessibility
+- Kill switch status
+- Risk limits configuration
+
+### Telegram Alerts
+
+Get real-time notifications for trades and issues:
+
+```bash
+# Add to .env
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
+TELEGRAM_ALERT_LEVELS=INFO,WARNING,CRITICAL
+```
+
+Alert types:
+- **INFO**: Trade executions, bot start/stop
+- **WARNING**: Risk limits approaching, reconciliation issues
+- **CRITICAL**: Max drawdown hit, errors, kill switch activation
+
+### Max Drawdown Protection
+
+Automatically halts trading if drawdown exceeds limit:
+
+```bash
+# Add to .env
+MAX_DRAWDOWN_PCT=0.30  # Halt at 30% drawdown from peak
+```
+
+### Database Backup
+
+```bash
+# Manual backup
+probablyprofit backup-db                     # Timestamped backup
+probablyprofit backup-db -o backup.db        # Custom path
+probablyprofit backup-db --compress          # Gzip compressed
+
+# Automated backup (add to crontab)
+0 * * * * cd /path/to/bot && probablyprofit backup-db --compress
+
+# Restore
+probablyprofit restore-db backup.db.gz
+```
+
+### Live Trading Safeguards
+
+Live trading requires explicit confirmation:
+
+```bash
+# Must use --confirm-live flag
+probablyprofit run -s strategy.txt --live --confirm-live
+
+# Then type "YES" to confirm
 ```
 
 ---

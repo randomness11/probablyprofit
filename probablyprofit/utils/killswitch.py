@@ -71,16 +71,22 @@ class KillSwitch:
         Check if kill switch is active.
 
         Checks both file-based and programmatic kill switch.
+        File-based check takes precedence to allow cross-process coordination.
 
         Returns:
             True if trading should be halted
         """
-        # Check programmatic kill first (faster)
-        if self._programmatic_kill:
+        # Check file-based kill switch first (allows cross-process coordination)
+        if self.kill_file.exists():
             return True
 
-        # Check file-based kill switch
-        return self.kill_file.exists()
+        # Check programmatic kill (instance-local)
+        # Sync with file state - if file was removed externally, clear programmatic flag
+        if self._programmatic_kill and not self.kill_file.exists():
+            self._programmatic_kill = False
+            self._kill_reason = None
+
+        return self._programmatic_kill
 
     def get_reason(self) -> Optional[str]:
         """

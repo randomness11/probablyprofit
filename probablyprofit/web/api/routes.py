@@ -357,6 +357,84 @@ async def set_dry_run(enabled: bool):
     return {"dry_run": enabled}
 
 
+@router.post("/emergency-stop")
+async def emergency_stop(reason: str = Query("Remote kill switch activated via API")):
+    """
+    Emergency stop endpoint - activates the kill switch to halt all trading.
+
+    This is a critical safety endpoint that immediately stops the trading bot.
+    Use this in emergencies to prevent further losses.
+
+    Args:
+        reason: Reason for activating the kill switch
+
+    Returns:
+        Status confirmation with kill switch state
+    """
+    from probablyprofit.utils.killswitch import activate_kill_switch, is_kill_switch_active
+    from probablyprofit.web.app import get_agent_state
+
+    # Activate the kill switch
+    activate_kill_switch(reason)
+
+    # Also stop the agent if running
+    state = get_agent_state()
+    if state and state.agent.running:
+        state.agent.running = False
+
+    logger.warning(f"Emergency stop activated via API: {reason}")
+
+    return {
+        "status": "emergency_stop_activated",
+        "kill_switch_active": is_kill_switch_active(),
+        "reason": reason,
+        "agent_stopped": state.agent.running if state else None,
+    }
+
+
+@router.post("/emergency-stop/deactivate")
+async def deactivate_emergency_stop():
+    """
+    Deactivate the emergency kill switch.
+
+    Use this to resume trading after an emergency stop.
+    The agent will need to be manually restarted after deactivation.
+
+    Returns:
+        Status confirmation
+    """
+    from probablyprofit.utils.killswitch import deactivate_kill_switch, is_kill_switch_active
+
+    deactivate_kill_switch()
+
+    logger.info("Emergency stop deactivated via API")
+
+    return {
+        "status": "emergency_stop_deactivated",
+        "kill_switch_active": is_kill_switch_active(),
+    }
+
+
+@router.get("/emergency-stop/status")
+async def get_emergency_stop_status():
+    """
+    Get current emergency stop / kill switch status.
+
+    Returns:
+        Kill switch status and reason if active
+    """
+    from probablyprofit.utils.killswitch import get_kill_switch
+
+    kill_switch = get_kill_switch()
+    is_active = kill_switch.is_active()
+    reason = kill_switch.get_reason() if is_active else None
+
+    return {
+        "kill_switch_active": is_active,
+        "reason": reason,
+    }
+
+
 @router.get("/exposure", response_model=ExposureResponse)
 async def get_exposure():
     """Get portfolio exposure breakdown with correlation analysis."""
