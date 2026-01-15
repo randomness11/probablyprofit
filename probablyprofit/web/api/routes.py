@@ -227,7 +227,7 @@ async def get_trades(
             ]
     except Exception as e:
         logger.error(f"Error fetching trades: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch trades")
 
 
 @router.get("/performance", response_model=PerformanceResponse)
@@ -275,7 +275,7 @@ async def get_equity_curve(days: int = Query(30, ge=1, le=365)):
             ]
     except Exception as e:
         logger.error(f"Error fetching equity curve: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch equity curve")
 
 
 @router.get("/markets", response_model=List[MarketResponse])
@@ -306,7 +306,7 @@ async def get_markets(active: bool = Query(True), limit: int = Query(50, le=200)
         ]
     except Exception as e:
         logger.error(f"Error fetching markets: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch markets")
 
 
 @router.post("/control/start")
@@ -388,7 +388,7 @@ async def emergency_stop(reason: str = Query("Remote kill switch activated via A
         "status": "emergency_stop_activated",
         "kill_switch_active": is_kill_switch_active(),
         "reason": reason,
-        "agent_stopped": state.agent.running if state else None,
+        "agent_stopped": not state.agent.running if state else None,
     }
 
 
@@ -731,7 +731,7 @@ async def scan_arbitrage():
         )
     except Exception as e:
         logger.error(f"Arbitrage scan failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Arbitrage scan failed")
 
 
 @router.get("/arbitrage/pairs")

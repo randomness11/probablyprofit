@@ -65,8 +65,18 @@ class RiskManager:
         Args:
             limits: Risk limits configuration
             initial_capital: Starting capital in USD
+
+        Raises:
+            ValueError: If initial_capital or limits have invalid values
         """
         self.limits = limits or RiskLimits()
+
+        # Validate to prevent division by zero
+        if initial_capital <= 0:
+            raise ValueError(f"initial_capital must be positive, got {initial_capital}")
+        if self.limits.max_daily_loss <= 0:
+            raise ValueError(f"max_daily_loss must be positive, got {self.limits.max_daily_loss}")
+
         self.initial_capital = initial_capital
         self.current_capital = initial_capital
 
@@ -156,14 +166,12 @@ class RiskManager:
     def _schedule_drawdown_alert(self, drawdown: float) -> None:
         """Schedule async alert for max drawdown exceeded."""
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                asyncio.create_task(self._send_drawdown_alert(drawdown))
-            else:
-                loop.run_until_complete(self._send_drawdown_alert(drawdown))
+            # Try to get the running loop (Python 3.10+ safe)
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._send_drawdown_alert(drawdown))
         except RuntimeError:
-            # No event loop, skip alert
-            logger.warning("Could not send drawdown alert - no event loop")
+            # No running event loop - alerts are non-critical, just log
+            logger.debug("Could not send drawdown alert - no running event loop")
 
     async def _send_drawdown_alert(self, drawdown: float) -> None:
         """Send max drawdown exceeded alert."""
@@ -180,13 +188,12 @@ class RiskManager:
     def _schedule_daily_loss_alert(self, exceeded: bool, pct: float = 1.0) -> None:
         """Schedule async alert for daily loss limit."""
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                asyncio.create_task(self._send_daily_loss_alert(exceeded, pct))
-            else:
-                loop.run_until_complete(self._send_daily_loss_alert(exceeded, pct))
+            # Try to get the running loop (Python 3.10+ safe)
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._send_daily_loss_alert(exceeded, pct))
         except RuntimeError:
-            logger.warning("Could not send daily loss alert - no event loop")
+            # No running event loop - alerts are non-critical, just log
+            logger.debug("Could not send daily loss alert - no running event loop")
 
     async def _send_daily_loss_alert(self, exceeded: bool, pct: float) -> None:
         """Send daily loss limit alert."""
