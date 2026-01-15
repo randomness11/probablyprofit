@@ -162,10 +162,11 @@ class PositionMonitor:
 
         self._positions[position_id] = position
 
+        sl_str = f"{stop_loss_price:.4f}" if stop_loss_price else "None"
+        tp_str = f"{take_profit_price:.4f}" if take_profit_price else "None"
         logger.info(
             f"[PositionMonitor] Added position {position_id}: "
-            f"entry={entry_price:.4f}, SL={stop_loss_price:.4f if stop_loss_price else 'None'}, "
-            f"TP={take_profit_price:.4f if take_profit_price else 'None'}"
+            f"entry={entry_price:.4f}, SL={sl_str}, TP={tp_str}"
         )
 
         return position_id

@@ -31,9 +31,10 @@ class TestNewsTradingStrategy:
         strategy = NewsTradingStrategy(keywords=keywords)
         prompt = strategy.get_prompt()
 
-        # Prompt should mention the keywords
+        # Prompt should mention the keywords (case-insensitive since strategy lowercases them)
+        prompt_lower = prompt.lower()
         for kw in keywords:
-            assert kw in prompt
+            assert kw.lower() in prompt_lower
 
     def test_empty_keywords(self):
         strategy = NewsTradingStrategy(keywords=[])

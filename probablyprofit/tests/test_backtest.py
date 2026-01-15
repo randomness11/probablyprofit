@@ -9,20 +9,21 @@ from probablyprofit.backtesting.engine import BacktestEngine
 def test_backtest_stats():
     engine = BacktestEngine(initial_capital=1000.0)
 
-    # Simulate some equity history
+    # Simulate some equity history with varying returns
     engine.equity_history = [
         {"equity": 1000.0},
         {"equity": 1100.0},  # +10%
-        {"equity": 1210.0},  # +10%
+        {"equity": 1155.0},  # +5%
+        {"equity": 1213.0},  # +5%
     ]
 
     sharpe = engine._calculate_sharpe_ratio()
-    # approx: mean(0.1, 0.1) / std(0.1, 0.1) -> tiny std -> huge sharpe
+    # With varying returns, sharpe should be positive
     assert sharpe > 0
 
     metrics = engine._calculate_results(datetime.now(), datetime.now())
-    assert metrics.final_capital == 1210.0
-    assert metrics.total_return_pct == 0.21
+    assert metrics.final_capital == 1213.0
+    assert metrics.total_return_pct == pytest.approx(0.213, rel=0.01)
 
 
 def test_max_drawdown():

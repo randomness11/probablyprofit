@@ -8,6 +8,22 @@ def __getattr__(name):
         from probablyprofit.utils.logging import setup_logging
 
         return setup_logging
+    if name == "register_secret":
+        from probablyprofit.utils.logging import register_secret
+
+        return register_secret
+    if name == "redact_string":
+        from probablyprofit.utils.logging import redact_string
+
+        return redact_string
+    if name == "redact_dict":
+        from probablyprofit.utils.logging import redact_dict
+
+        return redact_dict
+    if name == "get_safe_repr":
+        from probablyprofit.utils.logging import get_safe_repr
+
+        return get_safe_repr
 
     # Resilience
     if name == "retry":
@@ -81,11 +97,38 @@ def __getattr__(name):
 
         return AIRateLimiter
 
+    # Secrets Management
+    if name == "SecretsManager":
+        from probablyprofit.utils.secrets import SecretsManager
+
+        return SecretsManager
+    if name == "get_secrets_manager":
+        from probablyprofit.utils.secrets import get_secrets_manager
+
+        return get_secrets_manager
+    if name == "get_secret":
+        from probablyprofit.utils.secrets import get_secret
+
+        return get_secret
+    if name == "set_secret":
+        from probablyprofit.utils.secrets import set_secret
+
+        return set_secret
+    if name == "redact_secret":
+        from probablyprofit.utils.secrets import redact_secret
+
+        return redact_secret
+
     raise AttributeError(f"module 'probablyprofit.utils' has no attribute '{name}'")
 
 
 __all__ = [
+    # Logging
     "setup_logging",
+    "register_secret",
+    "redact_string",
+    "redact_dict",
+    "get_safe_repr",
     # Resilience
     "retry",
     "resilient",
@@ -106,4 +149,10 @@ __all__ = [
     "AsyncTTLCache",
     # AI Rate Limiter
     "AIRateLimiter",
+    # Secrets Management
+    "SecretsManager",
+    "get_secrets_manager",
+    "get_secret",
+    "set_secret",
+    "redact_secret",
 ]

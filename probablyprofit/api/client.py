@@ -28,6 +28,14 @@ except ImportError:
     params_avail = False
     logger.warning("py-clob-client not installed. Trading functionality will be limited.")
 
+# Import eth-account for wallet operations when py-clob-client unavailable
+try:
+    from eth_account import Account
+    eth_account_avail = True
+except ImportError:
+    Account = None
+    eth_account_avail = False
+
 from probablyprofit.api.async_wrapper import AsyncClientWrapper, run_sync
 from probablyprofit.api.exceptions import (APIException, NetworkException,
                                            OrderException, RateLimitException,
@@ -337,7 +345,7 @@ class PolymarketClient:
 
         # Apply circuit breaker
         circuit = get_gamma_circuit()
-        if not circuit.can_execute():
+        if circuit.is_open:
             raise NetworkException("Circuit breaker open for Gamma API")
 
         try:
@@ -882,35 +890,67 @@ class PolymarketClient:
         Returns:
             Balance in USDC
         """
-        if not self.client:
-            logger.warning("Cannot fetch balance - no API credentials")
-            return 0.0
-
-        try:
-            # Rate limit
-            await get_rate_limiter().acquire()
-
-            # Method 1: Try py_clob_client's get_balance (wrap in timeout)
-            if hasattr(self.client, "get_balance"):
-                try:
+        # Method 0: If we have py-clob-client, use it
+        if self.client:
+            try:
+                await get_rate_limiter().acquire()
+                if hasattr(self.client, "get_balance"):
                     import asyncio
-
-                    # Run synchronous call with timeout
                     loop = asyncio.get_event_loop()
                     balance = await asyncio.wait_for(
                         loop.run_in_executor(None, self.client.get_balance), timeout=5.0
                     )
                     if balance is not None:
                         return float(balance)
-                except asyncio.TimeoutError:
-                    logger.debug("get_balance() timed out")
-                except Exception as e:
-                    logger.debug(f"get_balance() failed: {e}")
+            except Exception as e:
+                logger.debug(f"py-clob-client get_balance() failed: {e}")
 
-            # Method 2: Try CLOB API /balances endpoint
+        # Method 1: Query USDC balance directly from Polygon blockchain
+        if self._private_key and eth_account_avail:
+            try:
+                # Derive wallet address from private key
+                account = Account.from_key(self._private_key)
+                wallet_address = account.address
+                logger.debug(f"Wallet address: {wallet_address}")
+
+                # USDC contract on Polygon
+                usdc_contract = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+
+                # ERC20 balanceOf function selector + padded address
+                # balanceOf(address) = 0x70a08231
+                padded_address = wallet_address[2:].lower().zfill(64)
+                data = f"0x70a08231{padded_address}"
+
+                # Query Polygon RPC
+                rpc_url = "https://polygon-rpc.com"
+                payload = {
+                    "jsonrpc": "2.0",
+                    "method": "eth_call",
+                    "params": [
+                        {"to": usdc_contract, "data": data},
+                        "latest"
+                    ],
+                    "id": 1
+                }
+
+                async with httpx.AsyncClient(timeout=10.0) as rpc_client:
+                    response = await rpc_client.post(rpc_url, json=payload)
+                    if response.status_code == 200:
+                        result = response.json()
+                        if "result" in result and result["result"] != "0x":
+                            # USDC has 6 decimals
+                            balance_wei = int(result["result"], 16)
+                            balance_usdc = balance_wei / 1_000_000
+                            logger.info(f"💰 Fetched USDC balance from Polygon: ${balance_usdc:.2f}")
+                            return balance_usdc
+            except Exception as e:
+                logger.debug(f"Blockchain balance query failed: {e}")
+
+        # Method 2: Try CLOB API /balances endpoint (if we have credentials)
+        if self._api_creds:
             try:
                 import asyncio
-
+                await get_rate_limiter().acquire()
                 response = await asyncio.wait_for(
                     self.http_client.get(
                         "/balances", headers=self._get_auth_headers(), timeout=5.0
@@ -919,54 +959,23 @@ class PolymarketClient:
                 )
                 if response.status_code == 200:
                     data = response.json()
-                    # Parse balance from response
                     if isinstance(data, dict):
-                        # Try common keys
                         for key in ["balance", "usdc", "collateral", "available", "amount"]:
                             if key in data:
                                 return float(data[key])
-                        # Check for nested structure
-                        if "usdc" in data and isinstance(data["usdc"], dict):
-                            return float(data["usdc"].get("balance", 0))
                     elif isinstance(data, list) and len(data) > 0:
-                        # Array of balances - find USDC
                         for bal in data:
                             if bal.get("asset") == "USDC" or bal.get("token") == "USDC":
                                 return float(bal.get("balance", bal.get("amount", 0)))
-                    elif isinstance(data, (int, float)):
-                        return float(data)
-            except asyncio.TimeoutError:
-                logger.debug("REST /balances timed out")
             except Exception as e:
                 logger.debug(f"REST /balances failed: {e}")
 
-            # Method 3: Try data-api endpoint for balance
-            try:
-                import asyncio
-
-                # Polymarket data API endpoint
-                response = await asyncio.wait_for(
-                    self.gamma_client.get(
-                        f"/users/{self._api_creds.api_key if self._api_creds else 'unknown'}/balances"
-                    ),
-                    timeout=10.0,
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    if isinstance(data, dict) and "balance" in data:
-                        return float(data["balance"])
-            except asyncio.TimeoutError:
-                logger.debug("Gamma /balances timed out")
-            except Exception as e:
-                logger.debug(f"Gamma /balances failed: {e}")
-
-            # Last resort: return 0 (tracked capital used by risk manager)
-            logger.warning("Could not fetch balance from API, using tracked capital")
-            return 0.0
-
-        except Exception as e:
-            logger.error(f"Error fetching balance: {e}")
-            return 0.0
+        # No credentials or all methods failed
+        if not self._private_key:
+            logger.warning("Cannot fetch balance - no private key configured")
+        else:
+            logger.warning("Could not fetch balance from any source")
+        return 0.0
 
     async def close(self) -> None:
         """Close HTTP clients."""

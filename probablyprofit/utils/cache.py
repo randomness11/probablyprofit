@@ -2,9 +2,11 @@
 TTL-based caching utilities for ProbablyProfit.
 
 Provides in-memory caching with time-to-live expiration.
+Thread-safe for both sync and async operations.
 """
 
 import asyncio
+import threading
 import time
 from dataclasses import dataclass, field
 from functools import wraps
@@ -67,7 +69,8 @@ class TTLCache(Generic[T]):
         self.name = name
 
         self._cache: Dict[str, CacheEntry[T]] = {}
-        self._lock = asyncio.Lock()
+        self._lock = asyncio.Lock()  # For async operations
+        self._thread_lock = threading.RLock()  # For sync operations (reentrant)
 
         # Statistics
         self._hits = 0
@@ -78,7 +81,7 @@ class TTLCache(Generic[T]):
 
     def get(self, key: str) -> Optional[T]:
         """
-        Get a value from the cache.
+        Get a value from the cache (thread-safe).
 
         Args:
             key: Cache key
@@ -86,43 +89,45 @@ class TTLCache(Generic[T]):
         Returns:
             Cached value or None if not found/expired
         """
-        entry = self._cache.get(key)
+        with self._thread_lock:
+            entry = self._cache.get(key)
 
-        if entry is None:
-            self._misses += 1
-            return None
+            if entry is None:
+                self._misses += 1
+                return None
 
-        if entry.is_expired:
-            del self._cache[key]
-            self._misses += 1
-            return None
+            if entry.is_expired:
+                del self._cache[key]
+                self._misses += 1
+                return None
 
-        self._hits += 1
-        return entry.value
+            self._hits += 1
+            return entry.value
 
     def set(self, key: str, value: T, ttl: Optional[float] = None) -> None:
         """
-        Set a value in the cache.
+        Set a value in the cache (thread-safe).
 
         Args:
             key: Cache key
             value: Value to cache
             ttl: Custom TTL for this entry (uses default if None)
         """
-        effective_ttl = ttl if ttl is not None else self.ttl
+        with self._thread_lock:
+            effective_ttl = ttl if ttl is not None else self.ttl
 
-        # Evict if at max size
-        if self.max_size and len(self._cache) >= self.max_size:
-            self._evict_oldest()
+            # Evict if at max size
+            if self.max_size and len(self._cache) >= self.max_size:
+                self._evict_oldest_unsafe()
 
-        self._cache[key] = CacheEntry(
-            value=value,
-            expires_at=time.time() + effective_ttl,
-        )
+            self._cache[key] = CacheEntry(
+                value=value,
+                expires_at=time.time() + effective_ttl,
+            )
 
     def delete(self, key: str) -> bool:
         """
-        Delete a key from the cache.
+        Delete a key from the cache (thread-safe).
 
         Args:
             key: Cache key
@@ -130,42 +135,45 @@ class TTLCache(Generic[T]):
         Returns:
             True if key was deleted, False if not found
         """
-        if key in self._cache:
-            del self._cache[key]
-            return True
-        return False
+        with self._thread_lock:
+            if key in self._cache:
+                del self._cache[key]
+                return True
+            return False
 
     def clear(self) -> int:
         """
-        Clear all entries from the cache.
+        Clear all entries from the cache (thread-safe).
 
         Returns:
             Number of entries cleared
         """
-        count = len(self._cache)
-        self._cache.clear()
-        logger.debug(f"[Cache] '{self.name}' cleared ({count} entries)")
-        return count
+        with self._thread_lock:
+            count = len(self._cache)
+            self._cache.clear()
+            logger.debug(f"[Cache] '{self.name}' cleared ({count} entries)")
+            return count
 
     def cleanup_expired(self) -> int:
         """
-        Remove all expired entries.
+        Remove all expired entries (thread-safe).
 
         Returns:
             Number of entries removed
         """
-        expired_keys = [key for key, entry in self._cache.items() if entry.is_expired]
+        with self._thread_lock:
+            expired_keys = [key for key, entry in self._cache.items() if entry.is_expired]
 
-        for key in expired_keys:
-            del self._cache[key]
+            for key in expired_keys:
+                del self._cache[key]
 
-        if expired_keys:
-            logger.debug(f"[Cache] '{self.name}' cleaned up {len(expired_keys)} expired entries")
+            if expired_keys:
+                logger.debug(f"[Cache] '{self.name}' cleaned up {len(expired_keys)} expired entries")
 
-        return len(expired_keys)
+            return len(expired_keys)
 
-    def _evict_oldest(self) -> None:
-        """Evict the oldest entry (LRU-style)."""
+    def _evict_oldest_unsafe(self) -> None:
+        """Evict the oldest entry (LRU-style). Must be called with lock held."""
         if not self._cache:
             return
 
@@ -196,14 +204,15 @@ class TTLCache(Generic[T]):
         }
 
     def __contains__(self, key: str) -> bool:
-        """Check if key exists and is not expired."""
-        entry = self._cache.get(key)
-        if entry is None:
-            return False
-        if entry.is_expired:
-            del self._cache[key]
-            return False
-        return True
+        """Check if key exists and is not expired (thread-safe)."""
+        with self._thread_lock:
+            entry = self._cache.get(key)
+            if entry is None:
+                return False
+            if entry.is_expired:
+                del self._cache[key]
+                return False
+            return True
 
     def __len__(self) -> int:
         return len(self._cache)

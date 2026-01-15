@@ -117,6 +117,49 @@ async def health_check():
     )
 
 
+@router.get("/metrics")
+async def get_metrics():
+    """
+    Get metrics in Prometheus format.
+
+    Returns:
+        Plain text metrics in Prometheus exposition format
+
+    Usage:
+        Configure Prometheus to scrape this endpoint:
+        ```yaml
+        scrape_configs:
+          - job_name: 'probablyprofit'
+            static_configs:
+              - targets: ['localhost:8000']
+            metrics_path: '/api/metrics'
+        ```
+    """
+    from fastapi.responses import PlainTextResponse
+
+    from probablyprofit.utils.metrics import get_metrics_registry
+
+    registry = get_metrics_registry()
+    return PlainTextResponse(
+        content=registry.to_prometheus(),
+        media_type="text/plain; charset=utf-8",
+    )
+
+
+@router.get("/metrics/json")
+async def get_metrics_json():
+    """
+    Get all metrics as JSON.
+
+    Returns:
+        Dictionary with counters, gauges, and histograms
+    """
+    from probablyprofit.utils.metrics import get_metrics_registry
+
+    registry = get_metrics_registry()
+    return registry.get_all_stats()
+
+
 @router.get("/status", response_model=StatusResponse)
 async def get_status():
     """Get current agent status."""

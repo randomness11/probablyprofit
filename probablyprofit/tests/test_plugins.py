@@ -84,17 +84,17 @@ class TestPluginRegistry:
         registry = PluginRegistry()
 
         class TestOutput(OutputPlugin):
-            def __init__(self, name="default"):
+            def __init__(self, custom_name="default"):
                 super().__init__()
-                self.name = name
+                self.custom_name = custom_name
 
             async def send(self, event_type, data):
                 pass
 
         registry.register_plugin(TestOutput, "test_output", PluginType.OUTPUT)
 
-        instance = registry.create_instance("test_output", PluginType.OUTPUT, name="custom")
-        assert instance.name == "custom"
+        instance = registry.create_instance("test_output", PluginType.OUTPUT, custom_name="custom")
+        assert instance.custom_name == "custom"
 
     def test_list_plugins(self):
         registry = PluginRegistry()

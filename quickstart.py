@@ -26,8 +26,8 @@ if missing_vars:
     exit(1)
 
 # Import framework
-from poly16z import AnthropicAgent, PolymarketClient, RiskManager
-from poly16z.utils import setup_logging
+from probablyprofit import AnthropicAgent, PolymarketClient, RiskManager
+from probablyprofit.utils import setup_logging
 
 # Simple test strategy
 TEST_STRATEGY = """

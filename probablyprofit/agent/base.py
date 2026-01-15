@@ -52,7 +52,10 @@ class Decision(BaseModel):
 
 
 class AgentMemory(BaseModel):
-    """Agent memory for context persistence with optional database storage."""
+    """Agent memory for context persistence with optional database storage.
+
+    Thread-safe for concurrent access using asyncio.Lock.
+    """
 
     # Use deque with maxlen to prevent unbounded memory growth
     # Note: Pydantic v2 handles deque serialization automatically
@@ -69,9 +72,16 @@ class AgentMemory(BaseModel):
     _agent_name: str = "unknown"
     _agent_type: str = "unknown"
 
+    # Thread safety lock (initialized in __init__)
+    _lock: Any = None
+
     def __init__(self, **data):
         """Initialize with proper deque instances."""
         super().__init__(**data)
+
+        # Initialize lock for thread safety
+        self._lock = asyncio.Lock()
+
         # Get memory limits from config
         cfg = get_config()
         max_obs = cfg.agent.memory_max_observations
@@ -97,9 +107,10 @@ class AgentMemory(BaseModel):
         logger.info(f"AgentMemory: Database persistence enabled for {agent_name}")
 
     async def add_observation(self, observation: Observation) -> None:
-        """Add observation to memory and optionally persist."""
-        # deque with maxlen automatically evicts oldest items
-        self.observations.append(observation)
+        """Add observation to memory and optionally persist (thread-safe)."""
+        async with self._lock:
+            # deque with maxlen automatically evicts oldest items
+            self.observations.append(observation)
 
         # Persist to database
         if self.enable_persistence and self._db_manager:
@@ -131,9 +142,10 @@ class AgentMemory(BaseModel):
                 logger.warning(f"Failed to persist observation: {e}")
 
     async def add_decision(self, decision: Decision) -> None:
-        """Add decision to memory and optionally persist."""
-        # deque with maxlen automatically evicts oldest items
-        self.decisions.append(decision)
+        """Add decision to memory and optionally persist (thread-safe)."""
+        async with self._lock:
+            # deque with maxlen automatically evicts oldest items
+            self.decisions.append(decision)
 
         # Persist to database
         if self.enable_persistence and self._db_manager:
@@ -161,9 +173,10 @@ class AgentMemory(BaseModel):
                 logger.warning(f"Failed to persist decision: {e}")
 
     async def add_trade(self, trade: Order) -> None:
-        """Add trade to memory and optionally persist."""
-        # deque with maxlen automatically evicts oldest items
-        self.trades.append(trade)
+        """Add trade to memory and optionally persist (thread-safe)."""
+        async with self._lock:
+            # deque with maxlen automatically evicts oldest items
+            self.trades.append(trade)
 
         # Persist to database
         if self.enable_persistence and self._db_manager:
@@ -187,15 +200,27 @@ class AgentMemory(BaseModel):
                 logger.warning(f"Failed to persist trade: {e}")
 
     def get_recent_history(self, n: int = 10) -> str:
-        """Get formatted recent history."""
+        """Get formatted recent history.
+
+        Note: This creates atomic snapshots of the deques, which is thread-safe
+        for reading even without locks in Python due to the GIL.
+        """
         history = []
-        for obs, dec in zip(self.observations[-n:], self.decisions[-n:]):
+        # Create atomic snapshots by converting to lists (safe due to GIL)
+        obs_list = list(self.observations)[-n:]
+        dec_list = list(self.decisions)[-n:]
+        for obs, dec in zip(obs_list, dec_list):
             history.append(
                 f"Time: {obs.timestamp}\n"
                 f"Markets observed: {len(obs.markets)}\n"
                 f"Decision: {dec.action} - {dec.reasoning}\n"
             )
         return "\n".join(history)
+
+    async def get_recent_history_async(self, n: int = 10) -> str:
+        """Get formatted recent history (async thread-safe version)."""
+        async with self._lock:
+            return self.get_recent_history(n)
 
 
 class BaseAgent(ABC):

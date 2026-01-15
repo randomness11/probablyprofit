@@ -19,7 +19,9 @@ from probablyprofit.api.exceptions import (AgentException, NetworkException,
                                            ValidationException)
 from probablyprofit.risk.manager import RiskManager
 from probablyprofit.utils.resilience import retry
-from probablyprofit.utils.validators import validate_confidence
+from probablyprofit.utils.validators import (validate_confidence,
+                                             validate_strategy,
+                                             wrap_strategy_safely)
 
 
 class OpenAIAgent(BaseAgent):
@@ -48,7 +50,11 @@ class OpenAIAgent(BaseAgent):
 
         self.openai = OpenAI(api_key=openai_api_key)
         self.model = model
-        self.strategy_prompt = strategy_prompt
+
+        # Validate and sanitize strategy prompt to prevent injection attacks
+        sanitized_strategy = validate_strategy(strategy_prompt)
+        self.strategy_prompt = wrap_strategy_safely(sanitized_strategy)
+
         self.temperature = 0.7
 
         logger.info(f"OpenAIAgent '{name}' initialized with model {model}")

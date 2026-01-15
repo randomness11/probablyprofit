@@ -14,6 +14,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from probablyprofit.arbitrage.matcher import MarketMatcher, MatchResult
+from probablyprofit.config import get_config
 
 
 class MarketPair(BaseModel):
@@ -86,17 +87,6 @@ class ArbitrageOpportunity(BaseModel):
         )
 
 
-@dataclass
-class ArbitrageConfig:
-    """Configuration for arbitrage detection."""
-
-    min_profit_pct: float = 0.02  # Minimum 2% profit after fees
-    polymarket_fee: float = 0.02  # 2% Polymarket fee
-    kalshi_fee: float = 0.01  # 1% Kalshi fee (estimate)
-    min_match_similarity: float = 0.75  # Minimum market match similarity
-    max_opportunities: int = 10  # Max opportunities to track
-
-
 class ArbitrageDetector:
     """
     Detects cross-platform arbitrage opportunities.
@@ -118,7 +108,6 @@ class ArbitrageDetector:
         self,
         polymarket_client: Any = None,
         kalshi_client: Any = None,
-        config: Optional[ArbitrageConfig] = None,
     ):
         """
         Initialize arbitrage detector.
@@ -126,12 +115,18 @@ class ArbitrageDetector:
         Args:
             polymarket_client: Polymarket API client
             kalshi_client: Kalshi API client
-            config: Detection configuration
         """
         self.polymarket_client = polymarket_client
         self.kalshi_client = kalshi_client
-        self.config = config or ArbitrageConfig()
-        self.matcher = MarketMatcher(min_similarity=self.config.min_match_similarity)
+
+        # Load config from global config
+        cfg = get_config()
+        self.min_profit_pct = cfg.arbitrage.min_profit_pct
+        self.polymarket_fee = cfg.arbitrage.polymarket_fee
+        self.kalshi_fee = cfg.arbitrage.kalshi_fee
+        self.min_match_similarity = cfg.arbitrage.min_match_similarity
+
+        self.matcher = MarketMatcher(min_similarity=self.min_match_similarity)
 
         # Cache for matched pairs
         self._matched_pairs: List[MarketPair] = []
@@ -226,7 +221,7 @@ class ArbitrageDetector:
 
         # Sort by profit and limit
         self._opportunities.sort(key=lambda o: o.net_profit_pct, reverse=True)
-        self._opportunities = self._opportunities[: self.config.max_opportunities]
+        self._opportunities = self._opportunities[: 10]
 
         self._last_scan = datetime.now()
 
@@ -256,7 +251,7 @@ class ArbitrageDetector:
             fees = self._calculate_fees(pair.polymarket_yes_price, pair.kalshi_no_price)
             net_profit = gross_profit - fees
 
-            if net_profit / combined_1 >= self.config.min_profit_pct:
+            if net_profit / combined_1 >= self.min_profit_pct:
                 opp = ArbitrageOpportunity(
                     pair=pair,
                     opportunity_type="yes_poly_no_kalshi",
@@ -284,7 +279,7 @@ class ArbitrageDetector:
             fees = self._calculate_fees(pair.polymarket_no_price, pair.kalshi_yes_price)
             net_profit = gross_profit - fees
 
-            if net_profit / combined_2 >= self.config.min_profit_pct:
+            if net_profit / combined_2 >= self.min_profit_pct:
                 opp = ArbitrageOpportunity(
                     pair=pair,
                     opportunity_type="no_poly_yes_kalshi",
@@ -313,8 +308,8 @@ class ArbitrageDetector:
         kalshi_price: float,
     ) -> float:
         """Calculate estimated trading fees."""
-        poly_fee = poly_price * self.config.polymarket_fee
-        kalshi_fee = kalshi_price * self.config.kalshi_fee
+        poly_fee = poly_price * self.polymarket_fee
+        kalshi_fee = kalshi_price * self.kalshi_fee
         return poly_fee + kalshi_fee
 
     def _calculate_confidence(self, pair: MarketPair) -> float:

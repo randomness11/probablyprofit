@@ -167,6 +167,8 @@ class PerformanceMetrics:
 
         # Trade-based metrics
         total_trades = len(trades) // 2  # Assuming buy/sell pairs
+        wins = []
+        losses = []
         if total_trades > 0:
             # Calculate P&L for each trade pair
             pnls = []

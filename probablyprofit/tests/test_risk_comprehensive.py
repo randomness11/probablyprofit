@@ -63,8 +63,8 @@ class TestCanOpenPosition:
 
     def test_exceeds_exposure_limit(self, risk_manager):
         # Simulate existing exposure
-        risk_manager.current_exposure = 900.0
-        # New position would bring total to 950 > 1000 (default max)
+        risk_manager.current_exposure = 950.0
+        # New position of 200*0.5=100 would bring total to 1050 > 1000 (default max)
         assert risk_manager.can_open_position(size=200, price=0.5) is False
 
     def test_exceeds_max_positions(self, risk_manager):

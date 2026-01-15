@@ -2,15 +2,27 @@
 WebSocket Client for Real-time Price Streaming
 
 Provides real-time price updates from Polymarket via WebSocket.
+Features automatic reconnection with exponential backoff and jitter.
 """
 
 import asyncio
 import json
+import random
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
+from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
 
 from loguru import logger
+
+
+class ConnectionState(Enum):
+    """WebSocket connection states."""
+    DISCONNECTED = "disconnected"
+    CONNECTING = "connecting"
+    CONNECTED = "connected"
+    RECONNECTING = "reconnecting"
+    FAILED = "failed"
 
 try:
     import websockets
@@ -97,7 +109,9 @@ class WebSocketClient:
         self._subscriptions: Set[str] = set()
         self._running = False
         self._task: Optional[asyncio.Task] = None
+        self._heartbeat_task: Optional[asyncio.Task] = None
         self._reconnect_count = 0
+        self._state = ConnectionState.DISCONNECTED
 
         # Callbacks
         self._price_callbacks: List[Callable[[PriceUpdate], Any]] = []
@@ -109,6 +123,12 @@ class WebSocketClient:
         # Statistics
         self._messages_received = 0
         self._last_message_time: Optional[datetime] = None
+        self._connected_at: Optional[datetime] = None
+        self._total_reconnects = 0
+
+        # Heartbeat settings
+        self._heartbeat_interval = 30.0  # seconds
+        self._heartbeat_timeout = 60.0  # consider dead if no message for this long
 
         logger.info(f"WebSocketClient initialized (URL: {self.url})")
 
@@ -119,6 +139,7 @@ class WebSocketClient:
         Returns:
             True if connected successfully
         """
+        self._state = ConnectionState.CONNECTING
         try:
             self._ws = await websockets.connect(
                 self.url,
@@ -127,6 +148,8 @@ class WebSocketClient:
             )
             self._running = True
             self._reconnect_count = 0
+            self._state = ConnectionState.CONNECTED
+            self._connected_at = datetime.now()
 
             logger.info("[WebSocket] Connected")
 
@@ -143,18 +166,30 @@ class WebSocketClient:
             if self._subscriptions:
                 await self._send_subscriptions(self._subscriptions)
 
-            # Start message loop
+            # Start message loop and heartbeat monitor
             self._task = asyncio.create_task(self._message_loop())
+            self._heartbeat_task = asyncio.create_task(self._heartbeat_monitor())
 
             return True
 
         except Exception as e:
             logger.error(f"[WebSocket] Connection failed: {e}")
+            self._state = ConnectionState.DISCONNECTED
             return False
 
     async def disconnect(self) -> None:
         """Disconnect from WebSocket server."""
         self._running = False
+        self._state = ConnectionState.DISCONNECTED
+
+        # Cancel heartbeat task
+        if self._heartbeat_task:
+            self._heartbeat_task.cancel()
+            try:
+                await self._heartbeat_task
+            except asyncio.CancelledError:
+                pass
+            self._heartbeat_task = None
 
         if self._task:
             self._task.cancel()
@@ -162,6 +197,7 @@ class WebSocketClient:
                 await self._task
             except asyncio.CancelledError:
                 pass
+            self._task = None
 
         if self._ws:
             await self._ws.close()
@@ -362,13 +398,20 @@ class WebSocketClient:
             await self._attempt_reconnect()
 
     async def _attempt_reconnect(self) -> None:
-        """Attempt to reconnect with exponential backoff."""
+        """Attempt to reconnect with exponential backoff and jitter."""
+        self._state = ConnectionState.RECONNECTING
+
         while self._running and self._reconnect_count < self.max_reconnect_attempts:
             self._reconnect_count += 1
+            self._total_reconnects += 1
 
-            # Exponential backoff
-            wait_time = self.reconnect_interval * (2 ** (self._reconnect_count - 1))
-            wait_time = min(wait_time, 60.0)  # Cap at 60 seconds
+            # Exponential backoff with jitter to prevent thundering herd
+            base_wait = self.reconnect_interval * (2 ** (self._reconnect_count - 1))
+            base_wait = min(base_wait, 60.0)  # Cap at 60 seconds
+
+            # Add jitter: random value between 0 and 25% of base_wait
+            jitter = random.uniform(0, base_wait * 0.25)
+            wait_time = base_wait + jitter
 
             logger.info(
                 f"[WebSocket] Reconnecting in {wait_time:.1f}s "
@@ -378,10 +421,31 @@ class WebSocketClient:
             await asyncio.sleep(wait_time)
 
             if await self.connect():
+                logger.info(f"[WebSocket] Reconnected successfully after {self._reconnect_count} attempt(s)")
                 return
 
         logger.error("[WebSocket] Max reconnection attempts reached")
         self._running = False
+        self._state = ConnectionState.FAILED
+
+    async def _heartbeat_monitor(self) -> None:
+        """Monitor connection health and trigger reconnection if needed."""
+        while self._running and self._state == ConnectionState.CONNECTED:
+            await asyncio.sleep(self._heartbeat_interval)
+
+            # Check if we've received any messages recently
+            if self._last_message_time:
+                time_since_last = (datetime.now() - self._last_message_time).total_seconds()
+                if time_since_last > self._heartbeat_timeout:
+                    logger.warning(
+                        f"[WebSocket] No messages received for {time_since_last:.0f}s, "
+                        "connection may be dead"
+                    )
+                    # Force disconnect and reconnect
+                    if self._ws:
+                        await self._ws.close()
+                    await self._handle_disconnect()
+                    break
 
     async def _handle_error(self, error: Exception) -> None:
         """Handle errors by calling error callbacks."""
@@ -431,16 +495,31 @@ class WebSocketClient:
         return self._subscriptions.copy()
 
     @property
+    def state(self) -> ConnectionState:
+        """Get current connection state."""
+        return self._state
+
+    @property
     def stats(self) -> Dict[str, Any]:
         """Get connection statistics."""
+        uptime = None
+        if self._connected_at and self._state == ConnectionState.CONNECTED:
+            uptime = (datetime.now() - self._connected_at).total_seconds()
+
         return {
             "connected": self.is_connected,
+            "state": self._state.value,
             "subscriptions": len(self._subscriptions),
             "messages_received": self._messages_received,
             "last_message_time": (
                 self._last_message_time.isoformat() if self._last_message_time else None
             ),
-            "reconnect_count": self._reconnect_count,
+            "connected_at": (
+                self._connected_at.isoformat() if self._connected_at else None
+            ),
+            "uptime_seconds": uptime,
+            "reconnect_attempts": self._reconnect_count,
+            "total_reconnects": self._total_reconnects,
         }
 
 

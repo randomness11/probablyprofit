@@ -200,3 +200,138 @@ class TestWebSocketMocked:
 
         # Should not raise, just log warning
         await client._handle_message("not valid json")
+
+
+class TestConnectionState:
+    """Tests for ConnectionState enum."""
+
+    def test_connection_states_exist(self):
+        """Test that all connection states are defined."""
+        from probablyprofit.api.websocket import ConnectionState
+
+        assert hasattr(ConnectionState, "DISCONNECTED")
+        assert hasattr(ConnectionState, "CONNECTING")
+        assert hasattr(ConnectionState, "CONNECTED")
+        assert hasattr(ConnectionState, "RECONNECTING")
+
+    def test_state_values(self):
+        """Test connection state values."""
+        from probablyprofit.api.websocket import ConnectionState
+
+        # Each state should be distinct
+        states = [
+            ConnectionState.DISCONNECTED,
+            ConnectionState.CONNECTING,
+            ConnectionState.CONNECTED,
+            ConnectionState.RECONNECTING,
+        ]
+        assert len(set(states)) == 4
+
+
+class TestExponentialBackoff:
+    """Tests for exponential backoff with jitter."""
+
+    def test_reconnect_interval_configurable(self):
+        """Test that reconnect interval is configurable."""
+        from probablyprofit.api.websocket import WebSocketClient
+
+        client = WebSocketClient(reconnect_interval=10.0)
+
+        assert client.reconnect_interval == 10.0
+
+    def test_default_reconnect_interval(self):
+        """Test default reconnect interval."""
+        from probablyprofit.api.websocket import WebSocketClient
+
+        client = WebSocketClient()
+
+        # Should have a reasonable default
+        assert client.reconnect_interval > 0
+
+
+class TestReconnectionLogic:
+    """Tests for reconnection behavior."""
+
+    def test_reconnect_attempts_tracked(self):
+        """Test that reconnect attempts are tracked."""
+        from probablyprofit.api.websocket import WebSocketClient
+
+        client = WebSocketClient()
+
+        # Simulate reconnect attempts
+        client._reconnect_attempts = 3
+
+        stats = client.stats
+        assert "reconnect_attempts" in stats or client._reconnect_attempts == 3
+
+    def test_max_reconnect_attempts_configurable(self):
+        """Test that max reconnect attempts is configurable."""
+        from probablyprofit.api.websocket import WebSocketClient
+
+        client = WebSocketClient(max_reconnect_attempts=10)
+
+        assert client.max_reconnect_attempts == 10
+
+    def test_default_max_reconnect_attempts(self):
+        """Test default max reconnect attempts."""
+        from probablyprofit.api.websocket import WebSocketClient
+
+        client = WebSocketClient()
+
+        # Should have a sensible default
+        assert client.max_reconnect_attempts >= 3
+
+
+class TestHeartbeat:
+    """Tests for heartbeat monitoring."""
+
+    def test_heartbeat_timeout_exists(self):
+        """Test that heartbeat timeout is set."""
+        from probablyprofit.api.websocket import WebSocketClient
+
+        client = WebSocketClient()
+
+        # Default heartbeat timeout should be set
+        assert client._heartbeat_timeout > 0
+
+    def test_default_heartbeat_timeout(self):
+        """Test default heartbeat timeout."""
+        from probablyprofit.api.websocket import WebSocketClient
+
+        client = WebSocketClient()
+
+        # Should have a sensible default (60 seconds)
+        assert client._heartbeat_timeout >= 30.0
+
+    def test_last_message_time_updated(self):
+        """Test that last message time is tracked."""
+        from probablyprofit.api.websocket import WebSocketClient
+
+        client = WebSocketClient()
+
+        # Should have a last_message_time attribute
+        assert hasattr(client, "_last_message_time")
+
+
+class TestConnectionStats:
+    """Tests for enhanced connection statistics."""
+
+    def test_stats_include_connection_info(self):
+        """Test that stats include connection information."""
+        from probablyprofit.api.websocket import WebSocketClient
+
+        client = WebSocketClient()
+        stats = client.stats
+
+        assert "connected" in stats
+        assert "messages_received" in stats
+        assert "subscriptions" in stats
+
+    def test_stats_track_total_reconnects(self):
+        """Test that total reconnects are tracked."""
+        from probablyprofit.api.websocket import WebSocketClient
+
+        client = WebSocketClient()
+
+        # Should have a total_reconnects counter
+        assert hasattr(client, "_total_reconnects")

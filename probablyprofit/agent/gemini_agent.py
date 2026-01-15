@@ -19,7 +19,9 @@ from probablyprofit.api.exceptions import (AgentException, NetworkException,
                                            ValidationException)
 from probablyprofit.risk.manager import RiskManager
 from probablyprofit.utils.resilience import retry
-from probablyprofit.utils.validators import validate_confidence
+from probablyprofit.utils.validators import (validate_confidence,
+                                             validate_strategy,
+                                             wrap_strategy_safely)
 
 # Try new SDK first, fall back to old
 try:
@@ -63,8 +65,11 @@ class GeminiAgent(BaseAgent):
             raise ImportError("Google Gemini SDK not installed. Run: pip install google-genai")
 
         self.model_name = model
-        self.strategy_prompt = strategy_prompt
         self.api_key = google_api_key
+
+        # Validate and sanitize strategy prompt to prevent injection attacks
+        sanitized_strategy = validate_strategy(strategy_prompt)
+        self.strategy_prompt = wrap_strategy_safely(sanitized_strategy)
 
         if NEW_SDK:
             # New google-genai SDK

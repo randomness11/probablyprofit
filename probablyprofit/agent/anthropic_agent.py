@@ -20,7 +20,9 @@ from probablyprofit.risk.manager import RiskManager
 from probablyprofit.utils.ai_rate_limiter import (AIRateLimiter,
                                                   anthropic_rate_limited)
 from probablyprofit.utils.resilience import retry
-from probablyprofit.utils.validators import validate_confidence
+from probablyprofit.utils.validators import (validate_confidence,
+                                             validate_strategy,
+                                             wrap_strategy_safely)
 
 
 class AnthropicAgent(BaseAgent):
@@ -78,7 +80,11 @@ class AnthropicAgent(BaseAgent):
         super().__init__(client, risk_manager, name, loop_interval)
 
         self.anthropic = Anthropic(api_key=anthropic_api_key)
-        self.strategy_prompt = strategy_prompt
+
+        # Validate and sanitize strategy prompt to prevent injection attacks
+        sanitized_strategy = validate_strategy(strategy_prompt)
+        self.strategy_prompt = wrap_strategy_safely(sanitized_strategy)
+
         self.model = model
         self.temperature = temperature
 

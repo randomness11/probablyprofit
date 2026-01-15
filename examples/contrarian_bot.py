@@ -8,8 +8,8 @@ import asyncio
 import os
 
 from dotenv import load_dotenv
-from poly16z import AnthropicAgent, PolymarketClient, RiskManager
-from poly16z.utils import setup_logging
+from probablyprofit import AnthropicAgent, PolymarketClient, RiskManager
+from probablyprofit.utils import setup_logging
 
 # Load environment variables
 load_dotenv()

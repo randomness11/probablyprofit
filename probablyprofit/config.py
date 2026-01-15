@@ -5,6 +5,7 @@ Handles loading, saving, and validating configuration from multiple sources:
 1. ~/.probablyprofit/config.yaml (user config)
 2. .env file (local project config)
 3. Environment variables (runtime overrides)
+4. Secure secrets storage (keyring/encrypted file)
 """
 
 import os
@@ -14,6 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 from dotenv import load_dotenv
+from loguru import logger
 
 # Config directory
 CONFIG_DIR = Path.home() / ".probablyprofit"
@@ -107,6 +109,44 @@ class RiskConfig:
 
 
 @dataclass
+class StrategyConfig:
+    """Strategy-specific configuration."""
+
+    # Liquidity strategy
+    min_liquidity: float = 1000.0
+
+    # Contrarian strategy
+    extreme_threshold: float = 0.85  # Price considered extreme (buy/sell signal)
+
+    # Value strategy
+    value_lower_bound: float = 0.30  # Min price for "value" plays
+    value_upper_bound: float = 0.70  # Max price for "value" plays
+
+    # Momentum
+    momentum_lookback_hours: int = 24
+    momentum_threshold_pct: float = 0.10  # 10% price move triggers signal
+
+
+@dataclass
+class ArbitrageConfig:
+    """Arbitrage detection configuration."""
+
+    # Profit thresholds
+    min_profit_pct: float = 0.02  # Minimum 2% profit after fees
+
+    # Platform fees
+    polymarket_fee: float = 0.02  # 2% Polymarket fee
+    kalshi_fee: float = 0.01  # 1% Kalshi fee (estimate)
+
+    # Market matching
+    min_match_similarity: float = 0.75  # Minimum fuzzy match score
+
+    # Confidence adjustments
+    low_liquidity_confidence_factor: float = 0.70
+    moderate_liquidity_confidence_factor: float = 0.85
+
+
+@dataclass
 class Config:
     """Main configuration object."""
 
@@ -143,6 +183,8 @@ class Config:
     api: APIConfig = field(default_factory=APIConfig)
     agent: AgentConfig = field(default_factory=AgentConfig)
     risk: RiskConfig = field(default_factory=RiskConfig)
+    strategy: StrategyConfig = field(default_factory=StrategyConfig)
+    arbitrage: ArbitrageConfig = field(default_factory=ArbitrageConfig)
 
     def get_available_agents(self) -> List[str]:
         """Get list of configured AI providers."""
@@ -390,31 +432,63 @@ def load_config() -> Config:
         except Exception:
             pass
 
-    # Load credentials from secure file
-    if CREDENTIALS_FILE.exists():
-        try:
-            with open(CREDENTIALS_FILE) as f:
-                creds = yaml.safe_load(f) or {}
-
-            config.openai_api_key = creds.get("openai_api_key")
-            config.anthropic_api_key = creds.get("anthropic_api_key")
-            config.google_api_key = creds.get("google_api_key")
-            config.private_key = creds.get("private_key")
-            config.perplexity_api_key = creds.get("perplexity_api_key")
-            config.twitter_bearer_token = creds.get("twitter_bearer_token")
-        except Exception:
-            pass
-
-    # Load from .env file (overrides config files)
+    # Load from .env file first (so env vars are available)
     load_dotenv()
 
-    # Environment variables override everything
-    config.openai_api_key = os.getenv("OPENAI_API_KEY", config.openai_api_key)
-    config.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", config.anthropic_api_key)
-    config.google_api_key = os.getenv("GOOGLE_API_KEY", config.google_api_key)
-    config.private_key = os.getenv("PRIVATE_KEY", config.private_key)
-    config.perplexity_api_key = os.getenv("PERPLEXITY_API_KEY", config.perplexity_api_key)
-    config.twitter_bearer_token = os.getenv("TWITTER_BEARER_TOKEN", config.twitter_bearer_token)
+    # Try to use secure secrets manager (keyring/encrypted storage)
+    try:
+        from probablyprofit.utils.secrets import get_secrets_manager
+
+        secrets = get_secrets_manager()
+
+        # Load secrets from secure storage (checks env vars first internally)
+        config.openai_api_key = secrets.get("openai_api_key")
+        config.anthropic_api_key = secrets.get("anthropic_api_key")
+        config.google_api_key = secrets.get("google_api_key")
+        config.private_key = secrets.get("private_key")
+        config.perplexity_api_key = secrets.get("perplexity_api_key")
+        config.twitter_bearer_token = secrets.get("twitter_bearer_token")
+
+        # Migrate plaintext credentials if they exist
+        if CREDENTIALS_FILE.exists():
+            try:
+                with open(CREDENTIALS_FILE) as f:
+                    plaintext_creds = yaml.safe_load(f) or {}
+                if plaintext_creds:
+                    migrated = secrets.migrate_from_plaintext(plaintext_creds)
+                    if migrated > 0:
+                        logger.info(f"Migrated {migrated} credentials to secure storage")
+                        # Backup and remove plaintext file
+                        backup_file = CREDENTIALS_FILE.with_suffix(".yaml.bak")
+                        CREDENTIALS_FILE.rename(backup_file)
+                        logger.info(f"Plaintext credentials backed up to {backup_file}")
+            except Exception as e:
+                logger.debug(f"Could not migrate plaintext credentials: {e}")
+
+    except ImportError:
+        logger.warning("Secrets manager not available, falling back to plaintext credentials")
+        # Fallback: Load credentials from plaintext file
+        if CREDENTIALS_FILE.exists():
+            try:
+                with open(CREDENTIALS_FILE) as f:
+                    creds = yaml.safe_load(f) or {}
+
+                config.openai_api_key = creds.get("openai_api_key")
+                config.anthropic_api_key = creds.get("anthropic_api_key")
+                config.google_api_key = creds.get("google_api_key")
+                config.private_key = creds.get("private_key")
+                config.perplexity_api_key = creds.get("perplexity_api_key")
+                config.twitter_bearer_token = creds.get("twitter_bearer_token")
+            except Exception:
+                pass
+
+        # Environment variables override file credentials
+        config.openai_api_key = os.getenv("OPENAI_API_KEY", config.openai_api_key)
+        config.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", config.anthropic_api_key)
+        config.google_api_key = os.getenv("GOOGLE_API_KEY", config.google_api_key)
+        config.private_key = os.getenv("PRIVATE_KEY", config.private_key)
+        config.perplexity_api_key = os.getenv("PERPLEXITY_API_KEY", config.perplexity_api_key)
+        config.twitter_bearer_token = os.getenv("TWITTER_BEARER_TOKEN", config.twitter_bearer_token)
 
     if os.getenv("INITIAL_CAPITAL"):
         config.initial_capital = float(os.getenv("INITIAL_CAPITAL"))
@@ -435,13 +509,23 @@ def save_config(config: Config) -> None:
     with open(CONFIG_FILE, "w") as f:
         yaml.dump(config.to_dict(), f, default_flow_style=False)
 
-    # Save credentials with restricted permissions
+    # Save credentials to secure storage
     creds = config.credentials_to_dict()
     if creds:
-        with open(CREDENTIALS_FILE, "w") as f:
-            yaml.dump(creds, f, default_flow_style=False)
-        # Restrict permissions on credentials file
-        os.chmod(CREDENTIALS_FILE, 0o600)
+        try:
+            from probablyprofit.utils.secrets import get_secrets_manager
+
+            secrets = get_secrets_manager()
+            for key, value in creds.items():
+                if value:
+                    secrets.set(key, value)
+            logger.info("Credentials saved to secure storage")
+        except ImportError:
+            # Fallback: Save to plaintext file with restricted permissions
+            logger.warning("Secrets manager not available, saving credentials to plaintext file")
+            with open(CREDENTIALS_FILE, "w") as f:
+                yaml.dump(creds, f, default_flow_style=False)
+            os.chmod(CREDENTIALS_FILE, 0o600)
 
 
 def validate_api_key(provider: str, key: str) -> bool:
@@ -495,3 +579,139 @@ def get_quick_status() -> Dict[str, Any]:
         "platform": config.platform,
         "dry_run": config.dry_run,
     }
+
+
+class ConfigValidationError(Exception):
+    """Raised when configuration validation fails."""
+    pass
+
+
+def validate_config(config: Config, strict: bool = False) -> List[str]:
+    """
+    Validate configuration and return list of warnings/errors.
+
+    Args:
+        config: Configuration to validate
+        strict: If True, raise exception on critical errors
+
+    Returns:
+        List of warning/error messages
+
+    Raises:
+        ConfigValidationError: If strict=True and critical errors found
+    """
+    errors: List[str] = []
+    warnings: List[str] = []
+
+    # Check for at least one AI provider
+    if not config.get_available_agents():
+        errors.append(
+            "No AI provider configured. Set at least one of: "
+            "OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY"
+        )
+
+    # Check wallet for live trading
+    if not config.dry_run and not config.has_wallet():
+        errors.append(
+            "Live trading enabled but no wallet configured. "
+            "Set PRIVATE_KEY or enable dry_run mode"
+        )
+
+    # Validate API key formats (basic checks)
+    if config.openai_api_key and not config.openai_api_key.startswith("sk-"):
+        warnings.append("OpenAI API key doesn't start with 'sk-' - may be invalid")
+
+    if config.anthropic_api_key and not (
+        config.anthropic_api_key.startswith("sk-ant-") or
+        config.anthropic_api_key.startswith("sk-")
+    ):
+        warnings.append("Anthropic API key format looks unusual")
+
+    # Validate private key format
+    if config.private_key:
+        key = config.private_key
+        if key.startswith("0x"):
+            key = key[2:]
+        if len(key) != 64:
+            errors.append(
+                f"Private key should be 64 hex characters (got {len(key)})"
+            )
+        else:
+            try:
+                int(key, 16)
+            except ValueError:
+                errors.append("Private key contains invalid hex characters")
+
+    # Validate risk settings
+    if config.risk.max_position_pct <= 0 or config.risk.max_position_pct > 1:
+        warnings.append(
+            f"max_position_pct should be 0-1, got {config.risk.max_position_pct}"
+        )
+
+    if config.risk.max_daily_loss_pct <= 0 or config.risk.max_daily_loss_pct > 1:
+        warnings.append(
+            f"max_daily_loss_pct should be 0-1, got {config.risk.max_daily_loss_pct}"
+        )
+
+    if config.risk.kelly_fraction <= 0 or config.risk.kelly_fraction > 1:
+        warnings.append(
+            f"kelly_fraction should be 0-1, got {config.risk.kelly_fraction}"
+        )
+
+    # Validate API settings
+    if config.api.http_timeout <= 0:
+        warnings.append(f"http_timeout should be positive, got {config.api.http_timeout}")
+
+    if config.api.polymarket_rate_limit_calls <= 0:
+        warnings.append(
+            f"rate_limit_calls should be positive, got {config.api.polymarket_rate_limit_calls}"
+        )
+
+    # Validate agent settings
+    if config.agent.default_loop_interval < 10:
+        warnings.append(
+            f"loop_interval very low ({config.agent.default_loop_interval}s) - may cause rate limiting"
+        )
+
+    if config.initial_capital <= 0:
+        warnings.append(f"initial_capital should be positive, got {config.initial_capital}")
+
+    # Log warnings
+    for warning in warnings:
+        logger.warning(f"Config warning: {warning}")
+
+    # Log errors
+    for error in errors:
+        logger.error(f"Config error: {error}")
+
+    if strict and errors:
+        raise ConfigValidationError(
+            f"Configuration validation failed with {len(errors)} error(s):\n" +
+            "\n".join(f"  - {e}" for e in errors)
+        )
+
+    return errors + warnings
+
+
+def validate_config_on_startup(strict: bool = True) -> Config:
+    """
+    Load and validate configuration on application startup.
+
+    Args:
+        strict: If True, raise exception on critical errors
+
+    Returns:
+        Validated configuration
+
+    Raises:
+        ConfigValidationError: If validation fails in strict mode
+    """
+    config = load_config()
+    issues = validate_config(config, strict=strict)
+
+    if issues:
+        logger.warning(f"Configuration has {len(issues)} issue(s)")
+    else:
+        logger.info("Configuration validated successfully")
+
+    return config
