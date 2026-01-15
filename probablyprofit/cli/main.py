@@ -178,10 +178,14 @@ def setup(reconfigure: bool = False):
             if 0 <= idx < len(ai_choices):
                 name, provider, _ = ai_choices[idx]
 
-                # Get API key
-                key = Prompt.ask(f"Enter your {name} API key", password=True)
+                # Get and validate API key with retry loop
+                while True:
+                    key = Prompt.ask(f"Enter your {name} API key", password=True)
 
-                if key:
+                    if not key:
+                        console.print("[dim]Skipped.[/dim]\n")
+                        break
+
                     # Validate
                     with console.status(f"[bold]Validating {name} API key...[/bold]"):
                         valid = validate_api_key(provider, key)
@@ -189,10 +193,12 @@ def setup(reconfigure: bool = False):
                     if valid:
                         setattr(config, f"{provider}_api_key", key)
                         console.print(f"[green]✓ {name} configured successfully![/green]\n")
+                        break
                     else:
-                        console.print(
-                            f"[red]✗ Invalid API key. Please check and try again.[/red]\n"
-                        )
+                        console.print(f"[red]✗ Invalid API key.[/red]")
+                        if not Confirm.ask("Try again?", default=True):
+                            console.print("[dim]Skipped.[/dim]\n")
+                            break
 
                 # Ask if they want to add another
                 if not Confirm.ask("Add another AI provider?", default=False):
@@ -209,9 +215,18 @@ def setup(reconfigure: bool = False):
         console.print("  • Google: https://makersuite.google.com/app/apikey")
         return
 
+    # Explain trading modes
+    console.print("\n[bold cyan]Trading Modes[/bold cyan]")
+    console.print("  [yellow]Dry-run[/yellow]  - Simulate trades on live market data (safe for testing)")
+    console.print("  [cyan]Paper[/cyan]    - Virtual portfolio with simulated money")
+    console.print("  [red]Live[/red]     - Real money trades (requires wallet + confirmation)")
+    console.print("[dim]Switch modes with --dry-run, --paper, or --live flags[/dim]\n")
+
     # Step 2: Wallet (optional)
-    console.print("\n[bold cyan]Step 2: Wallet Configuration (Optional)[/bold cyan]")
-    console.print("Connect a wallet to enable live trading. Skip for read-only/paper mode.\n")
+    console.print("[bold cyan]Step 2: Wallet Configuration (Optional)[/bold cyan]")
+    console.print("Connect a wallet to enable [red]live trading[/red].")
+    console.print("[dim]Note: Polymarket API keys are auto-derived from your private key.[/dim]")
+    console.print("[dim]You don't need to manually create them on Polymarket's website.[/dim]\n")
 
     if Confirm.ask("Connect a Polymarket wallet?", default=False):
         console.print("\n[dim]Your private key is stored locally and never sent anywhere.[/dim]")
@@ -240,7 +255,10 @@ def setup(reconfigure: bool = False):
                 console.print(f"[yellow]Could not derive Polymarket credentials: {e}[/yellow]")
                 console.print("[dim]You may need to set them manually in .env[/dim]")
     else:
-        console.print("[dim]Skipped wallet setup. You can trade in paper mode.[/dim]")
+        console.print("[dim]Wallet skipped. Available modes without a wallet:[/dim]")
+        console.print("  [cyan]Paper[/cyan]:   probablyprofit run -s strategy.txt --paper")
+        console.print("  [yellow]Dry-run[/yellow]: probablyprofit run -s strategy.txt --dry-run")
+        console.print("  [dim]Read-only: Fetch and analyze markets without trading[/dim]\n")
 
     # Step 3: Preferences
     console.print("\n[bold cyan]Step 3: Preferences[/bold cyan]\n")
@@ -263,7 +281,18 @@ def setup(reconfigure: bool = False):
     save_config(config)
 
     console.print("\n[bold green]✓ Setup complete![/bold green]\n")
-    console.print("Your configuration is saved to ~/.probablyprofit/\n")
+
+    # Show configuration summary
+    console.print("[bold]Configuration Summary:[/bold]")
+    agents = config.get_available_agents()
+    console.print(f"  AI Providers:  {', '.join(agents) if agents else '[red]none[/red]'}")
+    console.print(f"  Default Agent: {config.preferred_agent or 'auto'}")
+    wallet_status = "[green]connected[/green]" if config.private_key else "[dim]not connected[/dim]"
+    console.print(f"  Wallet:        {wallet_status}")
+    mode = "[yellow]dry-run (safe)[/yellow]" if config.dry_run else "[red]live[/red]"
+    console.print(f"  Default Mode:  {mode}")
+    console.print()
+    console.print("[dim]Saved to ~/.probablyprofit/[/dim]\n")
 
     show_quick_start()
 
