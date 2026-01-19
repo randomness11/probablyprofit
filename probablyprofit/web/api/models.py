@@ -10,6 +10,18 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
+class ErrorResponse(BaseModel):
+    """
+    Standard error response for API errors.
+
+    Frontend can check for this format to display user-friendly error messages.
+    """
+
+    error: str  # User-friendly error message
+    code: str  # Error code for programmatic handling (e.g., "AGENT_NOT_INITIALIZED")
+    details: Optional[str] = None  # Technical details for debugging (optional)
+
+
 class HealthResponse(BaseModel):
     """Health check response for monitoring systems."""
 

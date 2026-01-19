@@ -40,11 +40,13 @@ class TradeRepository:
         decision_id: Optional[int] = None,
         realized_pnl: Optional[float] = None,
         fees: float = 0.0,
+        market_question: Optional[str] = None,
     ) -> TradeRecord:
         """Create trade record."""
         trade = TradeRecord(
             order_id=order_id,
             market_id=market_id,
+            market_question=market_question,
             outcome=outcome,
             side=side,
             size=size,
@@ -87,6 +89,35 @@ class TradeRepository:
             .where(TradeRecord.timestamp >= start)
             .where(TradeRecord.timestamp <= end)
             .order_by(TradeRecord.timestamp)
+        )
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+
+    @staticmethod
+    async def search_by_question(
+        session: AsyncSession, search_text: str, limit: int = 100
+    ) -> List[TradeRecord]:
+        """
+        Search trades by market question text.
+
+        Allows users to search like "show me election trades" or "politics".
+
+        Args:
+            session: Database session
+            search_text: Text to search for in market questions
+            limit: Maximum results to return
+
+        Returns:
+            List of matching trades, sorted by timestamp descending
+        """
+        # Case-insensitive search using LIKE
+        search_pattern = f"%{search_text.lower()}%"
+        stmt = (
+            select(TradeRecord)
+            .where(TradeRecord.market_question.isnot(None))
+            .where(TradeRecord.market_question.ilike(search_pattern))
+            .order_by(TradeRecord.timestamp.desc())
+            .limit(limit)
         )
         result = await session.execute(stmt)
         return list(result.scalars().all())

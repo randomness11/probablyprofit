@@ -138,10 +138,12 @@ class TestValidateStrategy:
         and there's positive news sentiment. Set stop loss at 15%.
         Target profit of 30%.
         """
-        result = validate_strategy(text)
+        result, warnings = validate_strategy(text)
 
         assert len(result) > 0
         assert "buy" in result.lower() or "price" in result.lower()
+        # This strategy has trading terms, actions, and risk guidance - minimal warnings
+        assert isinstance(warnings, list)
 
     def test_too_short_strategy_raises(self):
         """Test that too short strategy raises error."""
@@ -151,15 +153,16 @@ class TestValidateStrategy:
             validate_strategy("Buy")
 
     def test_strategy_without_trading_terms_warns(self, caplog):
-        """Test that strategy without trading terms logs warning."""
+        """Test that strategy without trading terms returns warnings."""
         from probablyprofit.utils.validators import validate_strategy
 
         # This is long enough but doesn't have trading terms
         text = "This is a test " * 5
 
-        # Should not raise but should warn
-        result = validate_strategy(text)
+        # Should not raise but should return warnings
+        result, warnings = validate_strategy(text)
         assert result is not None
+        assert len(warnings) > 0  # Should have warnings about missing trading terms
 
 
 class TestWrapStrategySafely:

@@ -18,6 +18,7 @@ class TradeRecord(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     order_id: Optional[str] = Field(default=None, index=True)
     market_id: str = Field(index=True)
+    market_question: Optional[str] = Field(default=None, index=True)  # Searchable market name
     outcome: str
     side: str  # BUY/SELL
     size: float

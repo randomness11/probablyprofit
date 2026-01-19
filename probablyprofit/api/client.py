@@ -156,6 +156,7 @@ class Order(BaseModel):
 
     order_id: Optional[str] = None
     market_id: str
+    market_question: Optional[str] = None  # For searchable trade history
     outcome: str
     side: str  # BUY or SELL
     size: float
@@ -375,6 +376,7 @@ class PolymarketClient:
                 return []
 
             markets = []
+            parse_failures = []  # Track markets that fail to parse
             for market_data in data:
                 try:
                     # STRICT FILTER: Skip closed markets
@@ -443,8 +445,23 @@ class PolymarketClient:
                     # Use TTL cache instead of dict
                     self._market_cache.set(market.condition_id, market)
                 except Exception as parse_error:
-                    logger.debug(f"Skipping market due to parse error: {parse_error}")
+                    market_question = market_data.get("question", "Unknown")[:50]
+                    market_id = market_data.get("conditionId", "unknown")
+                    parse_failures.append(
+                        {"question": market_question, "id": market_id, "error": str(parse_error)}
+                    )
+                    logger.warning(
+                        f"Failed to parse market '{market_question}' (id={market_id}): {parse_error}"
+                    )
                     continue
+
+            # Surface parse failures to user if any occurred
+            if parse_failures:
+                logger.warning(
+                    f"Failed to parse {len(parse_failures)} market(s). "
+                    f"These markets will not be available for trading. "
+                    f"First failure: {parse_failures[0]['question']} - {parse_failures[0]['error']}"
+                )
 
             logger.info(f"Fetched {len(markets)} markets from Gamma API")
             return markets
@@ -613,10 +630,17 @@ class PolymarketClient:
             if not resp:
                 raise OrderException("Empty response from order API")
 
+            # Get market question from cache for searchable trade history
+            market_question = None
+            cached_market = self._market_cache.get(market_id)
+            if cached_market:
+                market_question = cached_market.question
+
             # Map response to Order object
             order = Order(
                 order_id=resp.get("orderID"),
                 market_id=market_id,
+                market_question=market_question,
                 outcome=outcome,
                 side=side,
                 size=size,
@@ -853,6 +877,7 @@ class PolymarketClient:
             positions_data = response.json()
 
             positions = []
+            position_parse_failures = []
             for pos_data in positions_data:
                 try:
                     market_id = pos_data.get("asset_id", pos_data.get("market_id", ""))
@@ -875,8 +900,17 @@ class PolymarketClient:
                         positions.append(position)
                         self._positions_cache.set(f"{market_id}_{outcome}", position)
                 except Exception as parse_error:
-                    logger.debug(f"Skipping position due to parse error: {parse_error}")
+                    position_parse_failures.append(
+                        {"market_id": market_id if market_id else "unknown", "error": str(parse_error)}
+                    )
+                    logger.warning(f"Failed to parse position for market {market_id}: {parse_error}")
                     continue
+
+            if position_parse_failures:
+                logger.warning(
+                    f"Failed to parse {len(position_parse_failures)} position(s). "
+                    f"Your actual positions may differ from what's shown."
+                )
 
             logger.debug(f"Fetched {len(positions)} positions")
             return positions

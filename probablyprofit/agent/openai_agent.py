@@ -52,8 +52,14 @@ class OpenAIAgent(BaseAgent):
         self.model = model
 
         # Validate and sanitize strategy prompt to prevent injection attacks
-        sanitized_strategy = validate_strategy(strategy_prompt)
+        sanitized_strategy, strategy_warnings = validate_strategy(strategy_prompt)
         self.strategy_prompt = wrap_strategy_safely(sanitized_strategy)
+
+        # Surface strategy validation warnings to user
+        if strategy_warnings:
+            logger.warning("Strategy validation warnings:")
+            for warning in strategy_warnings:
+                logger.warning(f"  - {warning}")
 
         self.temperature = 0.7
 

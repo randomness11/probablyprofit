@@ -28,6 +28,25 @@ from probablyprofit.web.api.models import (
 router = APIRouter(prefix="/api")
 
 
+def api_error(status_code: int, message: str, code: str, details: str = None) -> HTTPException:
+    """
+    Create a consistent API error response.
+
+    Args:
+        status_code: HTTP status code
+        message: User-friendly error message
+        code: Error code for programmatic handling
+        details: Technical details (optional)
+
+    Returns:
+        HTTPException with structured detail
+    """
+    detail = {"error": message, "code": code}
+    if details:
+        detail["details"] = details
+    return HTTPException(status_code=status_code, detail=detail)
+
+
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
     """
@@ -171,7 +190,11 @@ async def get_status():
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     last_obs = None
     balance = 0.0
@@ -231,7 +254,12 @@ async def get_trades(
             ]
     except Exception as e:
         logger.error(f"Error fetching trades: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch trades")
+        raise api_error(
+            500,
+            "Unable to load trade history. Check that the database is accessible.",
+            "TRADE_FETCH_ERROR",
+            str(e),
+        )
 
 
 @router.get("/performance", response_model=PerformanceResponse)
@@ -241,7 +269,11 @@ async def get_performance():
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     stats = state.agent.risk_manager.get_stats()
 
@@ -279,7 +311,12 @@ async def get_equity_curve(days: int = Query(30, ge=1, le=365)):
             ]
     except Exception as e:
         logger.error(f"Error fetching equity curve: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch equity curve")
+        raise api_error(
+            500,
+            "Unable to load equity curve. Your trading history may be corrupted.",
+            "EQUITY_FETCH_ERROR",
+            str(e),
+        )
 
 
 @router.get("/markets", response_model=List[MarketResponse])
@@ -289,7 +326,11 @@ async def get_markets(active: bool = Query(True), limit: int = Query(50, le=200)
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     try:
         markets = await state.agent.client.get_markets(active=active, limit=limit)
@@ -310,7 +351,12 @@ async def get_markets(active: bool = Query(True), limit: int = Query(50, le=200)
         ]
     except Exception as e:
         logger.error(f"Error fetching markets: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch markets")
+        raise api_error(
+            500,
+            "Unable to load markets from Polymarket. Check your internet connection.",
+            "MARKET_FETCH_ERROR",
+            str(e),
+        )
 
 
 @router.post("/control/start")
@@ -322,7 +368,11 @@ async def start_agent():
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     if state.agent.running:
         raise HTTPException(status_code=400, detail="Agent already running")
@@ -340,7 +390,11 @@ async def stop_agent():
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     state.agent.running = False
 
@@ -354,7 +408,11 @@ async def set_dry_run(enabled: bool):
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     state.agent.dry_run = enabled
 
@@ -446,7 +504,11 @@ async def get_exposure():
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     risk_manager = state.agent.risk_manager
     stats = risk_manager.get_stats()
@@ -602,7 +664,11 @@ async def get_positions():
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     risk_manager = state.agent.risk_manager
     positions = []
@@ -632,7 +698,11 @@ async def get_paper_portfolio():
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     # Check if paper trading is enabled
     paper_engine = getattr(state.agent, "paper_engine", None)
@@ -709,11 +779,19 @@ async def reset_paper_portfolio(initial_capital: float = Query(10000.0)):
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     paper_engine = getattr(state.agent, "paper_engine", None)
     if not paper_engine:
-        raise HTTPException(status_code=400, detail="Paper trading not enabled")
+        raise api_error(
+            400,
+            "Paper trading is not enabled. Run with --paper flag to enable.",
+            "PAPER_TRADING_DISABLED",
+        )
 
     paper_engine.reset(initial_capital=initial_capital)
     return {"status": "reset", "initial_capital": initial_capital}
@@ -733,11 +811,19 @@ async def execute_paper_trade(
 
     state = get_agent_state()
     if not state:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        raise api_error(
+            503,
+            "Trading bot not running. Start it with 'probablyprofit run <strategy>'",
+            "AGENT_NOT_INITIALIZED",
+        )
 
     paper_engine = getattr(state.agent, "paper_engine", None)
     if not paper_engine:
-        raise HTTPException(status_code=400, detail="Paper trading not enabled")
+        raise api_error(
+            400,
+            "Paper trading is not enabled. Run with --paper flag to enable.",
+            "PAPER_TRADING_DISABLED",
+        )
 
     trade = paper_engine.execute_trade(
         market_id=market_id,
@@ -749,7 +835,11 @@ async def execute_paper_trade(
     )
 
     if not trade:
-        raise HTTPException(status_code=400, detail="Trade failed - check parameters and balance")
+        raise api_error(
+            400,
+            "Trade failed. Check that you have sufficient balance and valid parameters.",
+            "TRADE_FAILED",
+        )
 
     return {
         "status": "executed",

@@ -189,6 +189,7 @@ class AgentMemory(BaseModel):
                         session=session,
                         order_id=trade.order_id,
                         market_id=trade.market_id,
+                        market_question=trade.market_question,  # For searchable trade history
                         outcome=trade.outcome,
                         side=trade.side,
                         size=trade.size,

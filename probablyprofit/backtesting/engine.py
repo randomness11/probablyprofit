@@ -176,6 +176,7 @@ class BacktestEngine:
                 # Record trade
                 trade = Order(
                     market_id=decision.market_id,
+                    market_question=market.question,  # For searchable trade history
                     outcome=decision.outcome or market.outcomes[0],
                     side="BUY",
                     size=decision.size,
@@ -201,6 +202,7 @@ class BacktestEngine:
                 # Record trade
                 trade = Order(
                     market_id=decision.market_id,
+                    market_question=market.question,  # For searchable trade history
                     outcome=decision.outcome or market.outcomes[0],
                     side="SELL",
                     size=position.size,

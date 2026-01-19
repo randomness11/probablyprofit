@@ -299,7 +299,7 @@ def validate_strategy(
     text: str,
     min_length: int = 10,
     max_length: int = MAX_STRATEGY_LENGTH,
-) -> str:
+) -> Tuple[str, List[str]]:
     """
     Validate and sanitize a trading strategy prompt.
 
@@ -309,17 +309,28 @@ def validate_strategy(
         max_length: Maximum allowed length
 
     Returns:
-        Validated and sanitized strategy text
+        Tuple of (validated strategy text, list of warnings/suggestions)
 
     Raises:
         ValidationException: If strategy is invalid
     """
+    warnings = []
+
     # Sanitize first
     sanitized = sanitize_strategy_text(text, max_length=max_length, strict=False)
 
-    # Check minimum length
+    # Check minimum length with helpful error
     if len(sanitized) < min_length:
-        raise ValidationException(f"Strategy text too short (minimum {min_length} characters)")
+        raise ValidationException(
+            f"Strategy too short ({len(sanitized)} chars, minimum {min_length}).\n"
+            f"A good strategy should describe:\n"
+            f"  - What markets to focus on (e.g., 'politics', 'sports', 'crypto')\n"
+            f"  - When to buy/sell (e.g., 'buy YES when price < 0.30')\n"
+            f"  - Risk tolerance (e.g., 'conservative', 'aggressive')\n"
+            f"\nExample: 'Focus on US politics markets. Buy YES when I believe the "
+            f"probability is higher than the market price by at least 15%. "
+            f"Be conservative with position sizes.'"
+        )
 
     # Basic content validation - should contain some trading-related terms
     trading_terms = [
@@ -340,15 +351,54 @@ def validate_strategy(
         "strategy",
         "capital",
         "exposure",
+        "yes",
+        "no",
+        "bet",
+        "wager",
+        "hold",
+        "avoid",
     ]
 
     text_lower = sanitized.lower()
     has_trading_context = any(term in text_lower for term in trading_terms)
 
     if not has_trading_context:
-        logger.warning("Strategy text doesn't appear to contain trading instructions")
+        warnings.append(
+            "Your strategy doesn't seem to mention trading actions (buy, sell, hold, etc.). "
+            "The AI may not know what trades to make. Consider adding instructions like: "
+            "'Buy YES when confident', 'Avoid markets with low volume', or 'Hold if uncertain'."
+        )
+        logger.warning(
+            "Strategy text doesn't contain trading terms. "
+            "AI may not understand trading intent."
+        )
 
-    return sanitized
+    # Check for actionable instructions
+    action_terms = ["buy", "sell", "hold", "trade", "bet", "avoid", "skip", "ignore", "focus"]
+    has_actions = any(term in text_lower for term in action_terms)
+
+    if not has_actions:
+        warnings.append(
+            "Your strategy doesn't include clear actions. Consider adding: "
+            "'Buy when...', 'Sell if...', 'Hold unless...', or 'Focus on...'"
+        )
+
+    # Check for risk/confidence guidance
+    risk_terms = ["risk", "confident", "conservative", "aggressive", "careful", "size", "amount"]
+    has_risk_guidance = any(term in text_lower for term in risk_terms)
+
+    if not has_risk_guidance:
+        warnings.append(
+            "Consider adding risk guidance to your strategy, such as: "
+            "'Be conservative with bet sizes', 'Only trade with high confidence', "
+            "or 'Risk no more than 5% per trade'."
+        )
+
+    # Log warnings but don't fail
+    for warning in warnings:
+        logger.warning(f"Strategy validation: {warning}")
+
+    return sanitized, warnings
 
 
 def wrap_strategy_safely(strategy: str) -> str:
