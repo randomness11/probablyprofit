@@ -375,6 +375,8 @@ class TestAgentLoop:
         assert call_count[0] >= 3
 
     @pytest.mark.asyncio
+    @pytest.mark.slow  # This test takes ~35s due to real exponential backoff
+    @pytest.mark.timeout(45)  # Allow time for exponential backoff (5s + 10s + 20s)
     async def test_max_consecutive_errors_stops_loop(self, mock_agent, mock_client):
         """Test that too many consecutive errors stops the loop."""
         error_count = [0]

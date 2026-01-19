@@ -159,6 +159,19 @@ disallow_untyped_defs = true
 exclude_dirs = ["tests", "venv", ".venv", "build", "dist"]
 skips = ["B101", "B104"]  # Skip assert warnings (B101) and hardcoded binding (B104)
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["probablyprofit/tests"]
+timeout = 30
+markers = [
+    "slow: marks tests as slow (run with --run-slow)",
+    "integration: integration tests requiring external services",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:websockets.*",
+    "ignore::pydantic.PydanticDeprecatedSince20",
+]
+
 [tool.ruff.lint]
 select = [
     "E",    # pycodestyle errors

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Save, Key, Shield, Bell, Palette, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { Key, Shield, Bell, Palette } from 'lucide-react';
 import { useAgentControl } from '../hooks/useApi';
 
 interface SettingsSection {
@@ -17,7 +17,6 @@ const sections: SettingsSection[] = [
 
 export function Settings() {
   const [activeSection, setActiveSection] = useState('api');
-  const [saved, setSaved] = useState(false);
   const { setDryRun, loading } = useAgentControl();
 
   // Local state for settings
@@ -49,11 +48,8 @@ export function Settings() {
     showPnlPercent: true,
   });
 
-  const handleSave = () => {
-    // In a real app, this would save to backend
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
+  // Note: Settings are read-only in the UI. Edit your .env file to change configuration.
+  // Backend settings API is planned for a future release.
 
   const updateSetting = <K extends keyof typeof settings>(
     key: K,
@@ -399,28 +395,15 @@ export function Settings() {
             </div>
           )}
 
-          {/* Save Button */}
-          <div className="mt-8 pt-6 border-t border-slate-700 flex justify-end">
-            <button
-              onClick={handleSave}
-              className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors ${
-                saved
-                  ? 'bg-green-500 text-white'
-                  : 'bg-purple-500 hover:bg-purple-600 text-white'
-              }`}
-            >
-              {saved ? (
-                <>
-                  <RefreshCw className="w-4 h-4" />
-                  Saved!
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save Changes
-                </>
-              )}
-            </button>
+          {/* Configuration Notice */}
+          <div className="mt-8 pt-6 border-t border-slate-700">
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+              <p className="text-sm text-slate-400">
+                <span className="font-medium text-slate-300">Note:</span> These settings are for reference only.
+                To change configuration, edit your <code className="bg-slate-900 px-1 rounded">.env</code> file
+                and restart the application.
+              </p>
+            </div>
           </div>
         </div>
       </div>
