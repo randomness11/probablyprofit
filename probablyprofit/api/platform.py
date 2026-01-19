@@ -22,7 +22,7 @@ class UnifiedMarket(BaseModel):
     volume: float
     liquidity: float
     active: bool = True
-    platform: str = "unknown"  # polymarket, kalshi, etc.
+    platform: str = "unknown"
     metadata: Dict[str, Any] = {}
 
 
@@ -104,7 +104,7 @@ def create_platform_client(platform: str, **kwargs) -> PlatformClient:
     Factory function to create platform clients.
 
     Args:
-        platform: "polymarket" or "kalshi"
+        platform: "polymarket"
         **kwargs: Platform-specific configuration
 
     Returns:
@@ -119,14 +119,5 @@ def create_platform_client(platform: str, **kwargs) -> PlatformClient:
             testnet=kwargs.get("testnet", False),
         )
 
-    elif platform.lower() == "kalshi":
-        from probablyprofit.api.kalshi_client import KalshiClient
-
-        return KalshiClient(
-            api_key_id=kwargs.get("api_key_id"),
-            private_key_path=kwargs.get("private_key_path"),
-            demo=kwargs.get("demo", False),
-        )
-
     else:
-        raise ValueError(f"Unknown platform: {platform}. Supported: polymarket, kalshi")
+        raise ValueError(f"Unknown platform: {platform}. Supported: polymarket")

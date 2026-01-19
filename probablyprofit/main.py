@@ -32,14 +32,14 @@ from probablyprofit.risk.manager import RiskManager
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="ProbablyProfit: AI Trading Bot for Polymarket & Kalshi"
+        description="ProbablyProfit: AI Trading Bot for Polymarket"
     )
 
     # Platform selection
     parser.add_argument(
         "--platform",
         type=str,
-        choices=["polymarket", "kalshi"],
+        choices=["polymarket"],
         default="polymarket",
         help="Prediction market platform to use (default: polymarket)",
     )
@@ -246,25 +246,10 @@ async def main():
             logger.warning("Continuing without persistence...")
 
     # 1. Initialize Platform Client
-    if args.platform == "polymarket":
-        from probablyprofit.api.client import PolymarketClient
+    from probablyprofit.api.client import PolymarketClient
 
-        client = PolymarketClient(private_key=os.getenv("PRIVATE_KEY"))
-        logger.info("📊 Connected to Polymarket")
-
-    elif args.platform == "kalshi":
-        from probablyprofit.api.kalshi_client import KalshiClient
-
-        client = KalshiClient(
-            api_key_id=os.getenv("KALSHI_API_KEY_ID"),
-            private_key_path=os.getenv("KALSHI_PRIVATE_KEY_PATH"),
-            demo=os.getenv("KALSHI_DEMO", "false").lower() == "true",
-        )
-        logger.info("📊 Connected to Kalshi")
-
-    else:
-        logger.error(f"❌ Unknown platform: {args.platform}")
-        return
+    client = PolymarketClient(private_key=os.getenv("PRIVATE_KEY"))
+    logger.info("📊 Connected to Polymarket")
 
     # 2. Risk Manager
     risk = RiskManager(initial_capital=float(os.getenv("INITIAL_CAPITAL", 1000.0)))

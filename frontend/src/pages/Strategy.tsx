@@ -132,11 +132,11 @@ AVOID:
     content: `You are an arbitrage hunter across prediction markets.
 
 GOAL: Find price discrepancies between related markets
-or between platforms (Polymarket vs Kalshi).
+within Polymarket.
 
 LOOK FOR:
-- Same event priced differently across platforms
-- Correlated markets with inconsistent prices
+- Related events with inconsistent prices
+- Correlated markets with pricing discrepancies
 - YES + NO prices that don't sum to ~1.00
 - Time-based arbitrage opportunities
 

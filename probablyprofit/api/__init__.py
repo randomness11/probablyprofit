@@ -19,10 +19,6 @@ def __getattr__(name):
         from probablyprofit.api.client import Position
 
         return Position
-    elif name == "KalshiClient":
-        from probablyprofit.api.kalshi_client import KalshiClient
-
-        return KalshiClient
     elif name == "WebSocketClient":
         from probablyprofit.api.websocket import WebSocketClient
 
@@ -39,7 +35,6 @@ __all__ = [
     "Market",
     "Order",
     "Position",
-    "KalshiClient",
     "WebSocketClient",
     "OrderManager",
 ]

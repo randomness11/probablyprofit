@@ -35,7 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Trading Platforms**
   - Polymarket integration
-  - Kalshi integration
 
 - **Risk Management**
   - Position sizing

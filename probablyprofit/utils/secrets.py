@@ -38,8 +38,6 @@ SECRET_KEYS = [
     "private_key",
     "perplexity_api_key",
     "twitter_bearer_token",
-    "kalshi_api_key",
-    "kalshi_api_secret",
 ]
 
 

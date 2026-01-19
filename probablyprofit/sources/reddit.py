@@ -176,7 +176,6 @@ DEFAULT_SUBREDDITS = [
     # Prediction markets
     "polymarket",
     "predictit",
-    "kalshi",
     # General
     "technology",
     "science",

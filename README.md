@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://github.com/randomness11/probablyprofit)
 
-**Build autonomous trading bots for [Polymarket](https://polymarket.com) and [Kalshi](https://kalshi.com) using natural language strategies.**
+**Build autonomous trading bots for [Polymarket](https://polymarket.com) using natural language strategies.**
 
 [Quick Start](#quick-start) · [Documentation](#documentation) · [Examples](#strategy-examples) · [API Reference](#python-api) · [Contributing](#contributing)
 
@@ -42,7 +42,7 @@ Avoid: markets under $5k volume, ambiguous resolution criteria, coin flips.
 |---------|-------------|
 | **Natural Language Strategies** | Define trading logic in plain English—no coding required |
 | **Multi-Provider AI** | Support for Claude, GPT-4, and Gemini with ensemble consensus mode |
-| **Dual Platform Support** | Trade on Polymarket (crypto/global) and Kalshi (regulated/US) |
+| **Polymarket Integration** | Full integration with Polymarket's CLOB API |
 | **Risk Management** | Kelly criterion sizing, position limits, stop-loss, drawdown protection |
 | **Order Management** | Full order lifecycle with partial fills, callbacks, and reconciliation |
 | **Paper Trading** | Test strategies with simulated capital before going live |
@@ -75,7 +75,7 @@ cp .env.example .env
 
 # Edit .env with your credentials:
 # - ANTHROPIC_API_KEY (or OPENAI_API_KEY, GOOGLE_API_KEY)
-# - PRIVATE_KEY (Polymarket wallet) or KALSHI_API_KEY
+# - PRIVATE_KEY (Polymarket wallet)
 ```
 
 ### Run Your First Bot
@@ -141,13 +141,12 @@ docker compose logs -f
 │   Order Lifecycle  │  Fill Tracking  │  Callbacks  │  Reconcile │
 └─────────────────────────────────────────────────────────────────┘
                                  │
-                 ┌───────────────┴───────────────┐
-                 ▼                               ▼
-┌─────────────────────────┐     ┌─────────────────────────┐
-│       POLYMARKET        │     │         KALSHI          │
-│    Crypto · Global      │     │    Regulated · US       │
-│    USDC Settlement      │     │    USD Settlement       │
-└─────────────────────────┘     └─────────────────────────┘
+                                 ▼
+                  ┌─────────────────────────┐
+                  │       POLYMARKET        │
+                  │    Crypto · Global      │
+                  │    USDC Settlement      │
+                  └─────────────────────────┘
 ```
 
 ---
@@ -414,12 +413,8 @@ ANTHROPIC_API_KEY=sk-ant-...
 OPENAI_API_KEY=sk-...
 GOOGLE_API_KEY=...
 
-# Polymarket (for Polymarket trading)
+# Polymarket
 PRIVATE_KEY=0x...
-
-# Kalshi (for Kalshi trading)
-KALSHI_API_KEY_ID=...
-KALSHI_PRIVATE_KEY_PATH=/path/to/key.pem
 ```
 
 ### Config File
@@ -439,8 +434,6 @@ risk:
 platforms:
   polymarket:
     enabled: true
-  kalshi:
-    enabled: false
 ```
 
 See [.env.example](.env.example) for all configuration options.
@@ -452,14 +445,12 @@ See [.env.example](.env.example) for all configuration options.
 | Platform | Type | Region | Settlement | Authentication |
 |----------|------|--------|------------|----------------|
 | [Polymarket](https://polymarket.com) | Crypto | Global | USDC on Polygon | Ethereum wallet |
-| [Kalshi](https://kalshi.com) | Regulated | US | USD | RSA key pair |
 
 ---
 
 ## Documentation
 
 - [Getting Started Guide](GETTING_STARTED.md)
-- [Kalshi Integration Guide](KALSHI_GUIDE.md)
 - [Deployment Guide](DEPLOY.md)
 - [API Reference](docs/API_REFERENCE.md)
 - [Strategy Writing Guide](docs/PROMPT_ENGINEERING.md)

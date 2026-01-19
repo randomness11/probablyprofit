@@ -185,45 +185,6 @@ DASHBOARD_HTML = """<!DOCTYPE html>
             </div>
         </div>
 
-        <!-- Arbitrage Opportunities Section -->
-        <div class="mt-6 glass rounded-xl p-6 card-gradient border border-white/10">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold">⚡ Arbitrage Opportunities</h2>
-                <div class="flex items-center space-x-2">
-                    <span id="arb-status" class="text-xs text-gray-400">Not scanned</span>
-                    <button onclick="scanArbitrage()" id="arb-scan-btn" class="text-sm bg-purple-500/20 hover:bg-purple-500/30 px-3 py-1 rounded">
-                        Scan Markets
-                    </button>
-                </div>
-            </div>
-
-            <!-- Arbitrage Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white/5 rounded-lg p-3">
-                    <div class="text-gray-400 text-xs mb-1">Opportunities</div>
-                    <div id="arb-count" class="text-xl font-bold text-purple-400">0</div>
-                </div>
-                <div class="bg-white/5 rounded-lg p-3">
-                    <div class="text-gray-400 text-xs mb-1">Best Profit</div>
-                    <div id="arb-best-profit" class="text-xl font-bold text-green-400">0%</div>
-                </div>
-                <div class="bg-white/5 rounded-lg p-3">
-                    <div class="text-gray-400 text-xs mb-1">Matched Pairs</div>
-                    <div id="arb-pairs" class="text-xl font-bold text-blue-400">0</div>
-                </div>
-                <div class="bg-white/5 rounded-lg p-3">
-                    <div class="text-gray-400 text-xs mb-1">Avg Confidence</div>
-                    <div id="arb-confidence" class="text-xl font-bold">0%</div>
-                </div>
-            </div>
-
-            <!-- Opportunities List -->
-            <div id="arb-opportunities" class="space-y-3">
-                <div class="text-gray-500 text-sm text-center py-4">
-                    Click "Scan Markets" to detect arbitrage opportunities between Polymarket and Kalshi
-                </div>
-            </div>
-        </div>
     </main>
 
     <script>
@@ -457,91 +418,6 @@ DASHBOARD_HTML = """<!DOCTYPE html>
                 exposureChart.data.datasets[0].data = [data.cash_balance, data.total_exposure];
             }
             exposureChart.update();
-        }
-
-        // Arbitrage functions
-        async function scanArbitrage() {
-            const btn = document.getElementById('arb-scan-btn');
-            const status = document.getElementById('arb-status');
-
-            btn.disabled = true;
-            btn.textContent = 'Scanning...';
-            status.textContent = 'Scanning markets...';
-
-            try {
-                const res = await fetch('/api/arbitrage/scan', { method: 'POST' });
-                const data = await res.json();
-                updateArbitrage(data);
-                status.textContent = `Last scan: ${new Date().toLocaleTimeString()}`;
-            } catch (e) {
-                console.error('Arbitrage scan failed:', e);
-                status.textContent = 'Scan failed';
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Scan Markets';
-            }
-        }
-
-        function updateArbitrage(data) {
-            // Update stats
-            document.getElementById('arb-count').textContent = data.opportunities.length;
-            document.getElementById('arb-pairs').textContent = data.matched_pairs_count;
-
-            if (data.opportunities.length > 0) {
-                const bestProfit = Math.max(...data.opportunities.map(o => o.net_profit_pct));
-                document.getElementById('arb-best-profit').textContent = `${(bestProfit * 100).toFixed(1)}%`;
-
-                const avgConfidence = data.opportunities.reduce((sum, o) => sum + o.confidence, 0) / data.opportunities.length;
-                document.getElementById('arb-confidence').textContent = `${(avgConfidence * 100).toFixed(0)}%`;
-            } else {
-                document.getElementById('arb-best-profit').textContent = '0%';
-                document.getElementById('arb-confidence').textContent = '0%';
-            }
-
-            // Update opportunities list
-            const container = document.getElementById('arb-opportunities');
-            if (data.opportunities.length === 0) {
-                container.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">No arbitrage opportunities found. Markets are efficiently priced.</div>';
-                return;
-            }
-
-            container.innerHTML = data.opportunities.map(opp => {
-                const profitColor = opp.net_profit_pct > 0.05 ? 'green' : opp.net_profit_pct > 0.02 ? 'yellow' : 'gray';
-                return `
-                    <div class="bg-white/5 rounded-lg p-4 border border-${profitColor}-500/30">
-                        <div class="flex items-start justify-between mb-2">
-                            <div class="flex-1">
-                                <div class="text-sm font-semibold text-${profitColor}-400">
-                                    ${(opp.net_profit_pct * 100).toFixed(1)}% Profit
-                                </div>
-                                <div class="text-xs text-gray-400 mt-1">
-                                    ${opp.polymarket_question.slice(0, 60)}...
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-xs bg-purple-500/20 px-2 py-1 rounded">
-                                    ${(opp.confidence * 100).toFixed(0)}% conf
-                                </div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-xs mt-3">
-                            <div class="bg-blue-500/10 rounded p-2">
-                                <div class="text-blue-400 font-medium">Buy ${opp.buy_side.toUpperCase()}</div>
-                                <div class="text-gray-300">${opp.buy_platform}</div>
-                                <div class="text-white font-bold">${(opp.buy_price * 100).toFixed(1)}¢</div>
-                            </div>
-                            <div class="bg-green-500/10 rounded p-2">
-                                <div class="text-green-400 font-medium">Buy ${opp.sell_side.toUpperCase()}</div>
-                                <div class="text-gray-300">${opp.sell_platform}</div>
-                                <div class="text-white font-bold">${(opp.sell_price * 100).toFixed(1)}¢</div>
-                            </div>
-                        </div>
-                        <div class="mt-2 text-xs text-gray-400">
-                            Combined: ${(opp.combined_cost * 100).toFixed(1)}¢ → Guaranteed $1.00 payout
-                        </div>
-                    </div>
-                `;
-            }).join('');
         }
 
         // Initial fetch

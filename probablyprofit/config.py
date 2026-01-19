@@ -38,7 +38,7 @@ class WalletConfig:
     """Wallet configuration."""
 
     private_key: Optional[str] = None
-    platform: str = "polymarket"  # polymarket or kalshi
+    platform: str = "polymarket"
 
 
 @dataclass
@@ -145,25 +145,6 @@ class StrategyConfig:
 
 
 @dataclass
-class ArbitrageConfig:
-    """Arbitrage detection configuration."""
-
-    # Profit thresholds
-    min_profit_pct: float = 0.02  # Minimum 2% profit after fees
-
-    # Platform fees
-    polymarket_fee: float = 0.02  # 2% Polymarket fee
-    kalshi_fee: float = 0.01  # 1% Kalshi fee (estimate)
-
-    # Market matching
-    min_match_similarity: float = 0.75  # Minimum fuzzy match score
-
-    # Confidence adjustments
-    low_liquidity_confidence_factor: float = 0.70
-    moderate_liquidity_confidence_factor: float = 0.85
-
-
-@dataclass
 class Config:
     """Main configuration object."""
 
@@ -201,7 +182,6 @@ class Config:
     agent: AgentConfig = field(default_factory=AgentConfig)
     risk: RiskConfig = field(default_factory=RiskConfig)
     strategy: StrategyConfig = field(default_factory=StrategyConfig)
-    arbitrage: ArbitrageConfig = field(default_factory=ArbitrageConfig)
     telegram: TelegramConfig = field(default_factory=TelegramConfig)
 
     def get_available_agents(self) -> List[str]:

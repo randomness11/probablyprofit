@@ -4,7 +4,7 @@
 
 - Python 3.9 or higher
 - pip (Python package manager)
-- A Polymarket or Kalshi account
+- A Polymarket account
 - API keys for at least one AI provider (OpenAI, Google, or Anthropic)
 
 ## Install from PyPI

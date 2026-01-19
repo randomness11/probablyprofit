@@ -126,35 +126,6 @@ class ExposureResponse(BaseModel):
     warnings: List[str]  # active risk warnings
 
 
-class ArbitrageOpportunityResponse(BaseModel):
-    """Arbitrage opportunity response."""
-
-    opportunity_type: str
-    buy_platform: str
-    buy_side: str
-    buy_price: float
-    sell_platform: str
-    sell_side: str
-    sell_price: float
-    combined_cost: float
-    gross_profit_pct: float
-    net_profit_pct: float
-    confidence: float
-    polymarket_question: str
-    kalshi_question: str
-    similarity_score: float
-
-
-class ArbitrageResponse(BaseModel):
-    """Full arbitrage scan response."""
-
-    opportunities: List[ArbitrageOpportunityResponse]
-    matched_pairs_count: int
-    last_scan: Optional[datetime] = None
-    polymarket_markets: int
-    kalshi_markets: int
-
-
 class PaperPositionResponse(BaseModel):
     """Paper trading position response."""
 

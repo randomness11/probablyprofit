@@ -25,16 +25,6 @@ POLYMARKET_API_PASSPHRASE=your-passphrase
 
 Get these from [Polymarket API Settings](https://polymarket.com/profile/api).
 
-## Kalshi Credentials
-
-For Kalshi trading:
-
-```bash
-KALSHI_API_KEY_ID=your-key-id
-KALSHI_PRIVATE_KEY_PATH=/path/to/private_key.pem
-KALSHI_DEMO=true  # Set false for live trading
-```
-
 ## Risk Settings
 
 ```bash

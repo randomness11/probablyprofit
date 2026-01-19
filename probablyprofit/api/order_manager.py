@@ -116,7 +116,7 @@ class ManagedOrder(BaseModel):
     total_fees: float = 0.0
 
     # Metadata
-    platform: str = "polymarket"  # polymarket, kalshi
+    platform: str = "polymarket"
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
     def model_post_init(self, __context: Any) -> None:
@@ -400,7 +400,7 @@ class OrderManager:
         Initialize order manager.
 
         Args:
-            client: API client (PolymarketClient or KalshiClient)
+            client: API client (PolymarketClient)
             platform: Platform name
             partial_fill_timeout: Seconds to wait before auto-canceling partial fills
         """
@@ -546,19 +546,6 @@ class OrderManager:
                         size=size,
                         price=price,
                         order_type=order_type.value,
-                    )
-                    if response and response.order_id:
-                        order.order_id = response.order_id
-                        order.status = OrderStatus.OPEN
-                elif self.platform == "kalshi":
-                    # Convert price to cents for Kalshi
-                    price_cents = int(price * 100)
-                    response = await self.client.place_order(
-                        ticker=market_id,
-                        side=outcome.lower(),  # yes/no
-                        action=side.lower(),  # buy/sell
-                        count=int(size),
-                        price=price_cents,
                     )
                     if response and response.order_id:
                         order.order_id = response.order_id
@@ -824,12 +811,6 @@ class OrderManager:
                         if status:
                             await self._update_from_exchange(order, status)
                             results["updated"] += 1
-                elif self.platform == "kalshi":
-                    if hasattr(self.client, "get_order"):
-                        status = await self.client.get_order(order.order_id)
-                        if status:
-                            await self._update_from_exchange(order, status)
-                            results["updated"] += 1
 
             except Exception as e:
                 results["errors"].append(f"{order.order_id}: {e}")
@@ -898,16 +879,6 @@ class OrderManager:
                 "canceled": OrderStatus.CANCELLED,
                 "cancelled": OrderStatus.CANCELLED,
                 "expired": OrderStatus.EXPIRED,
-            }
-
-        elif self.platform == "kalshi":
-            exchange_status = exchange_data.get("status", "").lower()
-            filled = float(exchange_data.get("filled_count", 0))
-
-            status_map = {
-                "resting": OrderStatus.OPEN,
-                "executed": OrderStatus.FILLED,
-                "canceled": OrderStatus.CANCELLED,
             }
         else:
             return

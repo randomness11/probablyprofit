@@ -28,7 +28,6 @@ probablyprofit/
 │
 ├── api/                 # Platform Clients
 │   ├── client.py        # PolymarketClient (Gamma API + CLOB)
-│   ├── kalshi_client.py # KalshiClient
 │   └── platform.py      # Platform abstraction
 │
 ├── risk/                # Risk Management
@@ -116,7 +115,7 @@ class MyStrategy(StrategyPlugin):
 ## Data Flow
 
 1. **CLI parses args** → selects platform, agent, strategy
-2. **Platform client initialized** → connects to Polymarket/Kalshi API
+2. **Platform client initialized** → connects to Polymarket API
 3. **Strategy loaded** → from file or built-in
 4. **Agent created** → with client, risk manager, strategy prompt
 5. **Loop starts**:

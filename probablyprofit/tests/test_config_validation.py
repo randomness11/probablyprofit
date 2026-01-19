@@ -19,7 +19,7 @@ class TestConfig:
 
         assert config.dry_run is True  # Safe default
         assert config.interval >= 30  # Reasonable interval
-        assert config.platform in ["polymarket", "kalshi"]
+        assert config.platform == "polymarket"
 
     def test_get_available_agents_empty(self):
         """Test getting available agents when none configured."""
@@ -117,33 +117,6 @@ class TestStrategyConfig:
 
         assert config.min_liquidity == 5000.0
         assert config.extreme_threshold == 0.9
-
-
-class TestArbitrageConfig:
-    """Tests for ArbitrageConfig dataclass."""
-
-    def test_default_values(self):
-        """Test default arbitrage config values."""
-        from probablyprofit.config import ArbitrageConfig
-
-        config = ArbitrageConfig()
-
-        assert config.min_profit_pct >= 0
-        assert config.polymarket_fee >= 0
-        assert config.kalshi_fee >= 0
-        assert 0 <= config.min_match_similarity <= 1
-
-    def test_custom_values(self):
-        """Test custom arbitrage config values."""
-        from probablyprofit.config import ArbitrageConfig
-
-        config = ArbitrageConfig(
-            min_profit_pct=0.05,
-            min_match_similarity=0.8,
-        )
-
-        assert config.min_profit_pct == 0.05
-        assert config.min_match_similarity == 0.8
 
 
 class TestRiskConfig:

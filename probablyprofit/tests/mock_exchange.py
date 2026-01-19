@@ -59,7 +59,7 @@ class MockExchangeClient:
     """
     Mock exchange client for testing.
 
-    Simulates Polymarket/Kalshi API behavior without real API calls.
+    Simulates Polymarket API behavior without real API calls.
     """
 
     def __init__(

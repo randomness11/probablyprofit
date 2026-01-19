@@ -12,7 +12,7 @@ Write trading strategies in plain English. Let AI agents execute them 24/7.
 
 ## What is probablyprofit?
 
-probablyprofit is an open source framework for building AI-powered trading bots on prediction markets like Polymarket and Kalshi.
+probablyprofit is an open source framework for building AI-powered trading bots on prediction markets like Polymarket.
 
 ### Key Features
 

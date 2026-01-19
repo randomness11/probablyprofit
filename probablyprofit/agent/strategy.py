@@ -447,19 +447,14 @@ Types of Arbitrage:
    - If YES + NO prices > 1.0, there's a spread to exploit
    - Example: YES @ 0.45 + NO @ 0.50 = 0.95 → Buy both, profit $0.05
 
-2. Cross-Platform Arbitrage:
-   - Same market priced differently on Polymarket vs Kalshi
-   - Buy low on one platform, effective short via opposite side on other
-   - Requires accounts on both platforms
-
-3. Related Market Arbitrage:
+2. Related Market Arbitrage:
    - Markets that should have related prices but don't
    - Example: "Trump wins" on two different market questions
 
 Analysis Framework:
 1. Calculate fair value for each side
 2. Compare to actual market prices
-3. Account for fees (typically 2% on Polymarket, 1% on Kalshi)
+3. Account for fees (typically 2% on Polymarket)
 4. Only trade if profit > fees
 
 Decision Output:

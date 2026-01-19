@@ -44,7 +44,7 @@ All PRs must pass these checks.
 ```
 probablyprofit/
 ├── agent/          # AI agents (OpenAI, Gemini, Anthropic, Ensemble)
-├── api/            # Platform clients (Polymarket, Kalshi)
+├── api/            # Platform clients (Polymarket)
 ├── plugins/        # Plugin system for extensibility
 ├── risk/           # Risk management
 ├── storage/        # Database persistence

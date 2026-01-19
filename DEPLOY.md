@@ -51,7 +51,6 @@ PAPER_CAPITAL=10000  # Starting virtual capital
 
 Requires confirmation and valid:
 - `PRIVATE_KEY` for Polymarket
-- `KALSHI_API_KEY_ID` and `KALSHI_PRIVATE_KEY_PATH` for Kalshi
 
 ### 4. Ensemble Mode
 Uses multiple AI providers for consensus-based decisions.
@@ -77,13 +76,6 @@ For Polymarket:
 ```env
 PRIVATE_KEY=your_polygon_private_key
 INITIAL_CAPITAL=1000.0
-```
-
-For Kalshi:
-```env
-KALSHI_API_KEY_ID=your_kalshi_key
-KALSHI_PRIVATE_KEY_PATH=/path/to/key.pem
-KALSHI_DEMO=true
 ```
 
 For AI (at least one required):
@@ -116,7 +108,7 @@ Override via environment or CLI:
 
 | Variable | CLI Flag | Options |
 |----------|----------|---------|
-| `PLATFORM` | `--platform` | polymarket, kalshi |
+| `PLATFORM` | `--platform` | polymarket |
 | `STRATEGY` | `--strategy` | mean-reversion, momentum, value, contrarian, volatility, calendar, arbitrage, news, custom |
 | `AGENT` | `--agent` | openai, gemini, anthropic, ensemble, fallback |
 | `INTERVAL` | `--interval` | seconds between loops |
@@ -194,8 +186,7 @@ python -m probablyprofit.main --dry-run --strategy mean-reversion
 ```
 probablyprofit/
 ├── agent/              # AI agents (OpenAI, Gemini, Anthropic)
-├── api/                # Platform clients (Polymarket, Kalshi)
-├── arbitrage/          # Cross-platform arbitrage detection
+├── api/                # Platform clients (Polymarket)
 ├── backtesting/        # Historical simulation
 ├── intelligence/       # News & alpha signal sources
 ├── resilience/         # Retry, circuit breaker, rate limiter
@@ -252,5 +243,4 @@ curl http://localhost:8000/health
 - **NEVER** commit `.env` to version control
 - Use read-only volume mounts for `.env` in Docker
 - Run as non-root user (default in Dockerfile)
-- Enable `KALSHI_DEMO=true` for testing
 - Start with `--dry-run` always

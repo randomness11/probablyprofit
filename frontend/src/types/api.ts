@@ -75,31 +75,6 @@ export interface ExposureResponse {
   warnings: string[];
 }
 
-export interface ArbitrageOpportunity {
-  opportunity_type: string;
-  buy_platform: string;
-  buy_side: string;
-  buy_price: number;
-  sell_platform: string;
-  sell_side: string;
-  sell_price: number;
-  combined_cost: number;
-  gross_profit_pct: number;
-  net_profit_pct: number;
-  confidence: number;
-  polymarket_question: string;
-  kalshi_question: string;
-  similarity_score: number;
-}
-
-export interface ArbitrageResponse {
-  opportunities: ArbitrageOpportunity[];
-  matched_pairs_count: number;
-  last_scan: string | null;
-  polymarket_markets: number;
-  kalshi_markets: number;
-}
-
 export interface Trade {
   id: number;
   order_id: string | null;
