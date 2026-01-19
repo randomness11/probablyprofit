@@ -55,16 +55,53 @@ Avoid: markets under $5k volume, ambiguous resolution criteria, coin flips.
 
 ## Quick Start
 
+### Requirements
+
+- **Python 3.10 or higher** (check with `python3 --version`)
+
+<details>
+<summary><b>Python version too old?</b></summary>
+
+If you see `Python 3.9.x` or older, install a newer version:
+
+```bash
+# macOS (using Homebrew)
+brew install python@3.12
+python3.12 -m pip install probablyprofit[full]
+
+# Or use pyenv (any platform)
+pyenv install 3.12
+pyenv global 3.12
+pip install probablyprofit[full]
+
+# Ubuntu/Debian
+sudo apt install python3.12 python3.12-venv
+python3.12 -m pip install probablyprofit[full]
+
+# Windows
+# Download from https://www.python.org/downloads/
+```
+
+</details>
+
 ### Installation
 
 ```bash
-# Install with pip
+# Install with pip (Python 3.10+ required)
 pip install probablyprofit[full]
 
 # Or clone and install from source
 git clone https://github.com/randomness11/probablyprofit.git
 cd probablyprofit
 pip install -e ".[full]"
+```
+
+**Using a virtual environment (recommended):**
+
+```bash
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install probablyprofit[full]
 ```
 
 ### Configuration

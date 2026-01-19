@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "probablyprofit"
-version = "1.0.1"
+version = "1.0.2"
 description = "AI-powered prediction market trading bots. Write strategy in English, let AI trade for you."
 authors = [{name = "ProbablyProfit Contributors", email = "hello@probablyprofit.dev"}]
 readme = "README.md"
