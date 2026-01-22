@@ -6,118 +6,112 @@ import '../../styles/landing.css';
 const terminalScenes = [
   // Scene 1: Initial setup + first trade
   [
-    { type: 'input', text: '$ pip install probablyprofit', delay: 0 },
-    { type: 'output', text: 'Collecting probablyprofit...', delay: 50 },
-    { type: 'success', text: '✓ Successfully installed probablyprofit-1.1.0', delay: 50 },
-    { type: 'input', text: '$ probablyprofit run --paper', delay: 100 },
-    { type: 'output', text: '', delay: 30 },
-    { type: 'header', text: '  ╔═══════════════════════════════════════════════════╗', delay: 30 },
-    { type: 'header', text: '  ║   PROBABLYPROFIT v1.1.0  •  Paper Trading Mode    ║', delay: 30 },
-    { type: 'header', text: '  ╚═══════════════════════════════════════════════════╝', delay: 30 },
-    { type: 'output', text: '', delay: 30 },
-    { type: 'info', text: '  ▸ Agent: Claude 3.5 Sonnet', delay: 40 },
-    { type: 'info', text: '  ▸ Bankroll: $1,000.00 (paper)', delay: 40 },
-    { type: 'info', text: '  ▸ Risk: Kelly Criterion @ 25% edge', delay: 40 },
-    { type: 'output', text: '', delay: 50 },
-    { type: 'success', text: '  [SCANNING] 1,247 active markets on Polymarket...', delay: 80 },
-    { type: 'success', text: '  [ANALYZING] Evaluating with AI agent...', delay: 100 },
-    { type: 'success', text: '  [FOUND] 4 high-confidence opportunities', delay: 80 },
-    { type: 'output', text: '', delay: 40 },
-    { type: 'trade', text: '  ┌─────────────────────────────────────────────────────┐', delay: 30 },
-    { type: 'trade', text: '  │  TRADE SIGNAL #1                                    │', delay: 30 },
-    { type: 'trade', text: '  ├─────────────────────────────────────────────────────┤', delay: 30 },
-    { type: 'market', text: '  │  Market: "Will GPT-5 release before July 2025?"    │', delay: 40 },
-    { type: 'trade', text: '  │  Current: YES $0.23  •  NO $0.77                    │', delay: 40 },
-    { type: 'buy', text: '  │  Action: BUY YES @ $0.23                            │', delay: 40 },
-    { type: 'trade', text: '  │  Size: $47.50 (4.75% bankroll)                     │', delay: 40 },
-    { type: 'info', text: '  │  Confidence: 84% • Expected +$158.20               │', delay: 40 },
-    { type: 'trade', text: '  │                                                     │', delay: 30 },
-    { type: 'reasoning', text: '  │  "OpenAI hiring surge + compute scaling suggests   │', delay: 50 },
-    { type: 'reasoning', text: '  │   imminent release. Market underpricing timeline." │', delay: 50 },
-    { type: 'trade', text: '  └─────────────────────────────────────────────────────┘', delay: 30 },
-    { type: 'output', text: '', delay: 30 },
-    { type: 'success', text: '  ✓ Order submitted • Filled @ $0.23 • 206 shares', delay: 60 },
+    { type: 'input', text: '$ pip install probablyprofit' },
+    { type: 'output', text: 'Collecting probablyprofit...' },
+    { type: 'success', text: '✓ Installed probablyprofit-1.1.0' },
+    { type: 'input', text: '$ probablyprofit run --paper' },
+    { type: 'output', text: '' },
+    { type: 'header', text: '╔════════════════════════════════════╗' },
+    { type: 'header', text: '║  PROBABLYPROFIT • Paper Mode       ║' },
+    { type: 'header', text: '╚════════════════════════════════════╝' },
+    { type: 'output', text: '' },
+    { type: 'info', text: '▸ Agent: Claude 3.5 Sonnet' },
+    { type: 'info', text: '▸ Bankroll: $1,000.00' },
+    { type: 'info', text: '▸ Risk: Kelly @ 25%' },
+    { type: 'output', text: '' },
+    { type: 'success', text: '[SCAN] 1,247 markets...' },
+    { type: 'success', text: '[AI] Evaluating...' },
+    { type: 'success', text: '[FOUND] 4 opportunities' },
+    { type: 'output', text: '' },
+    { type: 'trade', text: '┌─ TRADE #1 ─────────────────────┐' },
+    { type: 'market', text: '│ "GPT-5 before July 2025?"      │' },
+    { type: 'trade', text: '│ YES $0.23 • NO $0.77           │' },
+    { type: 'buy', text: '│ BUY YES @ $0.23                 │' },
+    { type: 'trade', text: '│ Size: $47.50 (4.75%)           │' },
+    { type: 'info', text: '│ Confidence: 84%                 │' },
+    { type: 'trade', text: '│                                 │' },
+    { type: 'reasoning', text: '│ "OpenAI hiring + compute       │' },
+    { type: 'reasoning', text: '│  scaling = imminent release"   │' },
+    { type: 'trade', text: '└─────────────────────────────────┘' },
+    { type: 'output', text: '' },
+    { type: 'success', text: '✓ Filled @ $0.23 • 206 shares' },
   ],
-  // Scene 2: Live portfolio monitoring
+  // Scene 2: Portfolio
   [
-    { type: 'input', text: '$ probablyprofit portfolio', delay: 0 },
-    { type: 'output', text: '', delay: 50 },
-    { type: 'header', text: '  ╔═══════════════════════════════════════════════════╗', delay: 30 },
-    { type: 'header', text: '  ║   PORTFOLIO OVERVIEW          Updated: just now   ║', delay: 30 },
-    { type: 'header', text: '  ╚═══════════════════════════════════════════════════╝', delay: 30 },
-    { type: 'output', text: '', delay: 30 },
-    { type: 'profit', text: '  Total Value:   $1,247.83  (+24.78%)', delay: 50 },
-    { type: 'info', text: '  Open Positions: 6', delay: 40 },
-    { type: 'info', text: '  Win Rate:      71.4% (15/21)', delay: 40 },
-    { type: 'output', text: '', delay: 40 },
-    { type: 'trade', text: '  ┌───────────────────────────────────────────────────────────┐', delay: 30 },
-    { type: 'trade', text: '  │  POSITION                          ENTRY   NOW    P&L    │', delay: 30 },
-    { type: 'trade', text: '  ├───────────────────────────────────────────────────────────┤', delay: 30 },
-    { type: 'profit', text: '  │  Trump wins 2024 (YES)             $0.52  $0.61  +17.3%  │', delay: 50 },
-    { type: 'profit', text: '  │  Fed cuts rates March (YES)        $0.34  $0.48  +41.2%  │', delay: 50 },
-    { type: 'loss', text: '  │  ETH flips BTC mcap (YES)          $0.08  $0.05  -37.5%  │', delay: 50 },
-    { type: 'profit', text: '  │  Taylor Swift endorses (NO)        $0.71  $0.83  +16.9%  │', delay: 50 },
-    { type: 'profit', text: '  │  GPT-5 before July (YES)           $0.23  $0.31  +34.8%  │', delay: 50 },
-    { type: 'info', text: '  │  SpaceX Mars 2026 (YES)            $0.15  $0.15   0.0%   │', delay: 50 },
-    { type: 'trade', text: '  └───────────────────────────────────────────────────────────┘', delay: 30 },
-    { type: 'output', text: '', delay: 40 },
-    { type: 'success', text: '  Agent analyzing new opportunities...', delay: 80 },
+    { type: 'input', text: '$ probablyprofit portfolio' },
+    { type: 'output', text: '' },
+    { type: 'header', text: '╔════════════════════════════════════╗' },
+    { type: 'header', text: '║  PORTFOLIO           Updated: now  ║' },
+    { type: 'header', text: '╚════════════════════════════════════╝' },
+    { type: 'output', text: '' },
+    { type: 'profit', text: 'Total: $1,247.83 (+24.78%)' },
+    { type: 'info', text: 'Positions: 6 • Win: 71.4%' },
+    { type: 'output', text: '' },
+    { type: 'trade', text: '┌─ POSITIONS ────────────────────┐' },
+    { type: 'trade', text: '│ MARKET              ENTRY  P&L │' },
+    { type: 'trade', text: '├─────────────────────────────────┤' },
+    { type: 'profit', text: '│ Trump 2024 YES     $0.52 +17%  │' },
+    { type: 'profit', text: '│ Fed cuts Mar YES   $0.34 +41%  │' },
+    { type: 'loss', text: '│ ETH flips BTC YES  $0.08 -37%  │' },
+    { type: 'profit', text: '│ Swift endorses NO  $0.71 +17%  │' },
+    { type: 'profit', text: '│ GPT-5 July YES     $0.23 +35%  │' },
+    { type: 'info', text: '│ SpaceX Mars YES    $0.15   0%  │' },
+    { type: 'trade', text: '└─────────────────────────────────┘' },
+    { type: 'output', text: '' },
+    { type: 'success', text: 'Agent scanning for opportunities...' },
   ],
-  // Scene 3: Backtest results
+  // Scene 3: Backtest
   [
-    { type: 'input', text: '$ probablyprofit backtest --days 90', delay: 0 },
-    { type: 'output', text: '', delay: 50 },
-    { type: 'info', text: '  Loading historical market data...', delay: 60 },
-    { type: 'info', text: '  Simulating 847 trades across 90 days...', delay: 80 },
-    { type: 'output', text: '', delay: 40 },
-    { type: 'header', text: '  ╔═══════════════════════════════════════════════════╗', delay: 30 },
-    { type: 'header', text: '  ║   BACKTEST RESULTS • 90 DAY SIMULATION            ║', delay: 30 },
-    { type: 'header', text: '  ╚═══════════════════════════════════════════════════╝', delay: 30 },
-    { type: 'output', text: '', delay: 30 },
-    { type: 'profit', text: '  Total Return:     +147.3%', delay: 50 },
-    { type: 'info', text: '  Sharpe Ratio:     2.34', delay: 40 },
-    { type: 'info', text: '  Max Drawdown:     -12.7%', delay: 40 },
-    { type: 'info', text: '  Win Rate:         68.2%', delay: 40 },
-    { type: 'info', text: '  Avg Trade:        +$4.82', delay: 40 },
-    { type: 'output', text: '', delay: 40 },
-    { type: 'trade', text: '  ┌─────────────────────────────────────────────────────┐', delay: 30 },
-    { type: 'trade', text: '  │  EQUITY CURVE                                       │', delay: 30 },
-    { type: 'trade', text: '  │                                              ▄▄██   │', delay: 40 },
-    { type: 'trade', text: '  │                                        ▄▄███████   │', delay: 40 },
-    { type: 'trade', text: '  │                                  ▄▄█████████████   │', delay: 40 },
-    { type: 'trade', text: '  │                            ▄▄████████████████████   │', delay: 40 },
-    { type: 'trade', text: '  │                    ▄▄▄█████████████████████████████   │', delay: 40 },
-    { type: 'trade', text: '  │  ▄▄▄▄▄▄▄▄▄▄████████████████████████████████████████   │', delay: 40 },
-    { type: 'trade', text: '  │  $1k────────────────────────────────────────$2.47k │', delay: 30 },
-    { type: 'trade', text: '  └─────────────────────────────────────────────────────┘', delay: 30 },
-    { type: 'output', text: '', delay: 40 },
-    { type: 'success', text: '  ✓ Strategy validated • Ready for live trading', delay: 60 },
+    { type: 'input', text: '$ probablyprofit backtest -d 90' },
+    { type: 'output', text: '' },
+    { type: 'info', text: 'Loading historical data...' },
+    { type: 'info', text: 'Simulating 847 trades...' },
+    { type: 'output', text: '' },
+    { type: 'header', text: '╔════════════════════════════════════╗' },
+    { type: 'header', text: '║  BACKTEST • 90 Days                ║' },
+    { type: 'header', text: '╚════════════════════════════════════╝' },
+    { type: 'output', text: '' },
+    { type: 'profit', text: 'Return:    +147.3%' },
+    { type: 'info', text: 'Sharpe:    2.34' },
+    { type: 'info', text: 'Drawdown:  -12.7%' },
+    { type: 'info', text: 'Win Rate:  68.2%' },
+    { type: 'output', text: '' },
+    { type: 'trade', text: '┌─ EQUITY CURVE ─────────────────┐' },
+    { type: 'trade', text: '│                          ▄▄██  │' },
+    { type: 'trade', text: '│                     ▄▄██████   │' },
+    { type: 'trade', text: '│                ▄▄██████████    │' },
+    { type: 'trade', text: '│           ▄▄██████████████     │' },
+    { type: 'trade', text: '│      ▄▄██████████████████      │' },
+    { type: 'trade', text: '│ ▄▄██████████████████████       │' },
+    { type: 'trade', text: '│ $1k─────────────────$2.47k     │' },
+    { type: 'trade', text: '└─────────────────────────────────┘' },
+    { type: 'output', text: '' },
+    { type: 'success', text: '✓ Ready for live trading' },
   ],
-  // Scene 4: Strategy customization
+  // Scene 4: Live mode
   [
-    { type: 'input', text: '$ cat strategy.txt', delay: 0 },
-    { type: 'output', text: '', delay: 50 },
-    { type: 'reasoning', text: '  # My Trading Strategy', delay: 40 },
-    { type: 'reasoning', text: '  ', delay: 20 },
-    { type: 'reasoning', text: '  Focus on political and tech markets.', delay: 40 },
-    { type: 'reasoning', text: '  Buy YES when market underestimates momentum.', delay: 40 },
-    { type: 'reasoning', text: '  Avoid sports and entertainment markets.', delay: 40 },
-    { type: 'reasoning', text: '  Max 5% per position, 20% sector exposure.', delay: 40 },
-    { type: 'reasoning', text: '  Exit at 2x or cut losses at -30%.', delay: 40 },
-    { type: 'output', text: '', delay: 50 },
-    { type: 'input', text: '$ probablyprofit run --live', delay: 80 },
-    { type: 'output', text: '', delay: 40 },
-    { type: 'header', text: '  ╔═══════════════════════════════════════════════════╗', delay: 30 },
-    { type: 'header', text: '  ║   🔴 LIVE TRADING MODE • Real Money Active        ║', delay: 30 },
-    { type: 'header', text: '  ╚═══════════════════════════════════════════════════╝', delay: 30 },
-    { type: 'output', text: '', delay: 30 },
-    { type: 'warning', text: '  ⚠ Connected to Polymarket via API', delay: 50 },
-    { type: 'info', text: '  ▸ Wallet: 0x7a3...f9c2', delay: 40 },
-    { type: 'info', text: '  ▸ Balance: $2,847.32 USDC', delay: 40 },
-    { type: 'info', text: '  ▸ Strategy: strategy.txt loaded', delay: 40 },
-    { type: 'output', text: '', delay: 40 },
-    { type: 'success', text: '  [LIVE] Monitoring markets for opportunities...', delay: 60 },
-    { type: 'success', text: '  [LIVE] Agent ready • Will notify on signals', delay: 60 },
+    { type: 'input', text: '$ cat strategy.txt' },
+    { type: 'output', text: '' },
+    { type: 'reasoning', text: '# My Trading Strategy' },
+    { type: 'reasoning', text: '' },
+    { type: 'reasoning', text: 'Focus on political + tech.' },
+    { type: 'reasoning', text: 'Buy YES when undervalued.' },
+    { type: 'reasoning', text: 'Max 5% per position.' },
+    { type: 'reasoning', text: 'Exit at 2x or -30%.' },
+    { type: 'output', text: '' },
+    { type: 'input', text: '$ probablyprofit run --live' },
+    { type: 'output', text: '' },
+    { type: 'header', text: '╔════════════════════════════════════╗' },
+    { type: 'header', text: '║  🔴 LIVE MODE • Real Money         ║' },
+    { type: 'header', text: '╚════════════════════════════════════╝' },
+    { type: 'output', text: '' },
+    { type: 'warning', text: '⚠ Connected to Polymarket' },
+    { type: 'info', text: '▸ Wallet: 0x7a3...f9c2' },
+    { type: 'info', text: '▸ Balance: $2,847.32 USDC' },
+    { type: 'info', text: '▸ Strategy loaded' },
+    { type: 'output', text: '' },
+    { type: 'success', text: '[LIVE] Monitoring markets...' },
+    { type: 'success', text: '[LIVE] Agent ready' },
   ],
 ];
 
@@ -184,24 +178,24 @@ export function LandingPage() {
   return (
     <div className="landing-theme min-h-screen bg-landing-bg flex flex-col">
       {/* Hero - Split Layout */}
-      <main className="flex-1 flex items-center justify-center p-4 lg:p-8">
-        <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+      <main className="flex-1 flex items-center justify-center p-3 sm:p-4 lg:p-8">
+        <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 lg:gap-12 items-center">
 
           {/* Left - Terminal */}
           <div className="order-2 lg:order-1">
-            <div className="border border-landing-border bg-black/50 overflow-hidden">
+            <div className="border border-landing-border bg-black/50 overflow-hidden rounded-sm">
               {/* Terminal Header */}
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-landing-border bg-landing-border/30">
+              <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-landing-border bg-landing-border/30">
                 <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500/80"></div>
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-500/80"></div>
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500/80"></div>
                 </div>
-                <span className="text-landing-text-muted text-xs font-mono ml-2">probablyprofit</span>
+                <span className="text-landing-text-muted text-[10px] sm:text-xs font-mono ml-2">probablyprofit</span>
               </div>
 
               {/* Terminal Body */}
-              <div className={`p-4 h-[520px] overflow-hidden font-mono text-xs transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+              <div className={`p-3 sm:p-4 h-[380px] sm:h-[420px] lg:h-[480px] overflow-hidden font-mono text-[10px] sm:text-xs transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
                 {terminalLines.slice(0, visibleLines).map((line, i) => (
                   <div
                     key={`${currentScene}-${i}`}
@@ -218,7 +212,7 @@ export function LandingPage() {
                       ${line.type === 'loss' ? 'text-red-400' : ''}
                       ${line.type === 'warning' ? 'text-yellow-400' : ''}
                       ${line.type === 'reasoning' ? 'text-purple-400 italic' : ''}
-                      ${line.text === '' ? 'h-3' : ''}
+                      ${line.text === '' ? 'h-2.5 sm:h-3' : ''}
                       leading-snug whitespace-pre
                     `}
                   >
@@ -226,7 +220,7 @@ export function LandingPage() {
                   </div>
                 ))}
                 {visibleLines < terminalLines.length && (
-                  <span className="inline-block w-2 h-4 bg-green-400 animate-pulse ml-1"></span>
+                  <span className="inline-block w-1.5 sm:w-2 h-3 sm:h-4 bg-green-400 animate-pulse ml-1"></span>
                 )}
               </div>
             </div>
@@ -235,82 +229,84 @@ export function LandingPage() {
           {/* Right - Info */}
           <div className="order-1 lg:order-2 flex flex-col">
             {/* Logo */}
-            <PixelLogo />
+            <div className="overflow-x-auto">
+              <PixelLogo />
+            </div>
 
             {/* Tagline */}
-            <p className="mt-4 text-lg text-landing-text-muted font-mono">
-              Open-source framework for building AI trading bots.<br />
-              Write strategy in English. Let AI trade.
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-landing-text-muted font-mono">
+              Open-source AI trading bot framework.<br className="hidden sm:block" />
+              <span className="sm:hidden"> </span>Write strategy in English.
             </p>
 
             {/* Install Command */}
-            <div className="mt-6 flex items-center gap-3 bg-landing-border/50 border border-landing-border px-4 py-3 w-fit">
-              <span className="text-landing-text-muted font-mono">$</span>
-              <code className="font-mono text-white">{command}</code>
+            <div className="mt-4 sm:mt-6 flex items-center gap-2 sm:gap-3 bg-landing-border/50 border border-landing-border px-3 sm:px-4 py-2 sm:py-3 w-fit max-w-full overflow-x-auto">
+              <span className="text-landing-text-muted font-mono text-sm">$</span>
+              <code className="font-mono text-white text-xs sm:text-sm whitespace-nowrap">{command}</code>
               <button
                 onClick={handleCopy}
-                className="ml-2 p-1.5 text-landing-text-muted hover:text-white transition-colors"
+                className="ml-1 sm:ml-2 p-1 sm:p-1.5 text-landing-text-muted hover:text-white transition-colors flex-shrink-0"
                 title="Copy to clipboard"
               >
-                {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <ClipboardIcon className="w-4 h-4" />}
+                {copied ? <CheckIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-400" /> : <ClipboardIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
               </button>
             </div>
 
             {/* CTAs */}
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
               <a
                 href="https://github.com/randomness11/probablyprofit"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-2.5 bg-white text-black font-mono text-sm hover:bg-white/90 transition-colors flex items-center gap-2"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 bg-white text-black font-mono text-xs sm:text-sm hover:bg-white/90 transition-colors flex items-center gap-2"
               >
-                <StarIcon className="w-4 h-4" />
+                <StarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Star on GitHub
               </a>
               <a
                 href="https://pypi.org/project/probablyprofit/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-2.5 border border-landing-border text-white font-mono text-sm hover:border-white/40 transition-colors"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 border border-landing-border text-white font-mono text-xs sm:text-sm hover:border-white/40 transition-colors"
               >
-                View on PyPI
+                PyPI
               </a>
             </div>
 
             {/* Providers */}
-            <div className="mt-8 flex items-center gap-6">
-              <span className="text-landing-text-muted text-xs font-mono">POWERED BY</span>
+            <div className="mt-5 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-6">
+              <span className="text-landing-text-muted text-[10px] sm:text-xs font-mono">POWERED BY</span>
               {providers.map((p) => (
-                <div key={p.name} className="flex items-center gap-1.5 text-landing-text-muted hover:text-white transition-colors">
-                  {p.icon}
-                  <span className="font-mono text-xs">{p.name}</span>
+                <div key={p.name} className="flex items-center gap-1 sm:gap-1.5 text-landing-text-muted hover:text-white transition-colors">
+                  <span className="[&>svg]:w-3 [&>svg]:h-3 sm:[&>svg]:w-4 sm:[&>svg]:h-4">{p.icon}</span>
+                  <span className="font-mono text-[10px] sm:text-xs">{p.name}</span>
                 </div>
               ))}
             </div>
 
             {/* Features Grid */}
-            <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="mt-5 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
               {features.map((f) => {
                 const Icon = f.icon;
                 return (
-                  <div key={f.title} className="border border-landing-border/50 p-3 hover:border-landing-border transition-colors">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Icon className="w-4 h-4 text-green-400" />
-                      <span className="font-mono text-white text-sm">{f.title}</span>
+                  <div key={f.title} className="border border-landing-border/50 p-2 sm:p-3 hover:border-landing-border transition-colors">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                      <Icon className="w-3 h-3 sm:w-4 sm:h-4 text-green-400 flex-shrink-0" />
+                      <span className="font-mono text-white text-[11px] sm:text-sm truncate">{f.title}</span>
                     </div>
-                    <p className="text-landing-text-muted text-xs">{f.desc}</p>
+                    <p className="text-landing-text-muted text-[10px] sm:text-xs truncate">{f.desc}</p>
                   </div>
                 );
               })}
             </div>
 
             {/* Version Badge */}
-            <div className="mt-6 flex items-center gap-4">
-              <span className="px-2 py-1 bg-green-400/10 border border-green-400/30 text-green-400 font-mono text-xs">
+            <div className="mt-4 sm:mt-6 flex items-center gap-3 sm:gap-4">
+              <span className="px-2 py-0.5 sm:py-1 bg-green-400/10 border border-green-400/30 text-green-400 font-mono text-[10px] sm:text-xs">
                 v1.1.0
               </span>
-              <span className="text-landing-text-muted text-xs font-mono">
-                MIT Licensed • Open Source
+              <span className="text-landing-text-muted text-[10px] sm:text-xs font-mono">
+                MIT • Open Source
               </span>
             </div>
           </div>
@@ -318,8 +314,8 @@ export function LandingPage() {
       </main>
 
       {/* Minimal Footer */}
-      <footer className="border-t border-landing-border py-3">
-        <p className="text-center text-landing-text-muted font-mono text-xs">
+      <footer className="border-t border-landing-border py-2 sm:py-3">
+        <p className="text-center text-landing-text-muted font-mono text-[10px] sm:text-xs">
           made by{' '}
           <a
             href="https://x.com/ankitkr0"
@@ -329,7 +325,7 @@ export function LandingPage() {
           >
             @ankitkr0
           </a>
-          {' '}• open source • MIT license
+          {' '}• open source
         </p>
       </footer>
     </div>
