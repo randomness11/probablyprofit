@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="4" fill="#0a0a0a"/>
+  <rect x="1" y="1" width="30" height="30" rx="3" fill="none" stroke="#10B981" stroke-width="1.5"/>
+  <!-- Stylized P -->
+  <path d="M9 8 L9 24 M9 8 L17 8 Q22 8 22 13 Q22 18 17 18 L9 18"
+        fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Profit arrow -->
+  <path d="M19 22 L23 14 L27 18"
+        fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="27" cy="18" r="1.5" fill="#10B981"/>
+</svg>
