@@ -3,54 +3,162 @@ import { ClipboardIcon, CheckIcon, StarIcon, CpuChipIcon, ArrowsRightLeftIcon, S
 import { PixelLogo } from './components/PixelLogo';
 import '../../styles/landing.css';
 
-const terminalLines = [
-  { type: 'input', text: '$ pip install probablyprofit' },
-  { type: 'output', text: 'Successfully installed probablyprofit-1.1.0' },
-  { type: 'input', text: '$ probablyprofit init' },
-  { type: 'output', text: '✓ Created .env.example' },
-  { type: 'output', text: '✓ Created strategy.txt' },
-  { type: 'input', text: '$ probablyprofit run "Buy undervalued markets"' },
-  { type: 'output', text: '' },
-  { type: 'output', text: '  ╔══════════════════════════════════════╗' },
-  { type: 'output', text: '  ║     PROBABLYPROFIT v1.1.0            ║' },
-  { type: 'output', text: '  ╚══════════════════════════════════════╝' },
-  { type: 'output', text: '' },
-  { type: 'output', text: '  Agent: Claude 3.5 Sonnet' },
-  { type: 'output', text: '  Strategy: Custom prompt' },
-  { type: 'output', text: '  Mode: Paper trading' },
-  { type: 'output', text: '' },
-  { type: 'success', text: '  [ANALYZING] Scanning 847 active markets...' },
-  { type: 'success', text: '  [FOUND] 3 opportunities match criteria' },
-  { type: 'output', text: '' },
-  { type: 'trade', text: '  ┌─ Trade #1 ────────────────────────────' },
-  { type: 'trade', text: '  │ Market: "Will BTC hit $100k by March?"' },
-  { type: 'trade', text: '  │ Side: YES @ $0.42' },
-  { type: 'trade', text: '  │ Size: $25.00 (2.5% of bankroll)' },
-  { type: 'trade', text: '  │ Confidence: 78%' },
-  { type: 'trade', text: '  │ Reasoning: "Historical momentum + halving"' },
-  { type: 'trade', text: '  └──────────────────────────────────────' },
-  { type: 'output', text: '' },
-  { type: 'success', text: '  ✓ Order placed successfully' },
+const terminalScenes = [
+  // Scene 1: Initial setup + first trade
+  [
+    { type: 'input', text: '$ pip install probablyprofit', delay: 0 },
+    { type: 'output', text: 'Collecting probablyprofit...', delay: 50 },
+    { type: 'success', text: '✓ Successfully installed probablyprofit-1.1.0', delay: 50 },
+    { type: 'input', text: '$ probablyprofit run --paper', delay: 100 },
+    { type: 'output', text: '', delay: 30 },
+    { type: 'header', text: '  ╔═══════════════════════════════════════════════════╗', delay: 30 },
+    { type: 'header', text: '  ║   PROBABLYPROFIT v1.1.0  •  Paper Trading Mode    ║', delay: 30 },
+    { type: 'header', text: '  ╚═══════════════════════════════════════════════════╝', delay: 30 },
+    { type: 'output', text: '', delay: 30 },
+    { type: 'info', text: '  ▸ Agent: Claude 3.5 Sonnet', delay: 40 },
+    { type: 'info', text: '  ▸ Bankroll: $1,000.00 (paper)', delay: 40 },
+    { type: 'info', text: '  ▸ Risk: Kelly Criterion @ 25% edge', delay: 40 },
+    { type: 'output', text: '', delay: 50 },
+    { type: 'success', text: '  [SCANNING] 1,247 active markets on Polymarket...', delay: 80 },
+    { type: 'success', text: '  [ANALYZING] Evaluating with AI agent...', delay: 100 },
+    { type: 'success', text: '  [FOUND] 4 high-confidence opportunities', delay: 80 },
+    { type: 'output', text: '', delay: 40 },
+    { type: 'trade', text: '  ┌─────────────────────────────────────────────────────┐', delay: 30 },
+    { type: 'trade', text: '  │  TRADE SIGNAL #1                                    │', delay: 30 },
+    { type: 'trade', text: '  ├─────────────────────────────────────────────────────┤', delay: 30 },
+    { type: 'market', text: '  │  Market: "Will GPT-5 release before July 2025?"    │', delay: 40 },
+    { type: 'trade', text: '  │  Current: YES $0.23  •  NO $0.77                    │', delay: 40 },
+    { type: 'buy', text: '  │  Action: BUY YES @ $0.23                            │', delay: 40 },
+    { type: 'trade', text: '  │  Size: $47.50 (4.75% bankroll)                     │', delay: 40 },
+    { type: 'info', text: '  │  Confidence: 84% • Expected +$158.20               │', delay: 40 },
+    { type: 'trade', text: '  │                                                     │', delay: 30 },
+    { type: 'reasoning', text: '  │  "OpenAI hiring surge + compute scaling suggests   │', delay: 50 },
+    { type: 'reasoning', text: '  │   imminent release. Market underpricing timeline." │', delay: 50 },
+    { type: 'trade', text: '  └─────────────────────────────────────────────────────┘', delay: 30 },
+    { type: 'output', text: '', delay: 30 },
+    { type: 'success', text: '  ✓ Order submitted • Filled @ $0.23 • 206 shares', delay: 60 },
+  ],
+  // Scene 2: Live portfolio monitoring
+  [
+    { type: 'input', text: '$ probablyprofit portfolio', delay: 0 },
+    { type: 'output', text: '', delay: 50 },
+    { type: 'header', text: '  ╔═══════════════════════════════════════════════════╗', delay: 30 },
+    { type: 'header', text: '  ║   PORTFOLIO OVERVIEW          Updated: just now   ║', delay: 30 },
+    { type: 'header', text: '  ╚═══════════════════════════════════════════════════╝', delay: 30 },
+    { type: 'output', text: '', delay: 30 },
+    { type: 'profit', text: '  Total Value:   $1,247.83  (+24.78%)', delay: 50 },
+    { type: 'info', text: '  Open Positions: 6', delay: 40 },
+    { type: 'info', text: '  Win Rate:      71.4% (15/21)', delay: 40 },
+    { type: 'output', text: '', delay: 40 },
+    { type: 'trade', text: '  ┌───────────────────────────────────────────────────────────┐', delay: 30 },
+    { type: 'trade', text: '  │  POSITION                          ENTRY   NOW    P&L    │', delay: 30 },
+    { type: 'trade', text: '  ├───────────────────────────────────────────────────────────┤', delay: 30 },
+    { type: 'profit', text: '  │  Trump wins 2024 (YES)             $0.52  $0.61  +17.3%  │', delay: 50 },
+    { type: 'profit', text: '  │  Fed cuts rates March (YES)        $0.34  $0.48  +41.2%  │', delay: 50 },
+    { type: 'loss', text: '  │  ETH flips BTC mcap (YES)          $0.08  $0.05  -37.5%  │', delay: 50 },
+    { type: 'profit', text: '  │  Taylor Swift endorses (NO)        $0.71  $0.83  +16.9%  │', delay: 50 },
+    { type: 'profit', text: '  │  GPT-5 before July (YES)           $0.23  $0.31  +34.8%  │', delay: 50 },
+    { type: 'info', text: '  │  SpaceX Mars 2026 (YES)            $0.15  $0.15   0.0%   │', delay: 50 },
+    { type: 'trade', text: '  └───────────────────────────────────────────────────────────┘', delay: 30 },
+    { type: 'output', text: '', delay: 40 },
+    { type: 'success', text: '  Agent analyzing new opportunities...', delay: 80 },
+  ],
+  // Scene 3: Backtest results
+  [
+    { type: 'input', text: '$ probablyprofit backtest --days 90', delay: 0 },
+    { type: 'output', text: '', delay: 50 },
+    { type: 'info', text: '  Loading historical market data...', delay: 60 },
+    { type: 'info', text: '  Simulating 847 trades across 90 days...', delay: 80 },
+    { type: 'output', text: '', delay: 40 },
+    { type: 'header', text: '  ╔═══════════════════════════════════════════════════╗', delay: 30 },
+    { type: 'header', text: '  ║   BACKTEST RESULTS • 90 DAY SIMULATION            ║', delay: 30 },
+    { type: 'header', text: '  ╚═══════════════════════════════════════════════════╝', delay: 30 },
+    { type: 'output', text: '', delay: 30 },
+    { type: 'profit', text: '  Total Return:     +147.3%', delay: 50 },
+    { type: 'info', text: '  Sharpe Ratio:     2.34', delay: 40 },
+    { type: 'info', text: '  Max Drawdown:     -12.7%', delay: 40 },
+    { type: 'info', text: '  Win Rate:         68.2%', delay: 40 },
+    { type: 'info', text: '  Avg Trade:        +$4.82', delay: 40 },
+    { type: 'output', text: '', delay: 40 },
+    { type: 'trade', text: '  ┌─────────────────────────────────────────────────────┐', delay: 30 },
+    { type: 'trade', text: '  │  EQUITY CURVE                                       │', delay: 30 },
+    { type: 'trade', text: '  │                                              ▄▄██   │', delay: 40 },
+    { type: 'trade', text: '  │                                        ▄▄███████   │', delay: 40 },
+    { type: 'trade', text: '  │                                  ▄▄█████████████   │', delay: 40 },
+    { type: 'trade', text: '  │                            ▄▄████████████████████   │', delay: 40 },
+    { type: 'trade', text: '  │                    ▄▄▄█████████████████████████████   │', delay: 40 },
+    { type: 'trade', text: '  │  ▄▄▄▄▄▄▄▄▄▄████████████████████████████████████████   │', delay: 40 },
+    { type: 'trade', text: '  │  $1k────────────────────────────────────────$2.47k │', delay: 30 },
+    { type: 'trade', text: '  └─────────────────────────────────────────────────────┘', delay: 30 },
+    { type: 'output', text: '', delay: 40 },
+    { type: 'success', text: '  ✓ Strategy validated • Ready for live trading', delay: 60 },
+  ],
+  // Scene 4: Strategy customization
+  [
+    { type: 'input', text: '$ cat strategy.txt', delay: 0 },
+    { type: 'output', text: '', delay: 50 },
+    { type: 'reasoning', text: '  # My Trading Strategy', delay: 40 },
+    { type: 'reasoning', text: '  ', delay: 20 },
+    { type: 'reasoning', text: '  Focus on political and tech markets.', delay: 40 },
+    { type: 'reasoning', text: '  Buy YES when market underestimates momentum.', delay: 40 },
+    { type: 'reasoning', text: '  Avoid sports and entertainment markets.', delay: 40 },
+    { type: 'reasoning', text: '  Max 5% per position, 20% sector exposure.', delay: 40 },
+    { type: 'reasoning', text: '  Exit at 2x or cut losses at -30%.', delay: 40 },
+    { type: 'output', text: '', delay: 50 },
+    { type: 'input', text: '$ probablyprofit run --live', delay: 80 },
+    { type: 'output', text: '', delay: 40 },
+    { type: 'header', text: '  ╔═══════════════════════════════════════════════════╗', delay: 30 },
+    { type: 'header', text: '  ║   🔴 LIVE TRADING MODE • Real Money Active        ║', delay: 30 },
+    { type: 'header', text: '  ╚═══════════════════════════════════════════════════╝', delay: 30 },
+    { type: 'output', text: '', delay: 30 },
+    { type: 'warning', text: '  ⚠ Connected to Polymarket via API', delay: 50 },
+    { type: 'info', text: '  ▸ Wallet: 0x7a3...f9c2', delay: 40 },
+    { type: 'info', text: '  ▸ Balance: $2,847.32 USDC', delay: 40 },
+    { type: 'info', text: '  ▸ Strategy: strategy.txt loaded', delay: 40 },
+    { type: 'output', text: '', delay: 40 },
+    { type: 'success', text: '  [LIVE] Monitoring markets for opportunities...', delay: 60 },
+    { type: 'success', text: '  [LIVE] Agent ready • Will notify on signals', delay: 60 },
+  ],
 ];
 
 export function LandingPage() {
   const [copied, setCopied] = useState(false);
+  const [currentScene, setCurrentScene] = useState(0);
   const [visibleLines, setVisibleLines] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const command = 'pip install probablyprofit';
 
+  const terminalLines = terminalScenes[currentScene];
+
   useEffect(() => {
+    if (isTransitioning) return;
+
     const timer = setInterval(() => {
       setVisibleLines((prev) => {
         if (prev >= terminalLines.length) {
-          // Reset after a pause
-          setTimeout(() => setVisibleLines(0), 3000);
           return prev;
         }
         return prev + 1;
       });
-    }, 150);
+    }, 80);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [terminalLines.length, isTransitioning]);
+
+  // Scene transition
+  useEffect(() => {
+    if (visibleLines >= terminalLines.length && !isTransitioning) {
+      const transitionTimer = setTimeout(() => {
+        setIsTransitioning(true);
+        setTimeout(() => {
+          setCurrentScene((prev) => (prev + 1) % terminalScenes.length);
+          setVisibleLines(0);
+          setIsTransitioning(false);
+        }, 500);
+      }, 2500);
+      return () => clearTimeout(transitionTimer);
+    }
+  }, [visibleLines, terminalLines.length, isTransitioning]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(command);
@@ -93,24 +201,32 @@ export function LandingPage() {
               </div>
 
               {/* Terminal Body */}
-              <div className="p-4 h-[420px] overflow-hidden font-mono text-sm">
+              <div className={`p-4 h-[520px] overflow-hidden font-mono text-xs transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
                 {terminalLines.slice(0, visibleLines).map((line, i) => (
                   <div
-                    key={i}
+                    key={`${currentScene}-${i}`}
                     className={`
-                      ${line.type === 'input' ? 'text-white' : ''}
+                      ${line.type === 'input' ? 'text-yellow-300' : ''}
                       ${line.type === 'output' ? 'text-landing-text-muted' : ''}
                       ${line.type === 'success' ? 'text-green-400' : ''}
-                      ${line.type === 'trade' ? 'text-cyan-400' : ''}
-                      ${line.text === '' ? 'h-4' : ''}
-                      leading-relaxed
+                      ${line.type === 'trade' ? 'text-slate-400' : ''}
+                      ${line.type === 'header' ? 'text-cyan-400 font-bold' : ''}
+                      ${line.type === 'info' ? 'text-slate-300' : ''}
+                      ${line.type === 'market' ? 'text-white font-semibold' : ''}
+                      ${line.type === 'buy' ? 'text-green-400 font-semibold' : ''}
+                      ${line.type === 'profit' ? 'text-green-400' : ''}
+                      ${line.type === 'loss' ? 'text-red-400' : ''}
+                      ${line.type === 'warning' ? 'text-yellow-400' : ''}
+                      ${line.type === 'reasoning' ? 'text-purple-400 italic' : ''}
+                      ${line.text === '' ? 'h-3' : ''}
+                      leading-snug whitespace-pre
                     `}
                   >
                     {line.text}
                   </div>
                 ))}
                 {visibleLines < terminalLines.length && (
-                  <span className="inline-block w-2 h-4 bg-white animate-pulse"></span>
+                  <span className="inline-block w-2 h-4 bg-green-400 animate-pulse ml-1"></span>
                 )}
               </div>
             </div>
