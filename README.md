@@ -487,11 +487,13 @@ See [.env.example](.env.example) for all configuration options.
 
 ## Documentation
 
-- [Getting Started Guide](GETTING_STARTED.md)
-- [Deployment Guide](DEPLOY.md)
-- [API Reference](docs/API_REFERENCE.md)
-- [Strategy Writing Guide](docs/PROMPT_ENGINEERING.md)
-- [Architecture Overview](probablyprofit/ARCHITECTURE.md)
+- [Getting Started Guide](docs/getting-started.md)
+- [Deployment Guide](docs/deployment.md)
+- [API Reference](docs/api-reference.md)
+- [Strategy Writing Guide](docs/strategy-guide.md)
+- [Architecture Overview](docs/architecture.md)
+- [Security Guide](docs/SECURITY.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ---
 
@@ -511,7 +513,7 @@ See [.env.example](.env.example) for all configuration options.
 
 ## Contributing
 
-Contributions are welcome. See [CONTRIBUTING.md](probablyprofit/CONTRIBUTING.md) for guidelines.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Areas of interest:
 - Exchange integrations

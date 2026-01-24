@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+
+  <!-- Grid pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Terminal window -->
+  <rect x="100" y="120" width="500" height="380" rx="12" fill="#111111" stroke="#10B981" stroke-width="2"/>
+
+  <!-- Terminal header -->
+  <rect x="100" y="120" width="500" height="40" rx="12" fill="#1a1a1a"/>
+  <rect x="100" y="148" width="500" height="12" fill="#1a1a1a"/>
+  <circle cx="130" cy="140" r="8" fill="#ff5f57"/>
+  <circle cx="160" cy="140" r="8" fill="#febc2e"/>
+  <circle cx="190" cy="140" r="8" fill="#28c840"/>
+
+  <!-- Terminal text -->
+  <text x="130" y="200" font-family="monospace" font-size="18" fill="#10B981">$ pip install probablyprofit</text>
+  <text x="130" y="240" font-family="monospace" font-size="18" fill="#888888"># Define strategy in English</text>
+  <text x="130" y="280" font-family="monospace" font-size="18" fill="#10B981">$ pp run --paper</text>
+  <text x="130" y="320" font-family="monospace" font-size="18" fill="#ffffff">AI analyzing markets...</text>
+  <text x="130" y="360" font-family="monospace" font-size="18" fill="#10B981">+$142.50</text>
+  <text x="230" y="360" font-family="monospace" font-size="18" fill="#888888">profit today</text>
+  <text x="130" y="400" font-family="monospace" font-size="18" fill="#10B981">+12.3%</text>
+  <text x="230" y="400" font-family="monospace" font-size="18" fill="#888888">win rate</text>
+  <text x="130" y="460" font-family="monospace" font-size="18" fill="#10B981">_</text>
+
+  <!-- Logo and text on right -->
+  <g transform="translate(700, 200)">
+    <!-- Large P logo -->
+    <svg width="120" height="120" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="4" fill="#0a0a0a"/>
+      <rect x="1" y="1" width="30" height="30" rx="3" fill="none" stroke="#10B981" stroke-width="1.5"/>
+      <path d="M9 8 L9 24 M9 8 L17 8 Q22 8 22 13 Q22 18 17 18 L9 18"
+            fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M19 22 L23 14 L27 18"
+            fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="27" cy="18" r="1.5" fill="#10B981"/>
+    </svg>
+
+    <!-- Title -->
+    <text x="140" y="50" font-family="system-ui, sans-serif" font-size="42" font-weight="bold" fill="#ffffff">Probably</text>
+    <text x="140" y="100" font-family="system-ui, sans-serif" font-size="42" font-weight="bold" fill="#10B981">Profit</text>
+  </g>
+
+  <!-- Tagline -->
+  <text x="700" y="380" font-family="system-ui, sans-serif" font-size="28" fill="#888888">AI Trading Bot for</text>
+  <text x="700" y="420" font-family="system-ui, sans-serif" font-size="28" fill="#ffffff">Polymarket Prediction Markets</text>
+
+  <!-- Features -->
+  <text x="700" y="500" font-family="monospace" font-size="20" fill="#10B981">Claude</text>
+  <text x="820" y="500" font-family="monospace" font-size="20" fill="#666666">|</text>
+  <text x="850" y="500" font-family="monospace" font-size="20" fill="#10B981">GPT-4</text>
+  <text x="970" y="500" font-family="monospace" font-size="20" fill="#666666">|</text>
+  <text x="1000" y="500" font-family="monospace" font-size="20" fill="#10B981">Gemini</text>
+
+  <!-- Border -->
+  <rect x="4" y="4" width="1192" height="622" rx="8" fill="none" stroke="#10B981" stroke-width="2" opacity="0.3"/>
+</svg>

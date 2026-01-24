@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProbablyProfit - AI Trading Bot for Polymarket</title>
+    <script>
+      // Single Page App workaround for GitHub Pages
+      // Redirects 404 to index with the path in query string
+      const path = window.location.pathname;
+      const query = window.location.search;
+      const hash = window.location.hash;
+      window.location.replace(
+        window.location.origin + '/?p=' + encodeURIComponent(path + query + hash)
+      );
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=/" />
+    </noscript>
+  </body>
+</html>
