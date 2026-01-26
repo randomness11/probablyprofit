@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ClipboardIcon, CheckIcon, StarIcon, CpuChipIcon, ArrowsRightLeftIcon, ShieldCheckIcon, BoltIcon, ChartBarIcon, CommandLineIcon } from '@heroicons/react/24/outline';
+import { ClipboardIcon, CheckIcon, CpuChipIcon, ArrowsRightLeftIcon, ShieldCheckIcon, BoltIcon, ChartBarIcon, CommandLineIcon } from '@heroicons/react/24/outline';
 import { PixelLogo } from './components/PixelLogo';
 import '../../styles/landing.css';
 
@@ -233,10 +233,14 @@ export function LandingPage() {
               <PixelLogo />
             </div>
 
-            {/* Tagline */}
-            <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-landing-text-muted font-mono">
-              Open-source AI trading bot framework.<br className="hidden sm:block" />
-              <span className="sm:hidden"> </span>Write strategy in English.
+            {/* Headline */}
+            <h1 className="mt-3 sm:mt-4 text-xl sm:text-2xl lg:text-3xl text-white font-mono font-bold">
+              Turn ideas into trades.
+            </h1>
+
+            {/* Subheadline */}
+            <p className="mt-2 sm:mt-3 text-sm sm:text-base lg:text-lg text-landing-text-muted font-mono">
+              Write trading strategies in plain English. AI handles analysis, sizing, and execution across Polymarket.
             </p>
 
             {/* Install Command */}
@@ -253,15 +257,14 @@ export function LandingPage() {
             </div>
 
             {/* CTAs */}
-            <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
+            <div className="mt-4 sm:mt-6 flex flex-wrap items-center gap-2 sm:gap-3">
               <a
                 href="https://github.com/randomness11/probablyprofit"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 sm:px-5 py-2 sm:py-2.5 bg-white text-black font-mono text-xs sm:text-sm hover:bg-white/90 transition-colors flex items-center gap-2"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 bg-white text-black font-mono text-xs sm:text-sm hover:bg-white/90 transition-colors"
               >
-                <StarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Star on GitHub
+                View on GitHub
               </a>
               <a
                 href="https://pypi.org/project/probablyprofit/"
@@ -270,6 +273,17 @@ export function LandingPage() {
                 className="px-4 sm:px-5 py-2 sm:py-2.5 border border-landing-border text-white font-mono text-xs sm:text-sm hover:border-white/40 transition-colors"
               >
                 PyPI
+              </a>
+              <a
+                href="https://github.com/randomness11/probablyprofit"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="https://img.shields.io/github/stars/randomness11/probablyprofit?style=social"
+                  alt="GitHub stars"
+                  className="h-5"
+                />
               </a>
             </div>
 
@@ -309,6 +323,11 @@ export function LandingPage() {
                 MIT • Open Source
               </span>
             </div>
+
+            {/* Risk Disclaimer */}
+            <p className="mt-4 sm:mt-6 text-landing-text-muted/70 font-mono text-[10px] sm:text-xs max-w-md">
+              This is experimental. AI makes mistakes. Markets are unpredictable. Paper trade first. Never bet what you can't lose.
+            </p>
           </div>
         </div>
       </main>
