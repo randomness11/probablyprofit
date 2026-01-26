@@ -5,14 +5,18 @@
 ### AI-Powered Trading Framework for Prediction Markets
 
 [![PyPI](https://img.shields.io/pypi/v/probablyprofit?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/probablyprofit/)
+[![CI](https://img.shields.io/github/actions/workflow/status/randomness11/probablyprofit/ci.yml?branch=main&style=for-the-badge&logo=github&label=CI)](https://github.com/randomness11/probablyprofit/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/Tests-374%20Passing-brightgreen?style=for-the-badge)](https://github.com/randomness11/probablyprofit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://github.com/randomness11/probablyprofit)
+[![GitHub Stars](https://img.shields.io/github/stars/randomness11/probablyprofit?style=for-the-badge&logo=github)](https://github.com/randomness11/probablyprofit/stargazers)
 
 **Build autonomous trading bots for [Polymarket](https://polymarket.com) using natural language strategies.**
 
 [Quick Start](#quick-start) · [Documentation](#documentation) · [Examples](#strategy-examples) · [API Reference](#python-api) · [Contributing](#contributing)
+
+```bash
+pip install probablyprofit[full]
+```
 
 </div>
 
@@ -513,9 +517,14 @@ See [.env.example](.env.example) for all configuration options.
 
 ## Contributing
 
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-Areas of interest:
+**Ways to contribute:**
+- Report bugs via [GitHub Issues](https://github.com/randomness11/probablyprofit/issues)
+- Request features or discuss ideas in [Discussions](https://github.com/randomness11/probablyprofit/discussions)
+- Submit PRs for bug fixes, new strategies, or documentation improvements
+
+**Areas of interest:**
 - Exchange integrations
 - Strategy templates
 - Risk management improvements
