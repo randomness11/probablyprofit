@@ -290,6 +290,44 @@ def ensure_config_dir() -> Path:
     return CONFIG_DIR
 
 
+def _register_config_secrets(config: Config) -> None:
+    """
+    Register all secrets from config with the logging system for automatic redaction.
+
+    This ensures that any secret values are automatically redacted if they
+    accidentally appear in log output.
+
+    Args:
+        config: Configuration object containing secrets
+    """
+    try:
+        from probablyprofit.utils.logging import register_secret
+
+        # Register all credential values with the logger
+        secrets_to_register = [
+            config.openai_api_key,
+            config.anthropic_api_key,
+            config.google_api_key,
+            config.private_key,
+            config.perplexity_api_key,
+            config.twitter_bearer_token,
+            config.telegram.bot_token,
+            config.telegram.chat_id,
+        ]
+
+        registered_count = 0
+        for secret in secrets_to_register:
+            if secret:
+                register_secret(secret)
+                registered_count += 1
+
+        if registered_count > 0:
+            logger.debug(f"Registered {registered_count} secrets with log redaction system")
+
+    except ImportError:
+        logger.warning("Logging module not available - secrets will not be auto-redacted from logs")
+
+
 # Global config singleton
 _config: Optional[Config] = None
 
@@ -436,6 +474,7 @@ def load_config() -> Config:
     # Try to use secure secrets manager (keyring/encrypted storage)
     try:
         from probablyprofit.utils.secrets import get_secrets_manager
+        from probablyprofit.utils.logging import register_secret
 
         secrets = get_secrets_manager()
 
@@ -446,6 +485,10 @@ def load_config() -> Config:
         config.private_key = secrets.get("private_key")
         config.perplexity_api_key = secrets.get("perplexity_api_key")
         config.twitter_bearer_token = secrets.get("twitter_bearer_token")
+
+        # SECURITY: Register all loaded secrets with the logger for automatic redaction
+        # This ensures secrets are never accidentally logged in plaintext
+        _register_config_secrets(config)
 
         # Migrate plaintext credentials if they exist
         if CREDENTIALS_FILE.exists():
@@ -464,29 +507,31 @@ def load_config() -> Config:
                 logger.debug(f"Could not migrate plaintext credentials: {e}")
 
     except ImportError:
-        logger.warning("Secrets manager not available, falling back to plaintext credentials")
-        # Fallback: Load credentials from plaintext file
+        # SECURITY: Do not load from plaintext credentials file
+        # Only allow environment variables as fallback (they're typically set securely)
+        logger.warning(
+            "Secrets manager not available. Install 'keyring' or 'cryptography' for secure storage. "
+            "Loading credentials from environment variables only."
+        )
+
+        # Warn if plaintext credentials file exists (legacy/insecure)
         if CREDENTIALS_FILE.exists():
-            try:
-                with open(CREDENTIALS_FILE) as f:
-                    creds = yaml.safe_load(f) or {}
+            logger.error(
+                f"SECURITY WARNING: Plaintext credentials file found at {CREDENTIALS_FILE}. "
+                "This is insecure. Please migrate to secure storage and delete this file. "
+                "Run: probablyprofit setup --migrate-credentials"
+            )
 
-                config.openai_api_key = creds.get("openai_api_key")
-                config.anthropic_api_key = creds.get("anthropic_api_key")
-                config.google_api_key = creds.get("google_api_key")
-                config.private_key = creds.get("private_key")
-                config.perplexity_api_key = creds.get("perplexity_api_key")
-                config.twitter_bearer_token = creds.get("twitter_bearer_token")
-            except Exception:
-                pass
+        # Only load from environment variables (not from plaintext file)
+        config.openai_api_key = os.getenv("OPENAI_API_KEY")
+        config.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+        config.google_api_key = os.getenv("GOOGLE_API_KEY")
+        config.private_key = os.getenv("PRIVATE_KEY")
+        config.perplexity_api_key = os.getenv("PERPLEXITY_API_KEY")
+        config.twitter_bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
 
-        # Environment variables override file credentials
-        config.openai_api_key = os.getenv("OPENAI_API_KEY", config.openai_api_key)
-        config.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", config.anthropic_api_key)
-        config.google_api_key = os.getenv("GOOGLE_API_KEY", config.google_api_key)
-        config.private_key = os.getenv("PRIVATE_KEY", config.private_key)
-        config.perplexity_api_key = os.getenv("PERPLEXITY_API_KEY", config.perplexity_api_key)
-        config.twitter_bearer_token = os.getenv("TWITTER_BEARER_TOKEN", config.twitter_bearer_token)
+        # SECURITY: Register secrets with logger for automatic redaction
+        _register_config_secrets(config)
 
     if os.getenv("INITIAL_CAPITAL"):
         config.initial_capital = float(os.getenv("INITIAL_CAPITAL"))
@@ -601,11 +646,17 @@ def save_config(config: Config) -> None:
                     secrets.set(key, value)
             logger.info("Credentials saved to secure storage")
         except ImportError:
-            # Fallback: Save to plaintext file with restricted permissions
-            logger.warning("Secrets manager not available, saving credentials to plaintext file")
-            with open(CREDENTIALS_FILE, "w") as f:
-                yaml.dump(creds, f, default_flow_style=False)
-            os.chmod(CREDENTIALS_FILE, 0o600)
+            # SECURITY: Do NOT fall back to plaintext storage for credentials
+            # This is a critical security requirement - credentials must use secure storage
+            logger.error(
+                "SECURITY ERROR: Secrets manager not available. "
+                "Install 'keyring' or 'cryptography' package to securely store credentials. "
+                "Refusing to save credentials in plaintext."
+            )
+            raise RuntimeError(
+                "Cannot save credentials: No secure storage available. "
+                "Install 'keyring' or 'cryptography' package."
+            )
 
 
 def validate_api_key(provider: str, key: str) -> bool:

@@ -2,6 +2,11 @@
 Base Agent
 
 Core agent framework implementing the observe-decide-act loop.
+
+# TODO: Consider extracting to separate modules:
+# - agent/memory.py - AgentMemory, Observation, Decision models
+# - agent/lifecycle.py - Agent lifecycle management, cleanup, stop handling
+# - agent/execution.py - Trade execution, position tracking
 """
 
 import asyncio
@@ -101,7 +106,7 @@ class AgentMemory(BaseModel):
 
     def configure_persistence(
         self, db_manager: Any, agent_name: str = "unknown", agent_type: str = "unknown"
-    ) -> None:
+    ) -> None:  # noqa: ANN401 - db_manager is intentionally Any to avoid circular import
         """Enable database persistence."""
         self.enable_persistence = True
         self._db_manager = db_manager
@@ -140,8 +145,12 @@ class AgentMemory(BaseModel):
                         news_context=observation.news_context,
                         sentiment_summary=observation.sentiment_summary,
                     )
-            except Exception as e:
-                logger.warning(f"Failed to persist observation: {e}")
+            except (ImportError, ModuleNotFoundError) as e:
+                logger.warning(f"Failed to persist observation - missing module: {e}")
+            except (ValueError, TypeError) as e:
+                logger.warning(f"Failed to persist observation - serialization error: {e}")
+            except OSError as e:
+                logger.warning(f"Failed to persist observation - I/O error: {e}")
 
     async def add_decision(self, decision: Decision) -> None:
         """Add decision to memory and optionally persist (thread-safe)."""
@@ -170,8 +179,12 @@ class AgentMemory(BaseModel):
                         agent_name=self._agent_name,
                         agent_type=self._agent_type,
                     )
-            except Exception as e:
-                logger.warning(f"Failed to persist decision: {e}")
+            except (ImportError, ModuleNotFoundError) as e:
+                logger.warning(f"Failed to persist decision - missing module: {e}")
+            except (ValueError, TypeError) as e:
+                logger.warning(f"Failed to persist decision - serialization error: {e}")
+            except OSError as e:
+                logger.warning(f"Failed to persist decision - I/O error: {e}")
 
     async def add_trade(self, trade: Order) -> None:
         """Add trade to memory and optionally persist (thread-safe)."""
@@ -198,8 +211,12 @@ class AgentMemory(BaseModel):
                         filled_size=trade.filled_size,
                         timestamp=trade.timestamp,
                     )
-            except Exception as e:
-                logger.warning(f"Failed to persist trade: {e}")
+            except (ImportError, ModuleNotFoundError) as e:
+                logger.warning(f"Failed to persist trade - missing module: {e}")
+            except (ValueError, TypeError) as e:
+                logger.warning(f"Failed to persist trade - serialization error: {e}")
+            except OSError as e:
+                logger.warning(f"Failed to persist trade - I/O error: {e}")
 
     def get_recent_history(self, n: int = 10) -> str:
         """Get formatted recent history.
@@ -273,10 +290,10 @@ class BaseAgent(ABC):
         self._running = False  # For synchronous checks only
 
         # Track open positions to avoid duplicates
-        self._open_positions: set = set()  # Set of market_id:outcome
+        self._open_positions: set[str] = set()  # Set of market_id:outcome
 
         # Cache market names for better logging
-        self._market_names: dict = {}  # market_id -> question
+        self._market_names: dict[str, str] = {}  # market_id -> question
 
         # Setup database persistence if enabled
         if enable_persistence:
@@ -288,8 +305,10 @@ class BaseAgent(ABC):
                 self.memory.configure_persistence(
                     db_manager, agent_name=name, agent_type=agent_type
                 )
-            except Exception as e:
-                logger.warning(f"Could not enable database persistence: {e}")
+            except (ImportError, ModuleNotFoundError) as e:
+                logger.warning(f"Database persistence unavailable - missing module: {e}")
+            except OSError as e:
+                logger.warning(f"Database persistence failed - I/O error: {e}")
 
         mode_str = " [DRY RUN MODE]" if dry_run else ""
         logger.info(f"Agent '{name}' initialized{mode_str}")
@@ -488,8 +507,10 @@ class BaseAgent(ABC):
                         size=order.size,
                         price=order.price,
                     )
-                except Exception:
-                    pass
+                except (ImportError, ModuleNotFoundError):
+                    logger.debug("Telegram alerter not available for trade notification")
+                except (OSError, ConnectionError) as e:
+                    logger.debug(f"Failed to send trade alert: {e}")
                 return True
 
             return False
@@ -540,8 +561,10 @@ class BaseAgent(ABC):
                         size=order.size,
                         price=order.price,
                     )
-                except Exception:
-                    pass
+                except (ImportError, ModuleNotFoundError):
+                    logger.debug("Telegram alerter not available for trade notification")
+                except (OSError, ConnectionError) as e:
+                    logger.debug(f"Failed to send trade alert: {e}")
                 return True
 
             return False
@@ -567,7 +590,9 @@ class BaseAgent(ABC):
                 agent_name=self.name,
                 capital=self.risk_manager.current_capital,
             )
-        except Exception as e:
+        except (ImportError, ModuleNotFoundError) as e:
+            logger.warning(f"Telegram alerter not available: {e}")
+        except (OSError, ConnectionError) as e:
             logger.warning(f"Failed to send bot started alert: {e}")
 
         # Get config values for error recovery
@@ -603,8 +628,8 @@ class BaseAgent(ABC):
                             "Kill Switch Activated",
                             f"Agent {self.name} stopped.\nReason: {reason}",
                         )
-                    except Exception:
-                        pass
+                    except (OSError, ConnectionError) as e:
+                        logger.debug(f"Failed to send kill switch alert: {e}")
                     self.running = False
                     break
 
@@ -651,8 +676,8 @@ class BaseAgent(ABC):
                             error_type=type(e).__name__,
                             error_message=f"Agent: {self.name}\nLoop: {self._loop_count}\n{str(e)[:200]}",
                         )
-                    except Exception:
-                        pass
+                    except (OSError, ConnectionError) as alert_err:
+                        logger.debug(f"Failed to send error alert: {alert_err}")
 
                     # Checkpoint on error
                     if recovery_manager:
@@ -669,8 +694,8 @@ class BaseAgent(ABC):
                                 "Agent Halted - Too Many Errors",
                                 f"Agent {self.name} stopped after {self._consecutive_errors} consecutive errors.",
                             )
-                        except Exception:
-                            pass
+                        except (OSError, ConnectionError) as alert_err:
+                            logger.debug(f"Failed to send critical alert: {alert_err}")
                         self.running = False
                         break
 
@@ -716,7 +741,9 @@ class BaseAgent(ABC):
                 reason="Graceful shutdown",
                 final_capital=self.risk_manager.current_capital,
             )
-        except Exception as e:
+        except (ImportError, ModuleNotFoundError) as e:
+            logger.debug(f"Telegram alerter not available: {e}")
+        except (OSError, ConnectionError) as e:
             logger.warning(f"Failed to send bot stopped alert: {e}")
 
         try:
@@ -724,16 +751,20 @@ class BaseAgent(ABC):
             if hasattr(self.risk_manager, "save_state"):
                 await self.risk_manager.save_state(agent_name=self.name)
                 logger.debug(f"[{self.name}] Risk state saved")
-        except Exception as e:
-            logger.warning(f"[{self.name}] Error saving risk state: {e}")
+        except OSError as e:
+            logger.warning(f"[{self.name}] Error saving risk state - I/O error: {e}")
+        except (ValueError, TypeError) as e:
+            logger.warning(f"[{self.name}] Error saving risk state - serialization error: {e}")
 
         try:
             # Close the API client connection
             if hasattr(self.client, "close"):
                 await self.client.close()
                 logger.debug(f"[{self.name}] API client closed")
-        except Exception as e:
-            logger.warning(f"[{self.name}] Error closing API client: {e}")
+        except (OSError, ConnectionError) as e:
+            logger.warning(f"[{self.name}] Error closing API client - connection error: {e}")
+        except asyncio.CancelledError:
+            logger.debug(f"[{self.name}] API client close was cancelled")
 
         try:
             # Flush any pending database writes
@@ -741,8 +772,10 @@ class BaseAgent(ABC):
                 # Give pending writes a chance to complete
                 await asyncio.sleep(0.1)
                 logger.debug(f"[{self.name}] Database writes flushed")
-        except Exception as e:
-            logger.warning(f"[{self.name}] Error flushing database: {e}")
+        except OSError as e:
+            logger.warning(f"[{self.name}] Error flushing database - I/O error: {e}")
+        except asyncio.CancelledError:
+            logger.debug(f"[{self.name}] Database flush was cancelled")
 
         logger.info(f"[{self.name}] Cleanup complete")
 

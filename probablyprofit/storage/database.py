@@ -7,6 +7,17 @@ Production improvements:
 - WAL mode for SQLite (better concurrency)
 - Synchronous mode for performance
 - Connection event handlers
+
+SECURITY WARNING:
+    The default SQLite database is NOT encrypted. For production deployments
+    handling sensitive trading data, you should use SQLCipher for encryption:
+
+    1. Install SQLCipher: pip install sqlcipher3-binary
+    2. Use a connection string like: sqlite+pysqlcipher:///path/to/db?key=your_key
+
+    Or use a production database like PostgreSQL with TLS/SSL.
+
+    See: https://www.zetetic.net/sqlcipher/
 """
 
 import os
@@ -48,11 +59,19 @@ def _set_sqlite_pragma(dbapi_conn, connection_record):
 
 
 class DatabaseManager:
-    """Manages database connections and sessions."""
+    """
+    Manages database connections and sessions.
+
+    SECURITY NOTE:
+        For production use with sensitive trading data, use encrypted storage:
+        - SQLCipher for SQLite encryption
+        - PostgreSQL/MySQL with TLS for network databases
+    """
 
     def __init__(self, database_url: str = "sqlite+aiosqlite:///probablyprofit.db"):
         self.database_url = database_url
         self.is_sqlite = "sqlite" in database_url
+        self.is_encrypted = "sqlcipher" in database_url or "pysqlcipher" in database_url
 
         # Create async engine with appropriate settings
         connect_args = {}
@@ -75,9 +94,35 @@ class DatabaseManager:
         self.async_session_maker = sessionmaker(
             self.engine, class_=AsyncSession, expire_on_commit=False
         )
-        logger.info(f"DatabaseManager initialized with URL: {database_url}")
-        if self.is_sqlite:
-            logger.info("SQLite: WAL mode and production PRAGMAs will be enabled")
+        logger.info(f"DatabaseManager initialized with URL: {self._redact_url(database_url)}")
+
+        # SECURITY: Warn about unencrypted SQLite in production
+        if self.is_sqlite and not self.is_encrypted:
+            env = os.getenv("ENVIRONMENT", os.getenv("ENV", "development"))
+            if env.lower() in ("production", "prod"):
+                logger.warning(
+                    "SECURITY WARNING: Using unencrypted SQLite database in production. "
+                    "Consider using SQLCipher for encryption: "
+                    "pip install sqlcipher3-binary "
+                    "and use connection string: sqlite+pysqlcipher:///path/to/db?key=YOUR_KEY"
+                )
+            else:
+                logger.info(
+                    "SQLite: WAL mode and production PRAGMAs will be enabled. "
+                    "Note: For production, consider SQLCipher for encryption."
+                )
+        elif self.is_sqlite and self.is_encrypted:
+            logger.info("SQLite with SQLCipher encryption enabled")
+
+    def _redact_url(self, url: str) -> str:
+        """Redact sensitive parts of database URL for logging."""
+        # Redact any password or key in the URL
+        import re
+        # Redact password in standard URLs
+        url = re.sub(r'://[^:]+:([^@]+)@', r'://***:***@', url)
+        # Redact encryption keys
+        url = re.sub(r'key=[^&\s]+', 'key=***', url)
+        return url
 
     async def create_tables(self):
         """Create all tables."""

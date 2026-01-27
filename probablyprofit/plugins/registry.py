@@ -2,6 +2,28 @@
 Plugin Registry
 
 Central registry for discovering and managing plugins.
+
+SECURITY WARNING:
+    Plugin loading executes arbitrary Python code from plugin files.
+    This is a significant security risk:
+
+    1. ONLY load plugins from TRUSTED sources
+    2. NEVER load plugins from user-provided paths in production
+    3. Consider implementing plugin signature verification for production use
+    4. Review all plugin code before enabling
+
+    The discover_plugins() method will execute any .py file in the specified
+    directory, which could contain malicious code that:
+    - Steals credentials or private keys
+    - Executes system commands
+    - Modifies trading behavior
+    - Exfiltrates data
+
+    For production deployments, consider:
+    - Using a plugin allowlist
+    - Implementing code signing/verification
+    - Running plugins in a sandboxed environment
+    - Disabling auto-discovery entirely
 """
 
 from dataclasses import dataclass, field
@@ -105,21 +127,54 @@ class PluginRegistry:
         """List all registered plugins by type."""
         return {pt.value: list(plugins.keys()) for pt, plugins in self._plugins.items() if plugins}
 
-    def discover_plugins(self, path: str) -> int:
+    def discover_plugins(self, path: str, trusted: bool = False) -> int:
         """
         Auto-discover plugins from a directory.
 
-        Looks for Python files with classes that inherit from BasePlugin.
-        Returns number of plugins discovered.
+        SECURITY WARNING:
+            This method executes arbitrary Python code from plugin files.
+            Only use with TRUSTED plugin directories. Malicious plugins can:
+            - Steal credentials and private keys
+            - Execute system commands
+            - Modify trading behavior
+            - Exfiltrate sensitive data
+
+        Args:
+            path: Directory path containing plugin files
+            trusted: Must be explicitly set to True to acknowledge security risk
+
+        Returns:
+            Number of plugins discovered
+
+        Raises:
+            SecurityError: If trusted=False (default) to prevent accidental use
         """
         import importlib.util
         import os
+
+        # SECURITY: Require explicit acknowledgment of security risk
+        if not trusted:
+            logger.error(
+                "SECURITY: Plugin discovery blocked. "
+                "Loading plugins executes arbitrary code which is a security risk. "
+                "If you trust the plugin source, call discover_plugins(path, trusted=True)"
+            )
+            raise SecurityError(
+                "Plugin discovery requires explicit trust acknowledgment. "
+                "Set trusted=True if you trust the plugin source."
+            )
 
         count = 0
 
         if not os.path.isdir(path):
             logger.warning(f"Plugin directory not found: {path}")
             return 0
+
+        # SECURITY: Log which directory is being loaded for audit trail
+        logger.warning(
+            f"SECURITY: Loading plugins from {path}. "
+            "Ensure this directory contains only trusted code."
+        )
 
         for filename in os.listdir(path):
             if not filename.endswith(".py") or filename.startswith("_"):
@@ -129,6 +184,7 @@ class PluginRegistry:
             module_name = filename[:-3]
 
             try:
+                logger.debug(f"Loading plugin file: {filepath}")
                 spec = importlib.util.spec_from_file_location(module_name, filepath)
                 if spec and spec.loader:
                     module = importlib.util.module_from_spec(spec)
@@ -146,3 +202,9 @@ class PluginRegistry:
 
         logger.info(f"Discovered {count} plugins from {path}")
         return count
+
+
+class SecurityError(Exception):
+    """Raised when a security constraint is violated."""
+
+    pass

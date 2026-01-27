@@ -26,6 +26,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("order_id", sa.String(), nullable=True),
         sa.Column("market_id", sa.String(), nullable=False),
+        sa.Column("market_question", sa.String(), nullable=True),
         sa.Column("outcome", sa.String(), nullable=False),
         sa.Column("side", sa.String(), nullable=False),
         sa.Column("size", sa.Float(), nullable=False),

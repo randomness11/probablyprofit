@@ -2,12 +2,19 @@
 Risk Manager
 
 Provides risk management primitives for safe trading.
+
+# TODO: Large file refactoring (857 lines) - consider splitting into:
+# - risk/sizing.py - Position sizing methods (kelly_size, calculate_position_size, _dynamic_size)
+# - risk/alerts.py - Alert scheduling and sending (_schedule_drawdown_alert, _send_daily_loss_alert)
+# - risk/persistence.py - State save/load, serialization (save_state, load_state, to_dict, from_dict)
+# - risk/limits.py - RiskLimits model and validation
+# - risk/tracking.py - Trade tracking, drawdown calculation, exposure management
 """
 
 import asyncio
 import threading
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 from pydantic import BaseModel
@@ -718,8 +725,14 @@ class RiskManager:
             logger.debug(f"Risk state saved for agent '{agent_name}'")
             return True
 
-        except Exception as e:
-            logger.warning(f"Failed to save risk state: {e}")
+        except (ImportError, ModuleNotFoundError) as e:
+            logger.warning(f"Failed to save risk state - missing module: {e}")
+            return False
+        except OSError as e:
+            logger.warning(f"Failed to save risk state - I/O error: {e}")
+            return False
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Failed to save risk state - serialization error: {e}")
             return False
 
     async def load_state(self, agent_name: str = "unknown") -> bool:
@@ -785,11 +798,20 @@ class RiskManager:
                 )
                 return True
 
-        except Exception as e:
-            logger.warning(f"Failed to load risk state: {e}")
+        except (ImportError, ModuleNotFoundError) as e:
+            logger.warning(f"Failed to load risk state - missing module: {e}")
+            return False
+        except OSError as e:
+            logger.warning(f"Failed to load risk state - I/O error: {e}")
+            return False
+        except (ValueError, TypeError, KeyError) as e:
+            logger.warning(f"Failed to load risk state - deserialization error: {e}")
+            return False
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to load risk state - invalid JSON: {e}")
             return False
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, Any]:
         """
         Export current state as dictionary (for JSON serialization).
 
@@ -820,7 +842,7 @@ class RiskManager:
             }
 
     @classmethod
-    def from_dict(cls, data: Dict) -> "RiskManager":
+    def from_dict(cls, data: Dict[str, Any]) -> "RiskManager":
         """
         Create RiskManager from dictionary state.
 

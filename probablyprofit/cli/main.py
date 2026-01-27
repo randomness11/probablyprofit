@@ -10,6 +10,13 @@ Usage:
     probablyprofit run -s strategy.txt                # File-based strategy
     probablyprofit markets                            # List markets
     probablyprofit status                             # Check status
+
+# TODO: Large file refactoring (1337 lines) - consider splitting into:
+# - cli/commands/trading.py - run, backtest commands
+# - cli/commands/markets.py - markets, positions, balance commands
+# - cli/commands/admin.py - setup, status, emergency-stop, backup/restore commands
+# - cli/commands/strategy.py - create-strategy, strategy validation
+# - cli/utils.py - show_banner, show_quick_start, common utilities
 """
 
 import asyncio

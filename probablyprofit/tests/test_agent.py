@@ -15,11 +15,24 @@ class MockAgent(BaseAgent):
 
 @pytest.fixture
 def mock_client():
+    from probablyprofit.api.client import Order
+
     client = AsyncMock()
     client.get_markets.return_value = []
     client.get_positions.return_value = []
     client.get_balance.return_value = 1000.0
-    client.place_order.return_value = MagicMock(size=10.0, price=0.5)
+    client.place_order.return_value = Order(
+        order_id="test-order-1",
+        market_id="m1",
+        market_question="Test Market",
+        outcome="Yes",
+        side="BUY",
+        size=10.0,
+        price=0.5,
+        status="filled",
+        filled_size=10.0,
+        timestamp=datetime.now(),
+    )
     return client
 
 

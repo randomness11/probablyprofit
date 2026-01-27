@@ -3,6 +3,11 @@ WebSocket Client for Real-time Price Streaming
 
 Provides real-time price updates from Polymarket via WebSocket.
 Features automatic reconnection with exponential backoff and jitter.
+
+# TODO: Consider extracting to separate modules:
+# - websocket/connection.py - ConnectionManager, ConnectionState
+# - websocket/subscriptions.py - SubscriptionManager
+# - websocket/handlers.py - MessageHandler, PriceUpdate, OrderbookUpdate parsing
 """
 
 import asyncio
@@ -28,11 +33,13 @@ class ConnectionState(Enum):
 
 try:
     import websockets
+    import websockets.exceptions
     from websockets.client import WebSocketClientProtocol
 
     WEBSOCKETS_AVAILABLE = True
 except ImportError:
     WEBSOCKETS_AVAILABLE = False
+    websockets = None  # type: ignore[assignment]
     logger.warning("websockets package not installed. Real-time streaming disabled.")
 
 
@@ -161,8 +168,12 @@ class WebSocketClient:
                     result = callback()
                     if asyncio.iscoroutine(result):
                         await result
-                except Exception as e:
-                    logger.error(f"[WebSocket] Connect callback error: {e}")
+                except (TypeError, AttributeError) as e:
+                    logger.error(f"[WebSocket] Connect callback invocation error: {e}")
+                except asyncio.CancelledError:
+                    raise  # Don't suppress cancellation
+                except RuntimeError as e:
+                    logger.error(f"[WebSocket] Connect callback runtime error: {e}")
 
             # Re-subscribe to previous subscriptions
             if self._subscriptions:
@@ -174,8 +185,20 @@ class WebSocketClient:
 
             return True
 
-        except Exception as e:
-            logger.error(f"[WebSocket] Connection failed: {e}")
+        except websockets.exceptions.InvalidURI as e:
+            logger.error(f"[WebSocket] Invalid URI: {e}")
+            self._state = ConnectionState.DISCONNECTED
+            return False
+        except websockets.exceptions.InvalidHandshake as e:
+            logger.error(f"[WebSocket] Handshake failed: {e}")
+            self._state = ConnectionState.DISCONNECTED
+            return False
+        except OSError as e:
+            logger.error(f"[WebSocket] Network error during connection: {e}")
+            self._state = ConnectionState.DISCONNECTED
+            return False
+        except asyncio.TimeoutError:
+            logger.error("[WebSocket] Connection timed out")
             self._state = ConnectionState.DISCONNECTED
             return False
 
@@ -211,8 +234,12 @@ class WebSocketClient:
                 result = callback()
                 if asyncio.iscoroutine(result):
                     await result
-            except Exception as e:
-                logger.error(f"[WebSocket] Disconnect callback error: {e}")
+            except (TypeError, AttributeError) as e:
+                logger.error(f"[WebSocket] Disconnect callback invocation error: {e}")
+            except asyncio.CancelledError:
+                raise  # Don't suppress cancellation
+            except RuntimeError as e:
+                logger.error(f"[WebSocket] Disconnect callback runtime error: {e}")
 
         logger.info("[WebSocket] Disconnected")
 
@@ -277,8 +304,14 @@ class WebSocketClient:
 
             return True
 
-        except Exception as e:
-            logger.error(f"[WebSocket] Subscription error: {e}")
+        except websockets.exceptions.ConnectionClosed as e:
+            logger.error(f"[WebSocket] Connection closed during subscription: {e}")
+            return False
+        except json.JSONDecodeError as e:
+            logger.error(f"[WebSocket] JSON encoding error in subscription: {e}")
+            return False
+        except OSError as e:
+            logger.error(f"[WebSocket] Network error during subscription: {e}")
             return False
 
     async def _send_unsubscriptions(self, market_ids: Set[str]) -> bool:
@@ -299,8 +332,14 @@ class WebSocketClient:
 
             return True
 
-        except Exception as e:
-            logger.error(f"[WebSocket] Unsubscription error: {e}")
+        except websockets.exceptions.ConnectionClosed as e:
+            logger.error(f"[WebSocket] Connection closed during unsubscription: {e}")
+            return False
+        except json.JSONDecodeError as e:
+            logger.error(f"[WebSocket] JSON encoding error in unsubscription: {e}")
+            return False
+        except OSError as e:
+            logger.error(f"[WebSocket] Network error during unsubscription: {e}")
             return False
 
     async def _message_loop(self) -> None:
@@ -313,14 +352,29 @@ class WebSocketClient:
 
                 await self._handle_message(message)
 
-            except websockets.ConnectionClosed:
-                logger.warning("[WebSocket] Connection closed")
+            except websockets.exceptions.ConnectionClosed as e:
+                logger.warning(f"[WebSocket] Connection closed: code={e.code}, reason={e.reason}")
                 await self._handle_disconnect()
                 break
 
-            except Exception as e:
-                logger.error(f"[WebSocket] Message loop error: {e}")
+            except websockets.exceptions.ConnectionClosedError as e:
+                logger.warning(f"[WebSocket] Connection closed with error: {e}")
+                await self._handle_disconnect()
+                break
+
+            except json.JSONDecodeError as e:
+                logger.error(f"[WebSocket] Failed to decode message: {e}")
                 await self._handle_error(e)
+
+            except asyncio.CancelledError:
+                logger.info("[WebSocket] Message loop cancelled")
+                raise
+
+            except OSError as e:
+                logger.error(f"[WebSocket] Network error in message loop: {e}")
+                await self._handle_error(e)
+                await self._handle_disconnect()
+                break
 
     async def _handle_message(self, message: str) -> None:
         """Handle incoming WebSocket message."""
@@ -337,8 +391,12 @@ class WebSocketClient:
                             result = callback(update)
                             if asyncio.iscoroutine(result):
                                 await result
-                        except Exception as e:
-                            logger.error(f"[WebSocket] Price callback error: {e}")
+                        except (TypeError, AttributeError) as e:
+                            logger.error(f"[WebSocket] Price callback invocation error: {e}")
+                        except asyncio.CancelledError:
+                            raise  # Don't suppress cancellation
+                        except ValueError as e:
+                            logger.error(f"[WebSocket] Price callback value error: {e}")
 
             elif msg_type in ("orderbook", "book"):
                 update = self._parse_orderbook_update(data)
@@ -348,8 +406,12 @@ class WebSocketClient:
                             result = callback(update)
                             if asyncio.iscoroutine(result):
                                 await result
-                        except Exception as e:
-                            logger.error(f"[WebSocket] Orderbook callback error: {e}")
+                        except (TypeError, AttributeError) as e:
+                            logger.error(f"[WebSocket] Orderbook callback invocation error: {e}")
+                        except asyncio.CancelledError:
+                            raise  # Don't suppress cancellation
+                        except ValueError as e:
+                            logger.error(f"[WebSocket] Orderbook callback value error: {e}")
 
         except json.JSONDecodeError:
             logger.warning(f"[WebSocket] Invalid JSON: {message[:100]}")
@@ -365,8 +427,11 @@ class WebSocketClient:
                 volume=float(data.get("volume", 0)),
                 metadata=data,
             )
-        except Exception as e:
-            logger.debug(f"[WebSocket] Failed to parse price update: {e}")
+        except (ValueError, TypeError) as e:
+            logger.debug(f"[WebSocket] Failed to parse price update - invalid data: {e}")
+            return None
+        except KeyError as e:
+            logger.debug(f"[WebSocket] Failed to parse price update - missing key: {e}")
             return None
 
     def _parse_orderbook_update(self, data: dict) -> Optional[OrderbookUpdate]:
@@ -379,8 +444,11 @@ class WebSocketClient:
                 asks=[(float(a["price"]), float(a["size"])) for a in data.get("asks", [])],
                 timestamp=datetime.now(),
             )
-        except Exception as e:
-            logger.debug(f"[WebSocket] Failed to parse orderbook update: {e}")
+        except (ValueError, TypeError) as e:
+            logger.debug(f"[WebSocket] Failed to parse orderbook update - invalid data: {e}")
+            return None
+        except KeyError as e:
+            logger.debug(f"[WebSocket] Failed to parse orderbook update - missing key: {e}")
             return None
 
     async def _handle_disconnect(self) -> None:
@@ -393,8 +461,12 @@ class WebSocketClient:
                 result = callback()
                 if asyncio.iscoroutine(result):
                     await result
-            except Exception:
-                pass
+            except (TypeError, AttributeError) as e:
+                logger.debug(f"[WebSocket] Disconnect callback error (ignored): {e}")
+            except asyncio.CancelledError:
+                raise  # Don't suppress cancellation
+            except RuntimeError as e:
+                logger.debug(f"[WebSocket] Disconnect callback runtime error (ignored): {e}")
 
         if self.reconnect and self._running:
             await self._attempt_reconnect()
@@ -458,32 +530,40 @@ class WebSocketClient:
                 result = callback(error)
                 if asyncio.iscoroutine(result):
                     await result
-            except Exception:
-                pass
+            except (TypeError, AttributeError) as e:
+                logger.debug(f"[WebSocket] Error callback invocation failed: {e}")
+            except asyncio.CancelledError:
+                raise  # Don't suppress cancellation
+            except RuntimeError as e:
+                logger.debug(f"[WebSocket] Error callback runtime error: {e}")
 
     # Callback decorators
 
-    def on_price_update(self, callback: Callable[[PriceUpdate], Any]):
+    def on_price_update(
+        self, callback: Callable[[PriceUpdate], Any]
+    ) -> Callable[[PriceUpdate], Any]:
         """Register a price update callback."""
         self._price_callbacks.append(callback)
         return callback
 
-    def on_orderbook_update(self, callback: Callable[[OrderbookUpdate], Any]):
+    def on_orderbook_update(
+        self, callback: Callable[[OrderbookUpdate], Any]
+    ) -> Callable[[OrderbookUpdate], Any]:
         """Register an orderbook update callback."""
         self._orderbook_callbacks.append(callback)
         return callback
 
-    def on_error(self, callback: Callable[[Exception], Any]):
+    def on_error(self, callback: Callable[[Exception], Any]) -> Callable[[Exception], Any]:
         """Register an error callback."""
         self._error_callbacks.append(callback)
         return callback
 
-    def on_connect(self, callback: Callable[[], Any]):
+    def on_connect(self, callback: Callable[[], Any]) -> Callable[[], Any]:
         """Register a connect callback."""
         self._connect_callbacks.append(callback)
         return callback
 
-    def on_disconnect(self, callback: Callable[[], Any]):
+    def on_disconnect(self, callback: Callable[[], Any]) -> Callable[[], Any]:
         """Register a disconnect callback."""
         self._disconnect_callbacks.append(callback)
         return callback

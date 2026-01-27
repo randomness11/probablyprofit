@@ -17,12 +17,27 @@ SECRET_PATTERNS: List[Pattern] = [
     re.compile(r"sk-[a-zA-Z0-9]{20,}"),  # OpenAI
     re.compile(r"sk-ant-[a-zA-Z0-9\-]{20,}"),  # Anthropic
     re.compile(r"AIza[a-zA-Z0-9_\-]{35}"),  # Google
-    re.compile(r"pplx-[a-zA-Z0-9]{20,}"),  # Perplexity
+    re.compile(r"pplx-[a-zA-Z0-9]{20,}"),  # Perplexity (full pattern)
+    re.compile(r"pplx-[a-zA-Z0-9]{8,}"),  # Perplexity (shorter keys)
+    # Telegram bot tokens (format: 123456789:ABCdefGHIjklMNOpqrsTUVwxyz)
+    re.compile(r"\d{8,10}:[a-zA-Z0-9_-]{35}"),
+    # Reddit credentials
+    re.compile(r"[a-zA-Z0-9_-]{14}"),  # Reddit client ID (14 chars)
+    re.compile(r"[a-zA-Z0-9_-]{27}"),  # Reddit client secret (27 chars)
+    # Twitter/X Bearer tokens
+    re.compile(r"AAAA[a-zA-Z0-9%]{40,}"),  # Twitter Bearer token format
+    # Discord tokens
+    re.compile(r"[MN][a-zA-Z0-9_-]{23,}\.[a-zA-Z0-9_-]{6}\.[a-zA-Z0-9_-]{27,}"),
     # Ethereum private keys (64 hex chars, with or without 0x)
     re.compile(r"0x[a-fA-F0-9]{64}"),
     re.compile(r"(?<![a-fA-F0-9])[a-fA-F0-9]{64}(?![a-fA-F0-9])"),
-    # Bearer tokens
+    # Bearer tokens in headers
     re.compile(r"Bearer\s+[a-zA-Z0-9\-_.~+/]+=*", re.IGNORECASE),
+    # Basic auth patterns
+    re.compile(r"Basic\s+[a-zA-Z0-9+/]+=*", re.IGNORECASE),
+    # AWS-style keys
+    re.compile(r"AKIA[A-Z0-9]{16}"),  # AWS Access Key ID
+    re.compile(r"[a-zA-Z0-9/+]{40}"),  # AWS Secret Access Key (40 chars)
     # Generic long alphanumeric strings that look like keys (32+ chars)
     re.compile(r"(?<![a-zA-Z0-9])[a-zA-Z0-9]{32,}(?![a-zA-Z0-9])"),
 ]
@@ -43,6 +58,30 @@ SENSITIVE_KEYWORDS = [
     "auth",
     "credential",
     "key",
+    # Telegram specific
+    "bot_token",
+    "telegram_token",
+    "chat_id",
+    # Reddit specific
+    "client_id",
+    "client_secret",
+    "reddit_password",
+    "reddit_secret",
+    # Social media
+    "twitter_token",
+    "twitter_bearer",
+    "discord_token",
+    # Perplexity
+    "perplexity_key",
+    "perplexity_api",
+    # Database
+    "db_password",
+    "database_url",
+    "connection_string",
+    # Wallet
+    "wallet_key",
+    "mnemonic",
+    "seed_phrase",
 ]
 
 # Values to always redact (populated at runtime)

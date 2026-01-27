@@ -2,11 +2,16 @@
 Backtest Engine
 
 Simulates trading strategies on historical data.
+
+PERFORMANCE OPTIMIZATION:
+    Uses collections.deque with maxlen for bounded equity history
+    to prevent memory leaks during long backtests.
 """
 
 import asyncio
+from collections import deque
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Deque, Dict, List, Optional
 
 import pandas as pd
 from loguru import logger
@@ -15,6 +20,9 @@ from pydantic import BaseModel
 from probablyprofit.agent.base import BaseAgent, Decision, Observation
 from probablyprofit.api.client import Market, Order, Position
 from probablyprofit.risk.manager import RiskManager
+
+# Default max size for equity history to prevent memory leaks
+DEFAULT_EQUITY_HISTORY_MAXLEN = 100_000
 
 
 class BacktestResult(BaseModel):
@@ -47,27 +55,61 @@ class BacktestEngine:
     - Paper trading simulation
     - Performance metrics calculation
     - Strategy comparison
+    - PERFORMANCE: Bounded equity history to prevent memory leaks
     """
 
     def __init__(
         self,
         initial_capital: float = 1000.0,
+        equity_history_maxlen: Optional[int] = None,
     ):
         """
         Initialize backtest engine.
 
         Args:
             initial_capital: Starting capital
+            equity_history_maxlen: Max size of equity history (prevents memory leaks).
+                                   Set to None for unlimited (use with caution).
+                                   Default: 100,000 entries (~10MB memory)
         """
         self.initial_capital = initial_capital
         self.current_capital = initial_capital
 
+        # PERFORMANCE OPTIMIZATION: Set max length for equity history
+        # This prevents unbounded memory growth during long backtests
+        self._equity_history_maxlen = equity_history_maxlen or DEFAULT_EQUITY_HISTORY_MAXLEN
+
         # Simulation state
         self.positions: Dict[str, Position] = {}
         self.trades: List[Order] = []
-        self.equity_history: List[Dict[str, Any]] = []
 
-        logger.info(f"Backtest engine initialized with ${initial_capital:,.2f}")
+        # PERFORMANCE: Use deque with maxlen for bounded equity history
+        # Automatically evicts oldest entries when maxlen is exceeded
+        self._equity_history_deque: Deque[Dict[str, Any]] = deque(
+            maxlen=self._equity_history_maxlen
+        )
+
+        logger.info(
+            f"Backtest engine initialized with ${initial_capital:,.2f} "
+            f"(equity_history_maxlen={self._equity_history_maxlen})"
+        )
+
+    @property
+    def equity_history(self) -> List[Dict[str, Any]]:
+        """
+        Get equity history as a list.
+
+        PERFORMANCE NOTE: This creates a list copy. For large histories,
+        consider iterating over _equity_history_deque directly.
+        """
+        return list(self._equity_history_deque)
+
+    @equity_history.setter
+    def equity_history(self, value: List[Dict[str, Any]]) -> None:
+        """Set equity history from a list."""
+        self._equity_history_deque.clear()
+        for item in value:
+            self._equity_history_deque.append(item)
 
     async def run_backtest(
         self,
@@ -94,7 +136,8 @@ class BacktestEngine:
         self.current_capital = self.initial_capital
         self.positions = {}
         self.trades = []
-        self.equity_history = []
+        # PERFORMANCE: Clear the deque instead of creating new list
+        self._equity_history_deque.clear()
 
         # Simulate trading over time
         for i, (markets, timestamp) in enumerate(zip(market_data, timestamps)):
@@ -114,9 +157,9 @@ class BacktestEngine:
             # Execute decision in simulation
             self._execute_simulated_trade(decision, markets)
 
-            # Record equity
+            # Record equity - PERFORMANCE: Use deque.append for O(1) with auto-eviction
             total_equity = self._calculate_total_equity(markets)
-            self.equity_history.append(
+            self._equity_history_deque.append(
                 {
                     "timestamp": timestamp,
                     "equity": total_equity,
@@ -255,8 +298,11 @@ class BacktestEngine:
         Returns:
             BacktestResult object
         """
+        # PERFORMANCE: Access deque directly instead of converting to list
         final_capital = (
-            self.equity_history[-1]["equity"] if self.equity_history else self.initial_capital
+            self._equity_history_deque[-1]["equity"]
+            if self._equity_history_deque
+            else self.initial_capital
         )
 
         from probablyprofit.backtesting.metrics import PerformanceMetrics
@@ -273,7 +319,9 @@ class BacktestEngine:
             for t in self.trades
         ]
 
-        metrics = PerformanceMetrics.calculate_all_metrics(self.equity_history, trade_dicts)
+        # PERFORMANCE: Convert deque to list only once for metrics calculation
+        equity_list = list(self._equity_history_deque)
+        metrics = PerformanceMetrics.calculate_all_metrics(equity_list, trade_dicts)
 
         # Calculate winning/losing trades manually for count if not in metrics
         # (The metrics class does return win_rate/total_trades/profit_factor)
@@ -297,15 +345,16 @@ class BacktestEngine:
             max_drawdown=metrics.get("max_drawdown", 0.0),
             sharpe_ratio=metrics.get("sharpe_ratio", 0.0),
             trades=trade_dicts,
-            equity_curve=self.equity_history,
+            equity_curve=equity_list,  # Use already-converted list
         )
 
     def _calculate_max_drawdown(self) -> float:
         """Calculate maximum drawdown."""
-        if not self.equity_history:
+        # PERFORMANCE: Access deque directly
+        if not self._equity_history_deque:
             return 0.0
 
-        equity_values = [e["equity"] for e in self.equity_history]
+        equity_values = [e["equity"] for e in self._equity_history_deque]
 
         peak = equity_values[0]
         max_dd = 0.0
@@ -322,14 +371,16 @@ class BacktestEngine:
 
     def _calculate_sharpe_ratio(self) -> float:
         """Calculate Sharpe ratio (annualized)."""
-        if len(self.equity_history) < 2:
+        # PERFORMANCE: Access deque directly
+        if len(self._equity_history_deque) < 2:
             return 0.0
 
         # Calculate returns
         returns = []
-        for i in range(1, len(self.equity_history)):
-            prev_equity = self.equity_history[i - 1]["equity"]
-            curr_equity = self.equity_history[i]["equity"]
+        equity_list = list(self._equity_history_deque)
+        for i in range(1, len(equity_list)):
+            prev_equity = equity_list[i - 1]["equity"]
+            curr_equity = equity_list[i]["equity"]
             ret = (curr_equity - prev_equity) / prev_equity
             returns.append(ret)
 

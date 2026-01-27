@@ -3,11 +3,16 @@ TTL-based caching utilities for ProbablyProfit.
 
 Provides in-memory caching with time-to-live expiration.
 Thread-safe for both sync and async operations.
+
+PERFORMANCE OPTIMIZATION:
+    Uses OrderedDict for O(1) LRU eviction instead of O(n) min() operations.
+    Cache operations are now constant-time regardless of cache size.
 """
 
 import asyncio
 import threading
 import time
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, Callable, Dict, Generic, Optional, TypeVar
@@ -38,9 +43,13 @@ class TTLCache(Generic[T]):
     """
     Thread-safe TTL (Time-To-Live) cache.
 
+    PERFORMANCE OPTIMIZATION:
+        Uses OrderedDict for O(1) LRU eviction instead of O(n) min() operations.
+        All cache operations are now constant-time regardless of cache size.
+
     Features:
     - Automatic expiration of entries
-    - Optional max size with LRU eviction
+    - O(1) LRU eviction with OrderedDict
     - Statistics tracking
     - Async-compatible
 
@@ -68,7 +77,9 @@ class TTLCache(Generic[T]):
         self.max_size = max_size
         self.name = name
 
-        self._cache: Dict[str, CacheEntry[T]] = {}
+        # PERFORMANCE: Use OrderedDict for O(1) LRU operations
+        # Keys are maintained in insertion order; move_to_end() is O(1)
+        self._cache: OrderedDict[str, CacheEntry[T]] = OrderedDict()
         self._lock = asyncio.Lock()  # For async operations
         self._thread_lock = threading.RLock()  # For sync operations (reentrant)
 
@@ -82,6 +93,8 @@ class TTLCache(Generic[T]):
     def get(self, key: str) -> Optional[T]:
         """
         Get a value from the cache (thread-safe).
+
+        PERFORMANCE: O(1) access with LRU update via move_to_end().
 
         Args:
             key: Cache key
@@ -101,12 +114,16 @@ class TTLCache(Generic[T]):
                 self._misses += 1
                 return None
 
+            # PERFORMANCE: O(1) move to end (most recently used)
+            self._cache.move_to_end(key)
             self._hits += 1
             return entry.value
 
     def set(self, key: str, value: T, ttl: Optional[float] = None) -> None:
         """
         Set a value in the cache (thread-safe).
+
+        PERFORMANCE: O(1) eviction using OrderedDict.popitem(last=False).
 
         Args:
             key: Cache key
@@ -116,10 +133,14 @@ class TTLCache(Generic[T]):
         with self._thread_lock:
             effective_ttl = ttl if ttl is not None else self.ttl
 
-            # Evict if at max size
-            if self.max_size and len(self._cache) >= self.max_size:
+            # If key exists, remove it first to update its position
+            if key in self._cache:
+                del self._cache[key]
+            # Evict oldest if at max size
+            elif self.max_size and len(self._cache) >= self.max_size:
                 self._evict_oldest_unsafe()
 
+            # Add at end (most recently used)
             self._cache[key] = CacheEntry(
                 value=value,
                 expires_at=time.time() + effective_ttl,
@@ -175,12 +196,18 @@ class TTLCache(Generic[T]):
             return len(expired_keys)
 
     def _evict_oldest_unsafe(self) -> None:
-        """Evict the oldest entry (LRU-style). Must be called with lock held."""
+        """
+        Evict the oldest entry (LRU-style). Must be called with lock held.
+
+        PERFORMANCE: O(1) eviction using OrderedDict.popitem(last=False)
+        instead of O(n) min() operation.
+        """
         if not self._cache:
             return
 
-        oldest_key = min(self._cache.keys(), key=lambda k: self._cache[k].created_at)
-        del self._cache[oldest_key]
+        # PERFORMANCE: O(1) removal of oldest item (first in OrderedDict)
+        # Previous implementation used min() which is O(n)
+        self._cache.popitem(last=False)
         self._evictions += 1
 
     @property
